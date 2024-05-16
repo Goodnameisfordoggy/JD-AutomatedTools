@@ -1,3 +1,11 @@
+venv*/
+[0-9]*.py
+p[0-9]*.html
+cookies.json
+Cookie.txt
+getCookies.py
+personal.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
