@@ -1,10 +1,8 @@
 venv*/
-[0-9]*.py
-p[0-9]*.html
+*[0-9].*
 cookies.json
 Cookie.txt
 getCookies.py
-personal.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
