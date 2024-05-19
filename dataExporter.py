@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-19 00:48:57
+LastEditTime: 2024-05-20 00:11:24
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-data-exporter\dataExporter.py
 Description: 
 
@@ -16,17 +16,14 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import time
-import json
-import asyncio
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-
-with open('config.json', 'r', encoding='utf-8') as jf:
-    config = json.load(jf)
+from dataExtraction import data_extraction
+from dataStorage import data_storage_to_Excel
+from dataPortector import config, date_range_dict
 
 
 def wait_for_loading(driver) -> bool | None:
@@ -65,13 +62,15 @@ def wait_for_element(driver, duration, attribute, value):
         print("超时未找到组件，请重试！")
 
 def get_d_values():
-    # 
+    """ 生成目标url的d值 """
     d_values = [date_range_dict.get(quantum) for quantum in config['date_range'] if date_range_dict.get(quantum)]
     d_values = list(set(d_values))
     
     if -1 in d_values:
         d_values = [value for value in date_range_dict.values() if value not in [-1, 1]]
-
+    if not d_values:
+        d_values.append(1)  # 默认d值仅有1
+        
     d_values.sort()
     return d_values
 
@@ -84,53 +83,32 @@ def main():
     url_login = "https://passport.jd.com/new/login.aspx"
     driver.get(url_login)
 
-    html_source = []
+    form = []
     if wait_for_loading(driver):
         for d in get_d_values():
             page = 1
             while(True):
                 target_url = f"https://order.jd.com/center/list.action?d={d}&s=4096&page={page}"
                 driver.get(target_url)
-                wait_for_element(driver, 10, By.XPATH, '//*[@id="order02"]/div[2]/table')  # 等待表单出现
-                finish_tip = wait_for_element(driver, 5, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5')
+                wait_for_element(driver, 6, By.XPATH, '//*[@id="order02"]/div[2]/table')  # 等待表单出现
+                # 获取结束标志
+                finish_tip = wait_for_element(driver, 3, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5')
                 if finish_tip:
-                    print("订单数据获取结束！")
+                    print("页面数据获取结束！")
                     break
-                
                 time.sleep(2)
-                html_source.append([driver.page_source])
-                print(driver.page_source)
-                print(f"------------page{page}结束---------------")
+                form += data_extraction(driver.page_source)
+                # print(driver.page_source)
+                print(f"------------d{d}-page{page}结束---------------")
                 page += 1
             page = 1
             print(f"------------d{d}结束---------------")
-            # print("=================================================")
-            # print(html_source)
 
-    time.sleep(2)
+    time.sleep(1)
     driver.quit()
-
-date_range_dict = {
-    "ALL": -1,
-    "近三个月订单": 1,
-    "今年内订单": 2,
-    "2023年订单": 2023,
-    "2022年订单": 2022,
-    "2021年订单": 2021,
-    "2020年订单": 2020,
-    "2019年订单": 2019,
-    "2018年订单": 2018,
-    "2017年订单": 2017,
-    "2016年订单": 2016,
-    "2015年订单": 2015,
-    "2014年订单": 2014,
-    "2014年以前订单": 3,
-} 
-         
+    data_storage_to_Excel(form, config['header'])
+    print('Excel文件已生成，请于项目目录内查看')
 
 
-
-    
-        
 if __name__ == "__main__":
     main()

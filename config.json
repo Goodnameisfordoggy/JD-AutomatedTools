@@ -1,5 +1,43 @@
 {
     "user_name": "Goodnameisfordoggy",
-    "date_range": ["ALL"],
-    "headers": ["order_id", "product_name", "goods_number", "amount", "order_time", "order_status", "consignee_name", "consignee_address", "consignee_phone_number"]
+    "date_range": [],
+    "header": ["order_id", "product_name", "goods_number", "amount", "order_time", "order_status", "consignee_name", "consignee_address", "consignee_phone_number"],
+    "header_items": [
+        {
+            "name": "order_id",
+            "width": "14"
+        },
+        {
+            "name": "product_name",
+            "width": "39"
+        },
+        {
+            "name": "goods_number",
+            "width": "6"
+        },
+        {
+            "name": "amount",
+            "width": "13"
+        },
+        {
+            "name": "order_time",
+            "width": "25"
+        },
+        {
+            "name": "order_status",
+            "width": "8"
+        },
+        {
+            "name": "consignee_name",
+            "width": "8"
+        },
+        {
+            "name": "consignee_address",
+            "width": "50"
+        },
+        {
+            "name": "consignee_phone_number",
+            "width": "22"
+        }
+    ]
 }

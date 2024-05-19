@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-18 23:11:13
+LastEditTime: 2024-05-19 14:33:03
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-data-exporter\dataExtraction.py
 Description: 
 
@@ -16,17 +16,11 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import re
-import json
 import parsel
+from dataPortector import config
 
 
-
-with open('config.json', 'r', encoding='utf-8') as jsf:
-    config = json.load(jsf)
-
-
-
-def data_extraction(page_html_src):
+def data_extraction(page_html_src: str):
     """ 
     数据提取 
 
@@ -35,7 +29,7 @@ def data_extraction(page_html_src):
     Returns: 
         list: 返回一个数据表，使用二维列表储存
     """
-    result = parsel.Selector(html)
+    result = parsel.Selector(page_html_src)
     # 找到合适的外层框架
     table = result.xpath('//table[@class="td-void order-tb"]')
     # 根据需求--筛掉合并订单，该类订单无具体商品信息
@@ -43,9 +37,9 @@ def data_extraction(page_html_src):
     form = []   # 表数据
     for tbody in tbodys:
         row = []    # 行数据，一行存一个订单全部数据 
-        for header in config['headers']:
+        for item in config['header']:
             try: 
-                row.append(func_dict.get(header)(tbody))
+                row.append(func_dict.get(item)(tbody))
             except TypeError:
                 row.append('暂无')
         form.append(row)
@@ -54,40 +48,71 @@ def data_extraction(page_html_src):
 
 def get_order_id(RP_element: parsel.Selector):
     """ 
+    获取订单编号
+
     Args:
-        RP_element (parsel.Selector): relative_parent_element
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
     """
-    # 获取订单编号
     order_id = RP_element.xpath('.//tr/td/span[@class="number"]/a/text()').get('')
     return order_id
 
-def get_product_name(RP_element):
-    # 获取商品名称
+def get_product_name(RP_element: parsel.Selector):
+    """ 
+    获取商品名称
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     product_name = RP_element.xpath('.//tr[@class="tr-bd"]/td/div/div/div/a/text()').get('').strip()
     return product_name
 
-def get_goods_number(RP_element):
-    # 商品数量
+def get_goods_number(RP_element: parsel.Selector):
+    """ 
+    获取商品数量
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     goods_number = RP_element.xpath('.//tr/td/div[@class="goods-number"]/text()').get('').strip().strip('x')
     return goods_number
 
-def get_amount(RP_element):
-    # 实付款
+def get_amount(RP_element: parsel.Selector):
+    """ 
+    获取实付款金额
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     amount = RP_element.xpath('.//tr/td/div[@class="amount"]/span[1]/text()').get('')
     return amount
 
-def get_order_time(RP_element):
-    # 下单时间
+def get_order_time(RP_element: parsel.Selector):
+    """ 
+    获取下单时间
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     order_time = RP_element.xpath('.//tr/td/span[@class="dealtime"]/text()').get('')
     return order_time
 
-def get_order_status(RP_element):
-    # 获取订单状态
+def get_order_status(RP_element: parsel.Selector):
+    """ 
+    获取订单状态
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     order_status = RP_element.xpath('.//tr/td/div[@class="status"]/span/text()').get('').strip()
     return order_status
 
-def get_consignee_name(RP_element):
-    # 收件人
+def get_consignee_name(RP_element: parsel.Selector):
+    """ 
+    获取收件人姓名
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     consignee_name = RP_element.xpath('.//tr/td/div/div/div/strong/text()').get('')
     # 进行脱敏
     if len(consignee_name) == 2:
@@ -96,14 +121,24 @@ def get_consignee_name(RP_element):
         return consignee_name[0] + "*" * (len(consignee_name) - 2) + consignee_name[-1]
     return consignee_name
 
-def get_consignee_address(RP_element):
-    # 收货地址
+def get_consignee_address(RP_element: parsel.Selector):
+    """ 
+    获取收货地址
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     consignee_address = RP_element.xpath('.//tr/td/div/div/div/p[1]/text()').get('')
     # 进行脱敏
     return re.sub(r'\d+', '****', consignee_address)
 
-def get_consignee_phone_number(RP_element):
-    # 联系方式
+def get_consignee_phone_number(RP_element: parsel.Selector):
+    """ 
+    获取收件人联系方式
+
+    Args:
+        RP_element (parsel.Selector): relative_parent_element(相对父元素)
+    """
     consignee_phone_number =RP_element.xpath('.//tr/td/div/div/div/p[2]/text()').get('')
     # 进行脱敏
     if len(consignee_phone_number) == 11:  # 适用于中国大陆手机号码

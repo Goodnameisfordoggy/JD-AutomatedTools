@@ -1,17 +1,59 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-18 23:10:41
+LastEditTime: 2024-05-19 16:59:30
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-data-exporter\dataStorage.py
 Description: 
 
-				*		Ğ´×ÖÂ¥ÀïĞ´×Ö¼ä£¬Ğ´×Ö¼äÀï³ÌĞòÔ±£»
-				*		³ÌĞòÈËÔ±Ğ´³ÌĞò£¬ÓÖÄÃ³ÌĞò»»¾ÆÇ®¡£
-				*		¾ÆĞÑÖ»ÔÚÍøÉÏ×ø£¬¾Æ×í»¹À´ÍøÏÂÃß£»
-				*		¾Æ×í¾ÆĞÑÈÕ¸´ÈÕ£¬ÍøÉÏÍøÏÂÄê¸´Äê¡£
-				*		µ«Ô¸ÀÏËÀµçÄÔ¼ä£¬²»Ô¸¾Ï¹ªÀÏ°åÇ°£»
-				*		±¼³Û±¦Âí¹óÕßÈ¤£¬¹«½»×ÔĞĞ³ÌĞòÔ±¡£
-				*		±ğÈËĞ¦ÎÒß¯·èñ²£¬ÎÒĞ¦×Ô¼ºÃüÌ«¼ú£»
-				*		²»¼ûÂú½ÖÆ¯ÁÁÃÃ£¬ÄÄ¸ö¹éµÃ³ÌĞòÔ±£¿    
+				*		å†™å­—æ¥¼é‡Œå†™å­—é—´ï¼Œå†™å­—é—´é‡Œç¨‹åºå‘˜ï¼›
+				*		ç¨‹åºäººå‘˜å†™ç¨‹åºï¼Œåˆæ‹¿ç¨‹åºæ¢é…’é’±ã€‚
+				*		é…’é†’åªåœ¨ç½‘ä¸Šåï¼Œé…’é†‰è¿˜æ¥ç½‘ä¸‹çœ ï¼›
+				*		é…’é†‰é…’é†’æ—¥å¤æ—¥ï¼Œç½‘ä¸Šç½‘ä¸‹å¹´å¤å¹´ã€‚
+				*		ä½†æ„¿è€æ­»ç”µè„‘é—´ï¼Œä¸æ„¿é èº¬è€æ¿å‰ï¼›
+				*		å¥”é©°å®é©¬è´µè€…è¶£ï¼Œå…¬äº¤è‡ªè¡Œç¨‹åºå‘˜ã€‚
+				*		åˆ«äººç¬‘æˆ‘å¿’ç–¯ç™«ï¼Œæˆ‘ç¬‘è‡ªå·±å‘½å¤ªè´±ï¼›
+				*		ä¸è§æ»¡è¡—æ¼‚äº®å¦¹ï¼Œå“ªä¸ªå½’å¾—ç¨‹åºå‘˜ï¼Ÿ    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import string
+import pandas as pd
+from openpyxl import load_workbook
+from dataPortector import config
+
+
+def data_storage_to_Excel(data: list, header: list):
+	""" 
+	æ•°æ®å‚¨å­˜ 
+	
+	Args:
+		data (ListLikeU | DataFrame | dict[Any, Any] | Iterable[ListLikeU | tuple[Hashable, ListLikeU] | dict[Any, Any]] | None)
+		header (list): ç”¨æˆ·é€‰æ‹©çš„è¡¨å¤´å­—æ®µåˆ—è¡¨
+	"""
+    
+	df = pd.DataFrame(data, columns=header)
+	# å°† DataFrame å¯¼å‡ºä¸º Excel æ–‡ä»¶
+	file_name = 'my_JD_order.xlsx'
+	df.to_excel(file_name, index=False)
+
+	# ä½¿ç”¨ openpyxl åŠ è½½åˆšåˆšåˆ›å»ºçš„ Excel æ–‡ä»¶
+	workbook = load_workbook(file_name)
+	worksheet = workbook.active
+
+	uppercase_letters = [letter for letter in string.ascii_uppercase] # å¤§å†™å­—æ¯A~Zï¼Œç”¨äºè¡¨å¤´è®¾ç½®
+	index = 0
+	default_width = 16
+	for header in config['header']:	# è·å–ç”¨æˆ·é€‰æ‹©çš„è¡¨å¤´åç§°
+		for header_item in config['header_items']:	# è·å–è¯¥è¡¨å¤´çš„ä¿¡æ¯
+			if header_item['name'] == header:
+				# è®¾ç½®è¡¨å¤´å®½åº¦
+				worksheet.column_dimensions[uppercase_letters[index]].width = float(header_item.get('width', default_width))
+				index += 1  # ä¸‹ä¸€ä¸ªè¡¨å¤´å­—æ¯çš„ç´¢å¼•
+				break
+
+	# ä¿å­˜ä¿®æ”¹åçš„ Excel æ–‡ä»¶
+	workbook.save(file_name)
+
+
+
+if __name__ == "__main__":
+	pass
