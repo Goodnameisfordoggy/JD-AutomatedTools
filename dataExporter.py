@@ -107,7 +107,7 @@ def main():
     time.sleep(1)
     driver.quit()
     data_storage_to_Excel(form, config['header'])
-    print('Excel文件已生成，请于项目目录内查看')
+    print('Excel文件已生成, 请于项目目录内查看')
 
 
 if __name__ == "__main__":

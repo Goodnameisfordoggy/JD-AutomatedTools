@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-19 14:33:03
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-data-exporter\dataExtraction.py
+LastEditTime: 2024-05-22 20:34:38
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\dataExtraction.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -45,6 +45,8 @@ def data_extraction(page_html_src: str):
         form.append(row)
     return form        
         
+def data_filter(data: list[list[any]]):
+    pass
 
 def get_order_id(RP_element: parsel.Selector):
     """ 
@@ -63,7 +65,16 @@ def get_product_name(RP_element: parsel.Selector):
     Args:
         RP_element (parsel.Selector): relative_parent_element(相对父元素)
     """
-    product_name = RP_element.xpath('.//tr[@class="tr-bd"]/td/div/div/div/a/text()').get('').strip()
+    tr_group = RP_element.xpath('.//tr[@class="tr-bd"]')
+    if len(tr_group) == 1:
+        product_name = RP_element.xpath('.//tr[@class="tr-bd"]/td/div/div/div/a/text()').get('').strip()
+    else:   # 处理一个单号下多个商品的情况
+        product_name = ''
+        index = 1
+        for tr in tr_group:
+            item_name = tr.xpath('.//td/div/div/div/a/text()').get('').strip()
+            product_name += f"({index}) {item_name}\n"
+            index += 1
     return product_name
 
 def get_goods_number(RP_element: parsel.Selector):
@@ -73,7 +84,16 @@ def get_goods_number(RP_element: parsel.Selector):
     Args:
         RP_element (parsel.Selector): relative_parent_element(相对父元素)
     """
-    goods_number = RP_element.xpath('.//tr/td/div[@class="goods-number"]/text()').get('').strip().strip('x')
+    tr_group = RP_element.xpath('.//tr[@class="tr-bd"]')
+    if len(tr_group) == 1:
+        goods_number = RP_element.xpath('.//tr/td/div[@class="goods-number"]/text()').get('').strip().strip('x')
+    else:   # 处理一个单号下多个商品的情况
+        goods_number = ''
+        index = 1
+        for tr in tr_group:
+            item_number = tr.xpath('.//td/div[@class="goods-number"]/text()').get('').strip().strip('x')
+            goods_number += f"({index}) {item_number}\n"
+            index += 1
     return goods_number
 
 def get_amount(RP_element: parsel.Selector):
