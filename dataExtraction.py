@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-22 20:34:38
+LastEditTime: 2024-05-23 23:17:22
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\dataExtraction.py
 Description: 
 
@@ -36,17 +36,54 @@ def data_extraction(page_html_src: str):
     tbodys = table.xpath('.//tbody[not(contains(@id, "parent"))]') 
     form = []   # 表数据
     for tbody in tbodys:
-        row = []    # 行数据，一行存一个订单全部数据 
+        row = {}    # 行数据，一个字典存一个订单全部数据 
         for item in config['header']:
             try: 
-                row.append(func_dict.get(item)(tbody))
+                row[item] = func_dict.get(item)(tbody)
             except TypeError:
-                row.append('暂无')
+                row[item] = '暂无'
         form.append(row)
     return form        
         
-def data_filter(data: list[list[any]]):
-    pass
+def data_filter(data: list[dict[any]]):
+    """ 数据筛选 """
+
+    def is_coupon(order: dict[any]):
+        """识别券(包)类订单, 返回Flase进行筛除"""
+        if any(keyword in order['product_name'] for keyword in ['券包', '福利券', '优惠券', '兑换券']):
+            return False
+        return True
+        
+    def is_rights_interests(order: dict[any]):
+        """识别权益类订单, 返回Flase进行筛除"""
+        if any(keyword in order['product_name'] for keyword in ['权益', '特权']):
+            return False
+        return True
+    
+    def is_completed(order: dict[any]):
+        """识别已完成订单, 返回Ture进行保留"""
+        if order['order_status'] == '已完成':
+            return True
+        return False
+    
+    def custom_filtering(order: dict[any]):
+        """自定义筛选"""
+        header_item = order.get(config.get('filter_config', {}).get('自定义筛选', {}).get('header_item'), '')
+        keywords = config.get('filter_config', {}).get('自定义筛选', {}).get('keyword')
+        if any(keyword in header_item for keyword in keywords):
+            return True
+        return False
+    
+    filtered_data = data
+    if config.get('filter_config', {}).get('去除券(包)类订单'):
+        filtered_data = list(filter(is_coupon, filtered_data))
+    if config.get('filter_config', {}).get('去除权益类订单'):
+        filtered_data = list(filter(is_rights_interests ,filtered_data))
+    if config.get('filter_config', {}).get('筛选已完成订单'):
+        filtered_data = list(filter(is_completed ,filtered_data))
+    
+    filtered_data = list(filter(custom_filtering ,filtered_data))
+    return filtered_data
 
 def get_order_id(RP_element: parsel.Selector):
     """ 
@@ -180,6 +217,10 @@ func_dict = {
     
 
 if __name__ == "__main__":
-    with open('p1.html', 'r', encoding='utf-8') as f:
+    with open('1.html', 'r', encoding='utf-8') as f:
         html = f.read()
-    print(data_extraction(html))
+    data = data_extraction(html)
+    filtered_data = data_filter(data)
+    # print(data)
+    print(filtered_data)
+    

@@ -21,7 +21,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from dataExtraction import data_extraction
+from dataExtraction import data_extraction, data_filter
 from dataStorage import data_storage_to_Excel
 from dataPortector import config, date_range_dict
 
@@ -97,7 +97,7 @@ def main():
                     print("页面数据获取结束！")
                     break
                 time.sleep(2)
-                form += data_extraction(driver.page_source)
+                form += data_filter(data_extraction(driver.page_source))
                 # print(driver.page_source)
                 print(f"------------d{d}-page{page}结束---------------")
                 page += 1

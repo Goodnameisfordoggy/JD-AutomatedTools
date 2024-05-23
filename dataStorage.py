@@ -21,12 +21,12 @@ from openpyxl import load_workbook
 from dataPortector import config
 
 
-def data_storage_to_Excel(data: list, header: list):
+def data_storage_to_Excel(data: list[dict], header: list):
 	""" 
 	数据储存 
 	
 	Args:
-		data (ListLikeU | DataFrame | dict[Any, Any] | Iterable[ListLikeU | tuple[Hashable, ListLikeU] | dict[Any, Any]] | None)
+		data (list[dict]): 需python3.7及以上，利用字典键值对的插入顺序。
 		header (list): 用户选择的表头字段列表
 	"""
     
