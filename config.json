@@ -1,6 +1,6 @@
 {
     "user_name": "Goodnameisfordoggy",
-    "date_range": ["ALL"],
+    "date_range": [""],
     "header": ["order_id", "product_name", "goods_number", "amount", "order_time", "order_status", "consignee_name", "consignee_address", "consignee_phone_number"],
     "header_items": [
         {
@@ -41,12 +41,12 @@
         }
     ],
     "filter_config": {
-        "去除券(包)类订单": false,
-        "去除权益类订单": false,
+        "去除券(包)类订单": true,
+        "去除权益类订单": true,
         "筛选已完成订单": false,
         "自定义筛选": {
-            "header_item": "product_name",
-            "keyword": ["小米", "泡腾片"]
+            "header_item": "",
+            "keyword": []
         }
 
     }
