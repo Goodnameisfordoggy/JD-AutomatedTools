@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 13:06:15
+LastEditTime: 2024-05-24 22:19:42
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToExcel.py
 Description: 
 
@@ -27,32 +27,32 @@ except ImportError:
 
 class ExcelStorage:
     def __init__(self, data: list[dict], header: list):
-        self.data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
-        self.header = header  # 用户选择的表头字段列表
+        self.__data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
+        self.__header = header  # 用户选择的表头字段列表
         # 获取配置文件
-        self.configManager = ConfigManager()
-        self.config = self.configManager.get_config()
+        self.__configManager = ConfigManager()
+        self.__config = self.__configManager.get_config()
         # 设置生成文件的文件名
-        self.file_name = f'{self.config.get('user_name', '')}_JD_order.xlsx'
+        self.__file_name = f'{self.__config.get('user_name', '')}_JD_order.xlsx'
     
     def save_to_excel(self):
         """ 
         数据储存 
         """
-        df = pd.DataFrame(self.data, columns=self.header)
-        df.to_excel(self.file_name, index=False)
+        df = pd.DataFrame(self.__data, columns=self.__header)
+        df.to_excel(self.__file_name, index=False)
         self.adjust_column_width()
 
     def adjust_column_width(self):
         """ 调整 Excel 表头宽度 """
-        workbook = load_workbook(self.file_name)
+        workbook = load_workbook(self.__file_name)
         worksheet = workbook.active
 
         uppercase_letters = [letter for letter in string.ascii_uppercase]  # 大写字母A~Z，用于表头设置
         index = 0
         default_width = 16
-        for header in self.config['header']:  # 获取用户选择的表头名称
-            for header_item in self.config['header_items']:  # 获取该表头的信息
+        for header in self.__config['header']:  # 获取用户选择的表头名称
+            for header_item in self.__config['header_items']:  # 获取该表头的信息
                 if header_item['name'] == header:
                     # 设置表头宽度
                     worksheet.column_dimensions[uppercase_letters[index]].width = float(header_item.get('width', default_width))
@@ -60,7 +60,7 @@ class ExcelStorage:
                     break
 
         # 保存修改后的 Excel 文件
-        workbook.save(self.file_name)
+        workbook.save(self.__file_name)
 
 
 if __name__ == "__main__":

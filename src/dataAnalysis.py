@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 21:20:51
+LastEditTime: 2024-05-24 22:59:45
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -26,11 +26,10 @@ except ImportError:
 
 class JDDataAnalysis:
     def __init__(self, page_html_src: str):
-        self.configManager = ConfigManager()
-        self.config = self.configManager.get_config() # 获取配置文件
-        self.page_html_src = page_html_src
-        self.result = parsel.Selector(page_html_src) 
-        self.func_dict = {
+        self.__configManager = ConfigManager()
+        self.__config = self.__configManager.get_config() # 获取配置文件
+        self.__result = parsel.Selector(page_html_src) 
+        self.__func_dict = {
             "order_id": self.get_order_id,
             "product_name": self.get_product_name,
             "goods_number": self.get_goods_number,
@@ -47,18 +46,18 @@ class JDDataAnalysis:
         数据提取 
 
         Returns: 
-            list: 返回一个数据表，使用二维列表储存
+            返回一个数据表 form (list[dict[any]])
         """
         # 找到合适的外层框架
-        table = self.result.xpath('//table[@class="td-void order-tb"]')
+        table = self.__result.xpath('//table[@class="td-void order-tb"]')
         # 根据需求--筛掉合并订单，该类订单无具体商品信息
         tbodys = table.xpath('.//tbody[not(contains(@id, "parent"))]')
         form = []   # 表数据
         for tbody in tbodys:
             row = {}    # 行数据，一个字典存一个订单全部数据 
-            for item in self.config['header']:
+            for item in self.__config['header']:
                 try: 
-                    row[item] = self.func_dict.get(item)(tbody)
+                    row[item] = self.__func_dict.get(item)(tbody)
                 except TypeError:
                     row[item] = '暂无'
             form.append(row)
@@ -86,24 +85,29 @@ class JDDataAnalysis:
         
         def custom_filtering(order):
             """自定义筛选"""
-            header_item = order.get(self.config.get('filter_config', {}).get('自定义筛选', {}).get('header_item'), '')
-            keywords = self.config.get('filter_config', {}).get('自定义筛选', {}).get('keyword')
+            header_item_choice = self.__config.get('filter_config', {}).get('自定义筛选', {}).get('header_item', '')
+            header_item = order.get(header_item_choice, '')
+            keywords = self.__config.get('filter_config', {}).get('自定义筛选', {}).get('keyword', '')
+            if not header_item or not keywords:
+                return True
             if any(keyword in header_item for keyword in keywords):
                 return True
             return False
-        
+            
         filters = []
-        if self.config.get('filter_config', {}).get('去除券(包)类订单'):
+        if self.__config.get('filter_config', {}).get('去除券(包)类订单'):
             filters.append(is_coupon)
-        if self.config.get('filter_config', {}).get('去除权益类订单'):
+        if self.__config.get('filter_config', {}).get('去除权益类订单'):
             filters.append(is_rights_interests)
-        if self.config.get('filter_config', {}).get('筛选已完成订单'):
+        if self.__config.get('filter_config', {}).get('筛选已完成订单'):
             filters.append(is_completed)        
         filters.append(custom_filtering)
 
         def apply_all_filters(order):
             """应用所有被选中的筛选器"""
-            return all(f(order) for f in filters)
+            result = all(f(order) for f in filters)
+            print(f"Order: {order}, Result: {result}")  # Debug 信息
+            return result
         
         return list(filter(apply_all_filters, form))
     
@@ -185,4 +189,5 @@ if __name__ == "__main__":
     extractor = JDDataAnalysis(html)
     data = extractor.extract_data()
     filtered_data = extractor.filter_data(data)
+    print()
     print(filtered_data)

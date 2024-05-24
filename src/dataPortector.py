@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 01:02:22
+LastEditTime: 2024-05-24 22:16:47
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataPortector.py
 Description: 
 
@@ -19,21 +19,21 @@ import json
 
 class ConfigManager:
     def __init__(self):
-        self.config_file = "config.json"
-        self._config = self._load_config()
-        self._date_range_dict = self._init_date_range_dict()
+        self.__config_file = "config.json"
+        self.__config = self._load_config()
+        self.__date_range_dict = self._init_date_range_dict()
     
     def get_config(self):
         """ 获取配置 """
-        return self._config
+        return self.__config
 
     def get_date_range_dict(self):
         """ 获取日期范围字典 """
-        return self._date_range_dict
+        return self.__date_range_dict
 
     def _load_config(self):
         """ 加载配置文件 """
-        with open(self.config_file, 'r', encoding='utf-8') as jsf:
+        with open(self.__config_file, 'r', encoding='utf-8') as jsf:
             return json.load(jsf)
 
     def _init_date_range_dict(self):
