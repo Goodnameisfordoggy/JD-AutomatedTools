@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 22:19:42
+LastEditTime: 2024-05-25 16:45:49
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToExcel.py
 Description: 
 
@@ -26,16 +26,16 @@ except ImportError:
 
 
 class ExcelStorage:
-    def __init__(self, data: list[dict], header: list):
+    def __init__(self, data: list[dict], header_needed: list, file_name: str):
         self.__data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
-        self.__header = header  # 用户选择的表头字段列表
+        self.__header_needed = header_needed  # 用户选择的表头字段列表
         # 获取配置文件
         self.__configManager = ConfigManager()
-        self.__config = self.__configManager.get_config()
+        self.__config = self.__configManager.get_excel_config()
         # 设置生成文件的文件名
-        self.__file_name = f'{self.__config.get('user_name', '')}_JD_order.xlsx'
+        self.__file_name = file_name
     
-    def save_to_excel(self):
+    def save(self):
         """ 
         数据储存 
         """
@@ -51,7 +51,7 @@ class ExcelStorage:
         uppercase_letters = [letter for letter in string.ascii_uppercase]  # 大写字母A~Z，用于表头设置
         index = 0
         default_width = 16
-        for header in self.__config['header']:  # 获取用户选择的表头名称
+        for header in self.__header_needed:  # 获取用户选择的表头名称
             for header_item in self.__config['header_items']:  # 获取该表头的信息
                 if header_item['name'] == header:
                     # 设置表头宽度

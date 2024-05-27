@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 22:59:45
+LastEditTime: 2024-05-25 18:58:02
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -106,7 +106,7 @@ class JDDataAnalysis:
         def apply_all_filters(order):
             """应用所有被选中的筛选器"""
             result = all(f(order) for f in filters)
-            print(f"Order: {order}, Result: {result}")  # Debug 信息
+            # print(f"Order: {order}, Result: {result}")  # Debug
             return result
         
         return list(filter(apply_all_filters, form))
@@ -146,7 +146,7 @@ class JDDataAnalysis:
 
     def get_amount(self, RP_element):
         """ 获取实付款金额 """
-        amount = RP_element.xpath('.//tr/td/div[@class="amount"]/span[1]/text()').get('')
+        amount = RP_element.xpath('.//tr/td/div[@class="amount"]/span[1]/text()').get('').strip('¥')
         return amount
 
     def get_order_time(self, RP_element):

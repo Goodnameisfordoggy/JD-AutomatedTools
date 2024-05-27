@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 22:26:17
+LastEditTime: 2024-05-27 22:59:35
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -27,10 +27,12 @@ try:
     from .dataAnalysis import JDDataAnalysis
     from .dataStorageToExcel import ExcelStorage
     from .dataPortector import ConfigManager
+    from .dataStorageToMySQL import MySQLStorange
 except ImportError:
     from dataAnalysis import JDDataAnalysis
     from dataStorageToExcel import ExcelStorage
     from dataPortector import ConfigManager
+    from dataStorageToMySQL import MySQLStorange
 
 class JDDataExporter:
     def __init__(self):
@@ -92,6 +94,7 @@ class JDDataExporter:
         return d_values
 
     def fetch_data(self):
+        """ 从网页获取所需数据 """
         form = []
         url_login = "https://passport.jd.com/new/login.aspx"
         self.__driver.get(url_login)
@@ -117,9 +120,14 @@ class JDDataExporter:
         return form
 
     def export_to_excel(self, form):
-        excelStorage = ExcelStorage(form, self.__config['header'])
-        excelStorage.save_to_excel()
+        excelStorage = ExcelStorage(form, self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
+        excelStorage.save()
         print('Excel文件已生成, 请于项目目录内查看')
+
+    def export_to_mysql(self, form):
+        mysqlStorage = MySQLStorange(form, self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')
+        mysqlStorage.save()
+        print('数据已存入MySQL服务器, 请查看')
 
     def close(self):
         time.sleep(1)
@@ -127,7 +135,10 @@ class JDDataExporter:
 
     def run(self):
         form = self.fetch_data()
-        self.export_to_excel(form)
+        if self.__config.get('export_mode') == 'excel':
+            self.export_to_excel(form)
+        elif self.__config.get('export_mode') == 'mysql':
+            self.export_to_mysql(form)
         self.close()
 
 if __name__ == "__main__":

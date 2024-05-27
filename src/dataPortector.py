@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-24 22:16:47
+LastEditTime: 2024-05-27 00:21:26
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataPortector.py
 Description: 
 
@@ -19,24 +19,57 @@ import json
 
 class ConfigManager:
     def __init__(self):
-        self.__config_file = "config.json"
-        self.__config = self._load_config()
-        self.__date_range_dict = self._init_date_range_dict()
+        self.__config_file = "config/config.json"
+        self.__excel_config_file = "config/excel_config.json"
+        self.__mysql_config_file = "config/mysql_config.json"
+
+        self.__config = self.__load_config()
+        self.__excel_config = self.__load_excel_config()
+        self.__mysql_config = self.__load_mysql_config()
+        self.__date_range_dict = self.__init_date_range_dict()
     
     def get_config(self):
         """ 获取配置 """
         return self.__config
+    
+    def get_excel_config(self):
+        """ 获取配置 """
+        return self.__excel_config
+    
+    def get_mysql_config(self):
+        """ 获取配置 """
+        return self.__mysql_config
 
     def get_date_range_dict(self):
         """ 获取日期范围字典 """
         return self.__date_range_dict
 
-    def _load_config(self):
+    def __load_config(self):
         """ 加载配置文件 """
-        with open(self.__config_file, 'r', encoding='utf-8') as jsf:
-            return json.load(jsf)
+        try:
+            with open(self.__config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.decoder.JSONDecodeError as err:
+            print(f"配置文件加载失败: {err}")
+    
+    def __load_excel_config(self):
+        """ 加载配置文件 """
+        try:
+            with open(self.__excel_config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.decoder.JSONDecodeError as err:
+            print(f"配置文件加载失败: {err}")
+    
+    def __load_mysql_config(self):
+        """ 加载配置文件 """
+        try:
+            with open(self.__mysql_config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.decoder.JSONDecodeError as err:
+            print(f"配置文件加载失败: {err}")
+    
 
-    def _init_date_range_dict(self):
+    def __init_date_range_dict(self):
         """ 初始化日期范围字典 """
         return {
             "ALL": -1,
@@ -59,7 +92,10 @@ class ConfigManager:
 if __name__ == "__main__":
     config_manager = ConfigManager()
     config = config_manager.get_config()
-    date_range_dict = config_manager.get_date_range_dict()
-    
     print(config)
-    print(date_range_dict)
+    config = config_manager.get_excel_config()
+    print(config)
+    config = config_manager.get_mysql_config()
+    print(config)
+    # date_range_dict = config_manager.get_date_range_dict()
+    # print(date_range_dict)

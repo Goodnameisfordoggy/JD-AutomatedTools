@@ -4,6 +4,7 @@ cookies.json
 Cookie.txt
 getCookies.py
 *.xlsx
+mysql_user.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

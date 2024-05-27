@@ -1,0 +1,50 @@
+{
+    "field_items": [
+        {
+            "name": "order_id",
+            "type": "varchar",
+            "length": 12
+        },
+        {
+            "name": "product_name",
+            "type": "varchar",
+            "length": 500
+        },
+        {
+            "name": "goods_number",
+            "type": "varchar",
+            "length": 50
+        },
+        {
+            "name": "amount",
+            "type": "decimal",
+            "length": 10,
+            "decimal_places": 2
+        },
+        {
+            "name": "order_time",
+            "type": "datetime",
+            "length": null
+        },
+        {
+            "name": "order_status",
+            "type": "varchar",
+            "length": "6"
+        },
+        {
+            "name": "consignee_name",
+            "type": "varchar",
+            "length": "6"
+        },
+        {
+            "name": "consignee_address",
+            "type": "varchar",
+            "length": "50"
+        },
+        {
+            "name": "consignee_phone_number",
+            "type": "varchar",
+            "length": "11"
+        }
+    ]
+}
