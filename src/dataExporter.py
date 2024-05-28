@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-27 22:59:35
+LastEditTime: 2024-05-28 16:48:52
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -25,14 +25,13 @@ from selenium.common.exceptions import TimeoutException
 
 try:
     from .dataAnalysis import JDDataAnalysis
-    from .dataStorageToExcel import ExcelStorage
     from .dataPortector import ConfigManager
-    from .dataStorageToMySQL import MySQLStorange
+    from .Form import Form
 except ImportError:
     from dataAnalysis import JDDataAnalysis
-    from dataStorageToExcel import ExcelStorage
     from dataPortector import ConfigManager
-    from dataStorageToMySQL import MySQLStorange
+    from Form import Form
+    
 
 class JDDataExporter:
     def __init__(self):
@@ -95,7 +94,7 @@ class JDDataExporter:
 
     def fetch_data(self):
         """ 从网页获取所需数据 """
-        form = []
+        form = Form()
         url_login = "https://passport.jd.com/new/login.aspx"
         self.__driver.get(url_login)
 
@@ -119,16 +118,6 @@ class JDDataExporter:
                 print(f"------------d{d}结束---------------")
         return form
 
-    def export_to_excel(self, form):
-        excelStorage = ExcelStorage(form, self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
-        excelStorage.save()
-        print('Excel文件已生成, 请于项目目录内查看')
-
-    def export_to_mysql(self, form):
-        mysqlStorage = MySQLStorange(form, self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')
-        mysqlStorage.save()
-        print('数据已存入MySQL服务器, 请查看')
-
     def close(self):
         time.sleep(1)
         self.__driver.quit()
@@ -136,9 +125,9 @@ class JDDataExporter:
     def run(self):
         form = self.fetch_data()
         if self.__config.get('export_mode') == 'excel':
-            self.export_to_excel(form)
+            form.save_to_excel(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
         elif self.__config.get('export_mode') == 'mysql':
-            self.export_to_mysql(form)
+            form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')
         self.close()
 
 if __name__ == "__main__":

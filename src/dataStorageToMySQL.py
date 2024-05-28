@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-05-27 23:28:57
+LastEditTime: 2024-05-29 00:13:04
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToMySQL.py
 Description: 
 
@@ -16,7 +16,6 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import mysql.connector
-
 try:
     from .dataPortector import ConfigManager
     from .databaseManager import DatabaseManager

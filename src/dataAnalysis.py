@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-25 18:58:02
+LastEditTime: 2024-05-28 23:13:22
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -21,8 +21,11 @@ import parsel
 
 try:
     from .dataPortector import ConfigManager
+    from .Form import Form
+
 except ImportError:
     from dataPortector import ConfigManager
+    from Form import Form
 
 class JDDataAnalysis:
     def __init__(self, page_html_src: str):
@@ -46,13 +49,13 @@ class JDDataAnalysis:
         数据提取 
 
         Returns: 
-            返回一个数据表 form (list[dict[any]])
+            返回一个数据表 form (Form)
         """
         # 找到合适的外层框架
         table = self.__result.xpath('//table[@class="td-void order-tb"]')
         # 根据需求--筛掉合并订单，该类订单无具体商品信息
         tbodys = table.xpath('.//tbody[not(contains(@id, "parent"))]')
-        form = []   # 表数据
+        form = Form()   # 表数据
         for tbody in tbodys:
             row = {}    # 行数据，一个字典存一个订单全部数据 
             for item in self.__config['header']:
@@ -63,7 +66,7 @@ class JDDataAnalysis:
             form.append(row)
         return form
 
-    def filter_data(self, form: list[dict[any]]):
+    def filter_data(self, form: Form):
         """ 数据筛选 """
         def is_coupon(order):
             """识别券(包)类订单, 返回Flase进行筛除"""

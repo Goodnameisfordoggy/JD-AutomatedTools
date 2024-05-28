@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-25 16:45:49
+LastEditTime: 2024-05-29 00:13:14
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToExcel.py
 Description: 
 
@@ -39,7 +39,7 @@ class ExcelStorage:
         """ 
         数据储存 
         """
-        df = pd.DataFrame(self.__data, columns=self.__header)
+        df = pd.DataFrame(self.__data, columns=self.__header_needed)
         df.to_excel(self.__file_name, index=False)
         self.adjust_column_width()
 

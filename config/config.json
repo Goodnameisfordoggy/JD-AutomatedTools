@@ -11,5 +11,5 @@
             "keyword": []
         }
     },
-    "export_mode": "mysql"
+    "export_mode": "excel"
 }
