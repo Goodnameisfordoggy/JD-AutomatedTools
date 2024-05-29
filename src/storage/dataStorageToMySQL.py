@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-05-29 00:13:04
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToMySQL.py
+LastEditTime: 2024-05-29 19:12:10
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -16,12 +16,9 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import mysql.connector
-try:
-    from .dataPortector import ConfigManager
-    from .databaseManager import DatabaseManager
-except ImportError:
-    from dataPortector import ConfigManager
-    from databaseManager import DatabaseManager
+
+from ..dataPortector import ConfigManager
+from ..databaseManager import DatabaseManager
 
 
 class MySQLStorange():

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-28 16:48:52
+LastEditTime: 2024-05-29 19:28:36
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -23,14 +23,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-try:
-    from .dataAnalysis import JDDataAnalysis
-    from .dataPortector import ConfigManager
-    from .Form import Form
-except ImportError:
-    from dataAnalysis import JDDataAnalysis
-    from dataPortector import ConfigManager
-    from Form import Form
+from .dataAnalysis import JDDataAnalysis
+from .dataPortector import ConfigManager
+from .data_type.Form import Form
     
 
 class JDDataExporter:
@@ -130,6 +125,3 @@ class JDDataExporter:
             form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')
         self.close()
 
-if __name__ == "__main__":
-    exporter = JDDataExporter()
-    exporter.run()

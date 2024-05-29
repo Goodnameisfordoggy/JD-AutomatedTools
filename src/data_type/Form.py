@@ -17,12 +17,8 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 '''
 import typing
 
-try:
-    from .dataStorageToExcel import ExcelStorage
-    from .dataStorageToMySQL import MySQLStorange
-except ImportError:
-    from dataStorageToExcel import ExcelStorage
-    from dataStorageToMySQL import MySQLStorange
+from ..storage.dataStorageToExcel import ExcelStorage
+from ..storage.dataStorageToMySQL import MySQLStorange
 
 
 class Form(list):
@@ -52,22 +48,3 @@ class Form(list):
         mysqlStorage = MySQLStorange(self, fields_needed, table_name)
         mysqlStorage.save()
         print('数据已存入MySQL服务器, 请查看')
-
-
-if __name__ == "__main__":
-    
-    # 示例使用
-    data = Form()
-    # data = Form(
-    #     {'name': 'Alice', 'age': 30},
-    #     {'name': 'Bob', 'age': 25},
-    # )
-
-    data.append({'name': 'Charlie', 'age': 35})
-
-    try:
-        data.append(['Not a dict'])  # 这将会引发一个TypeError
-    except TypeError as e:
-        print(e)
-
-    print(data.get_by_key('name'))  # 输出 ['Alice', 'Bob', 'Charlie']

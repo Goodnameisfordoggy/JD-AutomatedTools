@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-28 23:13:22
+LastEditTime: 2024-05-29 19:26:12
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -19,13 +19,9 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 import re
 import parsel
 
-try:
-    from .dataPortector import ConfigManager
-    from .Form import Form
+from .dataPortector import ConfigManager
+from .data_type.Form import Form
 
-except ImportError:
-    from dataPortector import ConfigManager
-    from Form import Form
 
 class JDDataAnalysis:
     def __init__(self, page_html_src: str):

@@ -11,5 +11,6 @@
             "keyword": []
         }
     },
-    "export_mode": "excel"
+    "desensitization_intensity": "",
+    "export_mode": "mysql"
 }

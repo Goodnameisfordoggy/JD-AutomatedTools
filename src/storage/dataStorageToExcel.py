@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-29 00:13:14
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataStorageToExcel.py
+LastEditTime: 2024-05-29 19:17:43
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
 Description: 
 
                 *       写字楼里写字间，写字间里程序员；
@@ -19,10 +19,7 @@ import string
 import pandas as pd
 from openpyxl import load_workbook
 
-try:
-    from .dataPortector import ConfigManager
-except ImportError:
-    from dataPortector import ConfigManager
+from ..dataPortector import ConfigManager
 
 
 class ExcelStorage:
@@ -61,11 +58,3 @@ class ExcelStorage:
 
         # 保存修改后的 Excel 文件
         workbook.save(self.__file_name)
-
-
-if __name__ == "__main__":
-    # 示例用法
-    data = [{'order_id': '123', 'product_name': 'item1', 'amount': '10.0'}, {'order_id': '124', 'product_name': 'item2', 'amount': '20.0'}]
-    header = ['order_id', 'product_name', 'amount']
-    excel_storage = ExcelStorage(data, header)
-    excel_storage.save_to_excel()
