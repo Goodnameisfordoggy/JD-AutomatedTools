@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-29 19:26:12
+LastEditTime: 2024-05-31 22:27:04
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -112,8 +112,24 @@ class JDDataAnalysis:
     
     def get_order_id(self, RP_element):
         """ 获取订单编号 """
+
+        def masking(data):
+            """ 订单号覆盖脱敏 """
+            masking_intensity = self.__config.get('masking_intensity').get('order_id', 2)
+            try: 
+                if masking_intensity == 0:
+                    return data
+                elif masking_intensity == 1:
+                    return data[:4] + '****' + data[-4:]
+                elif masking_intensity == 2:
+                    return '*' * (len(data) - 4) + data[-4:]
+                else:
+                    raise ValueError
+            except ValueError:
+                print('请选择正确的覆盖脱敏强度！')
+
         order_id = RP_element.xpath('.//tr/td/span[@class="number"]/a/text()').get('')
-        return order_id
+        return masking(order_id)
 
     def get_product_name(self, RP_element):
         """ 获取商品名称 """
@@ -160,33 +176,78 @@ class JDDataAnalysis:
 
     def get_consignee_name(self, RP_element):
         """ 获取收件人姓名 """
+
+        def masking(data):
+            """ 姓名覆盖脱敏 """
+            masking_intensity = self.__config.get('masking_intensity').get('consignee_name', 2)
+            try: 
+                if masking_intensity == 0:
+                    return data
+                elif masking_intensity == 1:
+                    if len(data) == 2:
+                        return data[0] + "*"
+                    elif len(data) > 2:
+                        return data[0] + "*" * (len(data) - 2) + data[-1]
+                    else:
+                        return data
+                elif masking_intensity == 2:
+                    return '*' * (len(data) - 1) + data[-1:]
+                else:
+                    raise ValueError
+            except ValueError:
+                print('请选择正确的覆盖脱敏强度！')
+
         consignee_name = RP_element.xpath('.//tr/td/div/div/div/strong/text()').get('')
         # 进行脱敏
-        if len(consignee_name) == 2:
-            return consignee_name[0] + "*"
-        elif len(consignee_name) > 2:
-            return consignee_name[0] + "*" * (len(consignee_name) - 2) + consignee_name[-1]
-        return consignee_name
+        return masking(consignee_name)
 
     def get_consignee_address(self, RP_element):
         """ 获取收货地址 """
+
+        def masking(data):
+            """ 收货地址覆盖脱敏 """
+            masking_intensity = self.__config.get('masking_intensity').get('consignee_address', 2)
+            try: 
+                if masking_intensity == 0:
+                    return data
+                elif masking_intensity == 1:
+                    return re.sub(r'\d+', '***', data)
+                elif masking_intensity == 2: # 只保留省，市，区级地址
+                    pattern = r'^([^省市区县]+?(?:省|市))?\s*([^市区县]+?(?:市|自治州|州|区))?\s*([^市区县]+?(?:区|县))?' # QWQ不会真有人地址直接填区级吧？
+                    match = re.match(pattern, data)
+                    if match:
+                        return ''.join(filter(None, match.groups())) + "***"
+                    else:
+                        return "******"
+                else:
+                    raise ValueError
+            except ValueError:
+                print('请选择正确的覆盖脱敏强度！')
+            
         consignee_address = RP_element.xpath('.//tr/td/div/div/div/p[1]/text()').get('')
         # 进行脱敏
-        return re.sub(r'\d+', '****', consignee_address)
+        return masking(consignee_address)
 
     def get_consignee_phone_number(self, RP_element):
         """ 获取收件人联系方式 """
+
+        def masking(data):
+            """ 电话号码覆盖脱敏 """
+            masking_intensity = self.__config.get('masking_intensity').get('consignee_phone_number', 2)
+            try: 
+                if masking_intensity == 0:
+                    return data
+                elif masking_intensity == 1:
+                    return data[:3] + "****" + data[7:]
+                elif masking_intensity == 2:
+                    return '*' * 7 + data[7:]
+                else:
+                    raise ValueError
+            except ValueError:
+                print('请选择正确的覆盖脱敏强度！')
+            
         consignee_phone_number = RP_element.xpath('.//tr/td/div/div/div/p[2]/text()').get('')
          # 进行脱敏
         if len(consignee_phone_number) == 11:
-            return consignee_phone_number[:3] + "****" + consignee_phone_number[7:]
+            masking(consignee_phone_number)
         return consignee_phone_number
-
-if __name__ == "__main__":
-    with open('1.html', 'r', encoding='utf-8') as f:
-        html = f.read()
-    extractor = JDDataAnalysis(html)
-    data = extractor.extract_data()
-    filtered_data = extractor.filter_data(data)
-    print()
-    print(filtered_data)
