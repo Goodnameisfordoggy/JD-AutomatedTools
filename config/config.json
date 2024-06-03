@@ -17,5 +17,5 @@
         "consignee_address": 2,
         "consignee_phone_number": 2
     },
-    "export_mode": "mysql"
+    "export_mode": "excel"
 }

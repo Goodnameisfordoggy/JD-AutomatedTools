@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-05-29 19:12:10
+LastEditTime: 2024-06-01 23:54:59
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
 Description: 
 
@@ -31,6 +31,7 @@ class MySQLStorange():
         self.__config = self.__configManager.get_mysql_config()
         # 设置生成表的表名
         self.__table_name = table_name 
+        self.__existent_order_id = None
 
     def table_exists(self, cursor):
         """检查表是否存在"""
@@ -80,6 +81,18 @@ class MySQLStorange():
         fields = [row[0] for row in cursor.fetchall()]
         return fields
     
+    def get_order_id(self, cursor):
+        """ 获取表中order_id字段下全部值 """
+        order_id_list = []
+        try:
+            cursor.execute(f"SELECT order_id FROM {self.__table_name}")
+            results = cursor.fetchall()
+        except mysql.connector.Error as err:
+            print(f"order_id获取失败: {err}")
+        for result in results:
+            order_id_list.append(result[0])
+        return order_id_list
+    
     def insert_data(self, cursor, order: dict):
         """ 插入数据,逐条"""
         table_fields = self.get_table_fields(cursor)  # 当前表拥有的全部字段
@@ -106,9 +119,13 @@ class MySQLStorange():
         """
         with DatabaseManager() as db_m:
             cursor =db_m.connection.cursor()
+            # 检测所选表是否存在，否则创建新表        
             if not self.table_exists(cursor):
                 self.creat_table(cursor)
+            # 获取表中存在的order_id
+            self.__existent_order_id = self.get_order_id(cursor)
             for order in self.__data:
-                self.insert_data(cursor, order)
+                if order.get('order_id', 0) not in self.__existent_order_id:
+                    self.insert_data(cursor, order)
             db_m.connection.commit()
                 
