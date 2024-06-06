@@ -1,5 +1,5 @@
 # JD-PersDataExporter
-[**ÖÐÎÄ¼òÌå**](./README.md) | [**English**](./README.en.md)
+[**Chinese**](./README.md) | [**English**](./README.en.md)
 
 ## Space safety claim
 1. Any scripts involved in the project `JD_PersDataExporter` published by this warehouse are for testing and study only, prohibited for commercial use, and cannot guarantee its legality, accuracy, completeness and validity. Please make your own judgment according to the situation.
