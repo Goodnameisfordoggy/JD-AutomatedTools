@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-01 23:54:59
+LastEditTime: 2024-06-07 10:51:54
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
 Description: 
 
@@ -15,6 +15,7 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import logging
 import mysql.connector
 
 from ..dataPortector import ConfigManager
@@ -24,11 +25,16 @@ from ..databaseManager import DatabaseManager
 class MySQLStorange():
     
     def __init__(self, data: list[dict], fields_needed: list, table_name: str) -> None:
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
+        
         self.__data = data  # 数据(含全部字段)
         self.__fields_needed = fields_needed  # 用户需要的字段
         # 获取配置文件
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_mysql_config()
+        # 连接的库名
+        self.__database_name = DatabaseManager.get_user().get('database')
         # 设置生成表的表名
         self.__table_name = table_name 
         self.__existent_order_id = None
@@ -41,11 +47,11 @@ class MySQLStorange():
                 FROM information_schema.tables 
                 WHERE table_schema = %s 
                 AND table_name = %s
-                """, (DatabaseManager.get_user().get('database'), self.__table_name))
+                """, (self.__database_name, self.__table_name))
             result = cursor.fetchone()
             return result[0] > 0
         except mysql.connector.Error as err:
-            print(f"检查表存在失败: {err}")
+            self.logger.error(f"检查表存在失败: {err}")
             return False
 
     def creat_table(self, cursor):
@@ -72,8 +78,9 @@ class MySQLStorange():
                     {fields}
                 );
                 """)
+            self.logger.info(f'成功创建表 db:{self.__database_name} - table:{self.__table_name}')
         except mysql.connector.Error as err:
-            print(f"创建表失败: {err}")
+            self.logger.error(f"创建表失败: {err}")
         
     def get_table_fields(self, cursor):
         """ 获取表中全部字段 """
@@ -88,7 +95,7 @@ class MySQLStorange():
             cursor.execute(f"SELECT order_id FROM {self.__table_name}")
             results = cursor.fetchall()
         except mysql.connector.Error as err:
-            print(f"order_id获取失败: {err}")
+            self.logger.error(f"order_id获取失败: {err}")
         for result in results:
             order_id_list.append(result[0])
         return order_id_list
@@ -111,7 +118,7 @@ class MySQLStorange():
                 VALUES ({placeholders})
             """, values)
         except mysql.connector.Error as err:
-            print(f"数据插入失败: {err}")
+            self.logger.error(f"数据插入失败: {err}")
 
     def save(self):
         """ 
@@ -124,8 +131,13 @@ class MySQLStorange():
                 self.creat_table(cursor)
             # 获取表中存在的order_id
             self.__existent_order_id = self.get_order_id(cursor)
+            new_orders = 0
             for order in self.__data:
                 if order.get('order_id', 0) not in self.__existent_order_id:
                     self.insert_data(cursor, order)
+                    new_orders += 1
             db_m.connection.commit()
-                
+            if not new_orders:
+                self.logger.info(f'没有新数据, 储存结束。')
+            else:
+                self.logger.info(f'新增数据 {new_orders}条')

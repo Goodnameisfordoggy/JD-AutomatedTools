@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-05-29 00:15:01
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\Form.py
+LastEditTime: 2024-06-07 11:40:09
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\data_type\Form.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -16,6 +16,7 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import typing
+import logging
 
 from ..storage.dataStorageToExcel import ExcelStorage
 from ..storage.dataStorageToMySQL import MySQLStorange
@@ -24,6 +25,9 @@ from ..storage.dataStorageToMySQL import MySQLStorange
 class Form(list):
     """ 表格 """
     def __init__(self, *args):
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
+
         if args:
             raise ValueError("暂不支持传参构造")
         # 使用提供的参数初始化父列表
@@ -42,9 +46,9 @@ class Form(list):
     def save_to_excel(self, header_needed: list, file_name: str):
         excelStorage = ExcelStorage(self, header_needed, file_name)
         excelStorage.save()
-        print('Excel文件已生成, 请于项目目录内查看')
+        self.logger.info('Excel文件已生成, 请于项目目录内查看')
 
     def save_to_mysql(self, fields_needed: list, table_name: str):
         mysqlStorage = MySQLStorange(self, fields_needed, table_name)
         mysqlStorage.save()
-        print('数据已存入MySQL服务器, 请查看')
+        self.logger.info('数据已存入MySQL服务器, 请查看')

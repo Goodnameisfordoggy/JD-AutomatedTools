@@ -10,6 +10,6 @@ if __name__ == "__main__":
     mysql_storange = MySQLStorange(
         data, 
         ["order_id", "product_name", "goods_number", "amount", "order_time", "order_status", "consignee_name", "consignee_address", "consignee_phone_number"], 
-        'Goodnameisfordoggy_JD_order'
+        '测试'
     )
     mysql_storange.save()

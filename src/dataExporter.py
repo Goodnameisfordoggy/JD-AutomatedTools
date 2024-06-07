@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-03 13:45:49
+LastEditTime: 2024-06-07 11:42:52
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -17,6 +17,7 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 '''
 
 import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,10 +27,12 @@ from selenium.common.exceptions import TimeoutException
 from .dataAnalysis import JDDataAnalysis
 from .dataPortector import ConfigManager
 from .data_type.Form import Form
-    
+
 
 class JDDataExporter:
     def __init__(self):
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
         
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_config() # 获取配置文件
@@ -45,12 +48,12 @@ class JDDataExporter:
             element = WebDriverWait(self.__driver, 60).until(EC.presence_of_element_located((By.XPATH, '//*[@id="J_user"]/div/div[1]/div/p[1]/a')))
             if self.__config.get('user_name') and element.text == self.__config.get('user_name'):
                 # 条件满足时，跳出循环
-                print("登录成功")
+                self.logger.info("登录成功")
                 return True
             else:
-                print("用户名不匹配，登录失败")
+                self.logger.warning("用户名不匹配，登录失败")
         except TimeoutException:
-            print("登录超时，请重试！")
+            self.logger.error("登录超时，请重试！")
         return False
 
     def wait_for_element(self, duration, attribute, value):
@@ -71,7 +74,7 @@ class JDDataExporter:
             if element:
                 return element
         except TimeoutException:
-            print("超时未找到组件，请重试！")
+            self.logger.error("超时未找到组件，请重试！")
         return None
 
     def get_d_values(self):
@@ -103,14 +106,14 @@ class JDDataExporter:
                     # 获取结束标志
                     finish_tip = self.wait_for_element(3, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5')
                     if finish_tip:
-                        print("页面数据获取结束！")
+                        self.logger.info("当前页面数据获取结束！")
                         break
                     time.sleep(2)
                     jDDataAnalysis = JDDataAnalysis(self.__driver.page_source)
                     form += jDDataAnalysis.filter_data(jDDataAnalysis.extract_data())
-                    print(f"------------d{d}-page{page}结束---------------")
+                    self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
-                print(f"------------d{d}结束---------------")
+                self.logger.info(f"------------d{d}结束---------------")
         return form
 
     def close(self):

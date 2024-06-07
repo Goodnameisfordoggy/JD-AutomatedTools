@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-27 00:21:26
+LastEditTime: 2024-06-07 11:34:32
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataPortector.py
 Description: 
 
@@ -16,9 +16,14 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import json
+import logging
+
 
 class ConfigManager:
     def __init__(self):
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
+        
         self.__config_file = "config/config.json"
         self.__excel_config_file = "config/excel_config.json"
         self.__mysql_config_file = "config/mysql_config.json"
@@ -50,7 +55,7 @@ class ConfigManager:
             with open(self.__config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.decoder.JSONDecodeError as err:
-            print(f"配置文件加载失败: {err}")
+            self.logger.error(f"配置文件加载失败: {err}")
     
     def __load_excel_config(self):
         """ 加载配置文件 """
@@ -58,7 +63,7 @@ class ConfigManager:
             with open(self.__excel_config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.decoder.JSONDecodeError as err:
-            print(f"配置文件加载失败: {err}")
+            self.logger.error(f"配置文件加载失败: {err}")
     
     def __load_mysql_config(self):
         """ 加载配置文件 """
@@ -66,7 +71,7 @@ class ConfigManager:
             with open(self.__mysql_config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.decoder.JSONDecodeError as err:
-            print(f"配置文件加载失败: {err}")
+            self.logger.error(f"配置文件加载失败: {err}")
     
 
     def __init_date_range_dict(self):
@@ -87,15 +92,3 @@ class ConfigManager:
             "2014年订单": 2014,
             "2014年以前订单": 3,
         }
-    
-
-if __name__ == "__main__":
-    config_manager = ConfigManager()
-    config = config_manager.get_config()
-    print(config)
-    config = config_manager.get_excel_config()
-    print(config)
-    config = config_manager.get_mysql_config()
-    print(config)
-    # date_range_dict = config_manager.get_date_range_dict()
-    # print(date_range_dict)

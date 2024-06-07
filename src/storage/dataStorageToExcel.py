@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-03 13:28:42
+LastEditTime: 2024-06-07 11:32:19
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -17,8 +17,9 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 '''
 import os
 import string
-import pandas as pd
+import logging
 import zipfile
+import pandas as pd
 from openpyxl import load_workbook, Workbook
 
 from ..dataPortector import ConfigManager
@@ -26,6 +27,9 @@ from ..dataPortector import ConfigManager
 
 class ExcelStorage:
     def __init__(self, data: list[dict], header_needed: list, file_name: str):
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
+
         self.__data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
         self.__header_needed = header_needed  # 用户选择的表头字段列表
         # 获取配置文件
@@ -38,10 +42,10 @@ class ExcelStorage:
     
     def is_file_exists(self):
         if os.path.exists(self.__file_name):
-            print(f"Reading file: {self.__file_name}, sheet: {self.__sheet_name}")
+            self.logger.info(f"Reading file: {self.__file_name}, sheet: {self.__sheet_name}")
             return True
         else:
-            print("文件不存在, 将新建Excel文件。")
+           self.logger.info("文件不存在, 将新建Excel文件。")
 
     def is_file_locked(self):
         """检测文件是否被占用"""
@@ -51,7 +55,7 @@ class ExcelStorage:
                 pass  # 如果文件可以被打开，则直接跳过
             return False  # 文件可以被打开，未被占用
         except PermissionError as e:
-            print(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写权限。")
+            self.logger.error(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写权限。")
             return True  # 文件被占用
     
     def create_new_file(self):
@@ -64,7 +68,7 @@ class ExcelStorage:
         sheet.append(self.__header_needed)
         # 保存工作簿
         workbook.save(self.__file_name)
-        print(f"新文件 '{self.__file_name}' 创建成功。")
+        self.logger.info(f"新文件 '{self.__file_name}' 创建成功。")
     
     def append_to_excel(self, df):
         """ 在现有的 Excel 文件末尾添加新内容 """
@@ -79,13 +83,13 @@ class ExcelStorage:
                 
             # 保存工作簿
             workbook.save(self.__file_name)
-            print(f"数据成功添加到 {self.__file_name}")
+            self.logger.info(f"数据成功添加到 {self.__file_name}")
         except FileNotFoundError:
             pass
         except PermissionError as e:
-            print(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写权限。")
+            self.logger.error(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写权限。")
         except Exception as e:
-            print(f"添加到Excel时发生错误: {e}")
+            self.logger.critical(f"添加到Excel时发生错误: {e}")
        
     def adjust_column_width(self):
         """ 调整 Excel 表头宽度 """
@@ -108,7 +112,7 @@ class ExcelStorage:
         except zipfile.BadZipFile:
             pass
         except Exception as e:
-            print(f"An error occurred: {e}")
+            self.logger.critical(e)
             
     def save(self):
         """ 
@@ -134,9 +138,9 @@ class ExcelStorage:
                     # 设置Excel文件列宽
                     self.adjust_column_width()
             else:
-                print(f'没有新数据, 储存结束。')
+                self.logger.info(f'没有新数据, 储存结束。')
                 return
         except zipfile.BadZipFile:
-            print(f"BadZipFile error: The file is not a valid zip file (Excel file): {self.__file_name}")
+            self.logger.error(f"BadZipFile error: The file is not a valid zip file (Excel file): {self.__file_name}")
         
     

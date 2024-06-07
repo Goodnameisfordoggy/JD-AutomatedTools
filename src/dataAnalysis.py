@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-05-31 22:27:04
+LastEditTime: 2024-06-07 10:50:14
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
 Description: 
 
@@ -18,6 +18,7 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 
 import re
 import parsel
+import logging
 
 from .dataPortector import ConfigManager
 from .data_type.Form import Form
@@ -25,6 +26,9 @@ from .data_type.Form import Form
 
 class JDDataAnalysis:
     def __init__(self, page_html_src: str):
+        # 日志记录器
+        self.logger = logging.getLogger(__name__)
+
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_config() # 获取配置文件
         self.__result = parsel.Selector(page_html_src) 
@@ -105,7 +109,7 @@ class JDDataAnalysis:
         def apply_all_filters(order):
             """应用所有被选中的筛选器"""
             result = all(f(order) for f in filters)
-            # print(f"Order: {order}, Result: {result}")  # Debug
+            self.logger.debug(f"Order: {order}, Result: {result}")
             return result
         
         return list(filter(apply_all_filters, form))
@@ -126,7 +130,7 @@ class JDDataAnalysis:
                 else:
                     raise ValueError
             except ValueError:
-                print('请选择正确的覆盖脱敏强度！')
+                self.logger.warning('请选择正确的覆盖脱敏强度！')
 
         order_id = RP_element.xpath('.//tr/td/span[@class="number"]/a/text()').get('')
         return masking(order_id)
@@ -195,7 +199,7 @@ class JDDataAnalysis:
                 else:
                     raise ValueError
             except ValueError:
-                print('请选择正确的覆盖脱敏强度！')
+                self.logger.warning('请选择正确的覆盖脱敏强度！')
 
         consignee_name = RP_element.xpath('.//tr/td/div/div/div/strong/text()').get('')
         # 进行脱敏
@@ -222,7 +226,7 @@ class JDDataAnalysis:
                 else:
                     raise ValueError
             except ValueError:
-                print('请选择正确的覆盖脱敏强度！')
+                self.logger.warning('请选择正确的覆盖脱敏强度！')
             
         consignee_address = RP_element.xpath('.//tr/td/div/div/div/p[1]/text()').get('')
         # 进行脱敏
@@ -244,7 +248,7 @@ class JDDataAnalysis:
                 else:
                     raise ValueError
             except ValueError:
-                print('请选择正确的覆盖脱敏强度！')
+                self.logger.warning('请选择正确的覆盖脱敏强度！')
             
         consignee_phone_number = RP_element.xpath('.//tr/td/div/div/div/p[2]/text()').get('')
          # 进行脱敏

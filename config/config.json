@@ -12,10 +12,10 @@
         }
     },
     "masking_intensity": {
-        "order_id": 2,
+        "order_id": 0,
         "consignee_name": 2,
         "consignee_address": 2,
         "consignee_phone_number": 2
     },
-    "export_mode": "excel"
+    "export_mode": "mysql"
 }

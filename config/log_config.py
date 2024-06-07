@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-07 11:41:33
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\main.py
+LastEditTime: 2024-06-07 11:12:52
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\log_config.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -15,10 +15,12 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
-import src.dataExporter
-from config.log_config import configure_logging
-configure_logging()
+import logging
 
-if __name__ == "__main__":
-    exporter = src.dataExporter.JDDataExporter()
-    exporter.run()
+def configure_logging():
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
