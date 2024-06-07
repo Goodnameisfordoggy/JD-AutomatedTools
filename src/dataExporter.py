@@ -24,7 +24,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-from .dataAnalysis import JDDataAnalysis
+from .orderListCapture import JDOrderListCapture
 from .dataPortector import ConfigManager
 from .data_type.Form import Form
 
@@ -109,8 +109,8 @@ class JDDataExporter:
                         self.logger.info("当前页面数据获取结束！")
                         break
                     time.sleep(2)
-                    jDDataAnalysis = JDDataAnalysis(self.__driver.page_source)
-                    form += jDDataAnalysis.filter_data(jDDataAnalysis.extract_data())
+                    orderListCapture = JDOrderListCapture(self.__driver.page_source)
+                    form += orderListCapture.filter_data(orderListCapture.extract_data())
                     self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
                 self.logger.info(f"------------d{d}结束---------------")

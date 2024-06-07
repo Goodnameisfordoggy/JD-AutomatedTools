@@ -1,10 +1,11 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-07 10:50:14
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataAnalysis.py
+LastEditTime: 2024-06-07 23:32:03
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderListCapture.py
 Description: 
-
+对订单列表页面源代码进行分析，并提取数据 / 
+Analyze the source code of the order list page and extract the data
                 *       写字楼里写字间，写字间里程序员；
                 *       程序人员写程序，又拿程序换酒钱。
                 *       酒醒只在网上坐，酒醉还来网下眠；
@@ -24,7 +25,7 @@ from .dataPortector import ConfigManager
 from .data_type.Form import Form
 
 
-class JDDataAnalysis:
+class JDOrderListCapture:
     def __init__(self, page_html_src: str):
         # 日志记录器
         self.logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class JDDataAnalysis:
         self.__result = parsel.Selector(page_html_src) 
         self.__func_dict = {
             "order_id": self.get_order_id,
+            "order_url": self.get_order_url,
             "product_name": self.get_product_name,
             "goods_number": self.get_goods_number,
             "amount": self.get_amount,
@@ -255,3 +257,9 @@ class JDDataAnalysis:
         if len(consignee_phone_number) == 11:
             masking(consignee_phone_number)
         return consignee_phone_number
+    
+    def get_order_url(self, RP_element):
+        """ 获取订单url """
+        order_url = RP_element.xpath('.//tr[@class="tr-bd"]/td/div[@class="status"]/a/@href').get('')
+        whole_url = 'https:'+ order_url
+        return whole_url
