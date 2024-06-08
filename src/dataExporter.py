@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-07 11:42:52
+LastEditTime: 2024-06-09 00:21:26
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -25,6 +25,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 from .orderListCapture import JDOrderListCapture
+from .orderDetailsCapture import JDOrderDetailsCapture
 from .dataPortector import ConfigManager
 from .data_type.Form import Form
 
@@ -56,7 +57,7 @@ class JDDataExporter:
             self.logger.error("登录超时，请重试！")
         return False
 
-    def wait_for_element(self, duration, attribute, value):
+    def wait_for_element(self, duration, attribute, value, err_text):
         """
         等待页面元素出现，并返回该元素对象。
 
@@ -64,6 +65,7 @@ class JDDataExporter:
             duration (int): 最长等待时间（秒）。
             attribute (str): 元素属性，如 'id'、'class name'、'xpath' 等。
             value (str): 元素属性值，用于定位元素。
+            err_text (str): 错误提示文本。 
 
         Returns:
             element: 如果元素出现，则返回该元素对象；否则返回 None。
@@ -74,7 +76,10 @@ class JDDataExporter:
             if element:
                 return element
         except TimeoutException:
-            self.logger.error("超时未找到组件，请重试！")
+            if err_text:
+                self.logger.error(f'超时: {err_text}')
+            else:
+                self.logger.error("超时未找到组件，请重试！")
         return None
 
     def get_d_values(self):
@@ -102,15 +107,24 @@ class JDDataExporter:
                 while True:
                     target_url = f"https://order.jd.com/center/list.action?d={d}&s=4096&page={page}"
                     self.__driver.get(target_url)
-                    self.wait_for_element(6, By.XPATH, '//*[@id="order02"]/div[2]/table')  # 等待表单出现
+                    self.wait_for_element(6, By.XPATH, '//*[@id="order02"]/div[2]/table', '表单未出现！')  # 等待表单出现
                     # 获取结束标志
-                    finish_tip = self.wait_for_element(3, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5')
+                    finish_tip = self.wait_for_element(3, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5', '结束标志未出现！')
                     if finish_tip:
                         self.logger.info("当前页面数据获取结束！")
                         break
                     time.sleep(2)
                     orderListCapture = JDOrderListCapture(self.__driver.page_source)
+                    orderDetailsCapture = JDOrderDetailsCapture()
                     form += orderListCapture.filter_data(orderListCapture.extract_data())
+                    if any(header in orderDetailsCapture.header_owned for header in self.__config['header']):
+                        for order in form:
+                            order_url = order.get('order_url', '')
+                            print(order_url)
+                            if order_url:
+                                orderDetailsCapture = JDOrderDetailsCapture(order_url, self.__driver)
+                                new_data = orderDetailsCapture.extract_data()
+                                order = {**order, **new_data}
                     self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
                 self.logger.info(f"------------d{d}结束---------------")

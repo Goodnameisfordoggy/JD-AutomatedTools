@@ -12,5 +12,6 @@ if __name__ == "__main__":
     data = extractor.extract_data()
     filtered_data = extractor.filter_data(data)
     print()
-    print(filtered_data)
-    print(data.get_by_key('order_url'))
+    # print(filtered_data)
+    for item in data.get_by_key('order_url'):
+        print(item)

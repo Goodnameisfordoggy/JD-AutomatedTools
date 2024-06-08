@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-07 23:32:03
+LastEditTime: 2024-06-08 23:15:50
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderListCapture.py
 Description: 
 对订单列表页面源代码进行分析，并提取数据 / 
@@ -45,6 +45,8 @@ class JDOrderListCapture:
             "consignee_address": self.get_consignee_address,
             "consignee_phone_number": self.get_consignee_phone_number
         }
+        self.header_owned = list(self.__func_dict.keys())
+        self.__header_needed = [header for header in self.__config.get('header', '') if header in self.header_owned]
 
     def extract_data(self):
         """ 
@@ -60,7 +62,7 @@ class JDOrderListCapture:
         form = Form()   # 表数据
         for tbody in tbodys:
             row = {}    # 行数据，一个字典存一个订单全部数据 
-            for item in self.__config['header']:
+            for item in self.__header_needed:
                 try: 
                     row[item] = self.__func_dict.get(item)(tbody)
                 except TypeError:
@@ -260,6 +262,7 @@ class JDOrderListCapture:
     
     def get_order_url(self, RP_element):
         """ 获取订单url """
-        order_url = RP_element.xpath('.//tr[@class="tr-bd"]/td/div[@class="status"]/a/@href').get('')
-        whole_url = 'https:'+ order_url
-        return whole_url
+        order_url = RP_element.xpath('.//tr[@class="tr-bd"]/td/div[@class="status"]/a[text()="订单详情"]/@href').get('')
+        if order_url:
+            whole_url = 'https:'+ order_url
+            return whole_url

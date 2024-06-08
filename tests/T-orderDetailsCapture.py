@@ -6,4 +6,6 @@ from src.orderDetailsCapture import JDOrderDetailsCapture
 
 if __name__ == '__main__':
     orderDetailsCapture = JDOrderDetailsCapture()
-    orderDetailsCapture.get()
+    # orderDetailsCapture.get()
+    orderDetailsCapture.extract_data()
+    # print(orderDetailsCapture.get_courier_services_company())

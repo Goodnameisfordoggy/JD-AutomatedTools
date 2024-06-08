@@ -5,6 +5,14 @@
             "width": "14"
         },
         {
+            "name": "shop_name",
+            "width": "20"
+        },
+        {
+            "name": "product_id",
+            "width": "20"
+        },
+        {
             "name": "product_name",
             "width": "39"
         },
@@ -17,12 +25,24 @@
             "width": "13"
         },
         {
+            "name": "jingdou",
+            "width": "6"
+        },
+        {
             "name": "order_time",
             "width": "25"
         },
         {
             "name": "order_status",
             "width": "8"
+        },
+        {
+            "name": "courier_services_company",
+            "width": "10"
+        },
+        {
+            "name": "courier_number",
+            "width": "20"
         },
         {
             "name": "consignee_name",
@@ -35,6 +55,10 @@
         {
             "name": "consignee_phone_number",
             "width": "22"
+        },
+        {
+            "name": "order_url",
+            "width": "30"
         }
     ]
 }
