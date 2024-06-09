@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-09 00:21:26
+LastEditTime: 2024-06-09 22:13:24
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -42,6 +42,8 @@ class JDDataExporter:
         self.__chrome_options.add_argument('--start-maximized')  # 最大化浏览器
         self.__chrome_options.add_argument('--disable-infobars')  # 禁用信息栏
         self.__driver = webdriver.Chrome(options=self.__chrome_options)
+
+        self.__need_details = False
 
     def wait_for_loading(self) -> bool:
         """等待用户登录"""
@@ -97,10 +99,12 @@ class JDDataExporter:
 
     def fetch_data(self):
         """ 从网页获取所需数据 """
+        orderDetailsCapture = JDOrderDetailsCapture()
+        # 判断是否需要进一步抓取
+        self.__need_details = any(header in orderDetailsCapture.header_owned for header in self.__config['header'])
         form = Form()
         url_login = "https://passport.jd.com/new/login.aspx"
         self.__driver.get(url_login)
-
         if self.wait_for_loading():
             for d in self.get_d_values():
                 page = 1
@@ -113,18 +117,18 @@ class JDDataExporter:
                     if finish_tip:
                         self.logger.info("当前页面数据获取结束！")
                         break
-                    time.sleep(2)
+                    # time.sleep(2)
                     orderListCapture = JDOrderListCapture(self.__driver.page_source)
-                    orderDetailsCapture = JDOrderDetailsCapture()
-                    form += orderListCapture.filter_data(orderListCapture.extract_data())
-                    if any(header in orderDetailsCapture.header_owned for header in self.__config['header']):
-                        for order in form:
+                    new_form = orderListCapture.filter_data(orderListCapture.extract_data())
+                    if self.__need_details:
+                        for order in new_form:
                             order_url = order.get('order_url', '')
-                            print(order_url)
                             if order_url:
                                 orderDetailsCapture = JDOrderDetailsCapture(order_url, self.__driver)
                                 new_data = orderDetailsCapture.extract_data()
                                 order = {**order, **new_data}
+                                print(order)
+                    form += new_form  # 将新的一页数据添加到from
                     self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
                 self.logger.info(f"------------d{d}结束---------------")

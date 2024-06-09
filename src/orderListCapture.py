@@ -62,7 +62,7 @@ class JDOrderListCapture:
         form = Form()   # 表数据
         for tbody in tbodys:
             row = {}    # 行数据，一个字典存一个订单全部数据 
-            for item in self.__header_needed:
+            for item in self.header_owned:
                 try: 
                     row[item] = self.__func_dict.get(item)(tbody)
                 except TypeError:
