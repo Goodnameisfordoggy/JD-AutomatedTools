@@ -1,3 +1,20 @@
+'''
+Author: HDJ
+StartDate: please fill in
+LastEditTime: 2024-06-11 00:08:35
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderDetailsCapture.py
+Description: 
+
+				*		写字楼里写字间，写字间里程序员；
+				*		程序人员写程序，又拿程序换酒钱。
+				*		酒醒只在网上坐，酒醉还来网下眠；
+				*		酒醉酒醒日复日，网上网下年复年。
+				*		但愿老死电脑间，不愿鞠躬老板前；
+				*		奔驰宝马贵者趣，公交自行程序员。
+				*		别人笑我忒疯癫，我笑自己命太贱；
+				*		不见满街漂亮妹，哪个归得程序员？    
+Copyright (c) 2024 by HDJ, All Rights Reserved. 
+'''
 import re
 import logging
 from selenium import webdriver
@@ -52,7 +69,7 @@ class JDOrderDetailsCapture:
                 row[item] = self.__func_dict.get(item)()
             except TypeError:
                     row[item] = '暂无'
-        print(row)
+        # print(row)
         return row
     
     def get_order_type(self):
@@ -160,7 +177,7 @@ class JDOrderDetailsCapture:
             match1 = re.search(r'国际物流承运方：(.*?)\s*货运单号：(.*?)(\n|$)', element.text)
             match2 = re.search(r'国内物流承运方：(.*?)\s*货运单号：(.*?)(点击查询|\n|$)', element.text)
             if match1 and match2:
-                return match1.group(2).strip() + ' | ' + match2.group(2).strip()
+                return masking(match1.group(2).strip()) + ' | ' + masking(match2.group(2).strip())
             elif match2:
-                return match2.group(2).strip()
+                return masking(match2.group(2).strip())
                 

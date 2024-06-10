@@ -23,6 +23,8 @@
 ## 功能说明
 - 该项目是一个本地自动化工具，用于导出京东个人账户的订单信息。
 
+#### 注意事项
+保持网络通常，如遇到页面卡死，丢失，访问失败导致程序异常退出，请重启程序。
 
 ## 使用说明
 下载解压项目压缩包后按照以下说明进行
@@ -55,11 +57,16 @@
     |可选项|信息类型|
     |---|---|
     order_id|订单号
+    shop_name|店铺名称
+    product_id|商品编号
     product_name|商品名称
     goods_number|商品数量
     amount|总金额(实付)
+    jingdou|订单返京豆数量
     order_time|下单时间
     order_status|订单状态
+    courier_services_company|物流公司/快递名称
+    courier_number|快递单号
     consignee_name|收件人姓名
     consignee_address|收货地址
     consignee_phone_number|收件人联系方式(该信息源已脱敏)
@@ -106,6 +113,8 @@
     mysql-connector-python|8.4.0
   
 # Update log
+- 1.8.7: 优化了从订单详情获取数据的部分方法(添加脱敏(覆盖)，正则优化)。
+- 1.8.6：新增了部分数据信息的获取，导出。
 - 1.7.6：为所有模块添加了简单的日志记录，使用全局配置管理。
 - 1.6.6: 补齐了所有模块对应的test文件。
 - 1.6.5: 添加了英文的README文件。
