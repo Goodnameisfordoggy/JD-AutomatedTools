@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-07 11:32:19
+LastEditTime: 2024-06-10 21:58:56
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -35,10 +35,48 @@ class ExcelStorage:
         # 获取配置文件
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_excel_config()
-        # 设置生成文件的文件名
-        self.__file_name = file_name
-        self.__sheet_name = 'Sheet1'
-        self.__existent_order_id = None
+        
+        self.__file_name = file_name # 设置生成文件的文件名
+        self.__sheet_name = 'Sheet1' # 设置生成的工作簿名
+        self.__existent_order_id = None # 现有表中的id
+        self.__output_fields = self.__define_output_fields()
+    
+    def __define_output_fields(self):
+        """ 
+        定义输出字段组合：
+
+        筛除未定义的字段名。
+
+        Return: (list) 处理后的字段名称列表。
+        """
+        field_items = self.__config.get('header_items', '') 
+        self.logger.debug(f'field_items: {field_items}\n')
+
+        all_fields_name = [field.get('name', '') for field in field_items] # 全部已定义字段的名称
+        self.logger.debug(f'all_fields_name: {all_fields_name}\n')
+
+        try:
+            self.__header_needed.remove('order_url')
+        except ValueError:
+            pass
+        # 保证表中有order_id，作为订单唯一性标志
+        if 'order_id' not in self.__header_needed:
+            self.__header_needed = ['order_id'] + self.__header_needed
+        # 筛除未定义的字段名
+        self.__header_needed = [item for item in self.__header_needed if item in all_fields_name]
+        self.logger.debug(f'__header_needed: {self.__header_needed}\n')
+        
+        # 收集不需要的字段名
+        # fields_not_needed = [item for item in all_field if item not in self.__header_needed]
+
+        field_items_sorted = []
+        # 重新排序field_items
+        for name in self.__header_needed:
+            for item in field_items:
+                if item.get('name', '') == name:
+                    field_items_sorted.append(item)
+        self.logger.debug(f'field_items_sorted: {field_items_sorted}\n')
+        return [item.get('name', '') for item in field_items_sorted]
     
     def is_file_exists(self):
         if os.path.exists(self.__file_name):
@@ -65,7 +103,7 @@ class ExcelStorage:
         sheet.title = self.__sheet_name
         
         # 写入列名
-        sheet.append(self.__header_needed)
+        sheet.append(self.__output_fields)
         # 保存工作簿
         workbook.save(self.__file_name)
         self.logger.info(f"新文件 '{self.__file_name}' 创建成功。")
@@ -83,7 +121,7 @@ class ExcelStorage:
                 
             # 保存工作簿
             workbook.save(self.__file_name)
-            self.logger.info(f"数据成功添加到 {self.__file_name}")
+            self.logger.info(f"数据成功添加到 '{self.__file_name}'")
         except FileNotFoundError:
             pass
         except PermissionError as e:
@@ -100,7 +138,7 @@ class ExcelStorage:
             uppercase_letters = [letter for letter in string.ascii_uppercase]  # 大写字母A~Z，用于表头设置
             index = 0
             default_width = 16
-            for header in self.__header_needed:  # 获取用户选择的表头名称
+            for header in self.__output_fields:  # 获取用户选择的表头名称
                 for header_item in self.__config['header_items']:  # 获取该表头的信息
                     if header_item['name'] == header:
                         # 设置表头宽度
@@ -126,14 +164,12 @@ class ExcelStorage:
             # 获取表中order_id字段下的所有值
             self.__existent_order_id = df['order_id'].tolist()
             self.__data = [order for order in self.__data if int(order.get('order_id')) not in self.__existent_order_id]
-            # print(self.__existent_order_id)
-            # print(self.__data)
 
         try:
             if self.__data:
                 if not self.is_file_locked():
                     # 创建DataFrame
-                    df = pd.DataFrame(self.__data, columns=self.__header_needed)
+                    df = pd.DataFrame(self.__data, columns=self.__output_fields)
                     self.append_to_excel(df)
                     # 设置Excel文件列宽
                     self.adjust_column_width()

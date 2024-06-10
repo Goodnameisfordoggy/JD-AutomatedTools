@@ -16,8 +16,6 @@ class JDOrderDetailsCapture:
         self.logger = logging.getLogger(__name__)
 
         self.__url = url
-        # self.__url = r'https://details.jd.com/normal/item.action?orderid=296415319787&PassKey=4CF1EE7A07BCD7C14F282E87984C8008'
-        # self.__url = r"https://home.jd.hk/order.html?orderId=293749423277"
         self.__driver = driver            
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_config() # 获取配置文件
@@ -47,15 +45,14 @@ class JDOrderDetailsCapture:
         Returns: 
             返回一个数据表 form (Form)
         """
-        form = Form()   # 表数据
         row = {}    # 行数据，一个字典存一个订单全部数据 
         self.get_order_type()
-        for item in self.header_owned:
+        for item in self.__header_needed:
             try:
                 row[item] = self.__func_dict.get(item)()
             except TypeError:
                     row[item] = '暂无'
-        # print(row)
+        print(row)
         return row
     
     def get_order_type(self):
@@ -75,7 +72,6 @@ class JDOrderDetailsCapture:
             pass
         except Exception as e:
             self.logger.error(f'订单类型获取失败：{e}')
-        # print(self.__order_type)
 
     def get_shop_name(self):
         """ 获取店铺名称 """
@@ -95,7 +91,7 @@ class JDOrderDetailsCapture:
             except NoSuchElementException:
                 return "NULL"
         elif self.__order_type == '京东国际':
-            return 'NULL'
+            return None
         
     def get_jingdou(self):
         """ 获取订单返京豆数量 """
@@ -104,40 +100,67 @@ class JDOrderDetailsCapture:
                 element = self.__driver.find_element(By.XPATH, '//*[@id="container"]/div[2]/div/div[5]/div[2]/div[1]/table/tbody/tr[1]/td[contains(@id,"jingdou")]')
                 return element.text
             except NoSuchElementException:
-                return "NULL"
+                return -99999
         elif self.__order_type == '京东国际':
-            return 'NULL'
+            return None
 
     def get_courier_services_company(self):
         """ 获取物流公司 """
         if self.__order_type == '普通订单':
             try:
-                element = self.__driver.find_element(By.CLASS_NAME, 'p-info')
-                match = re.search(r'承运人：(.*?)快递', element.text)
-                if match:
-                    return match.group(1) + '快递'
+                element = self.__driver.find_elements(By.CLASS_NAME, 'p-info')[0]
             except NoSuchElementException:
                 return "NULL"
+            match = re.search(r'承运人：(.*?)(快递咨询|包裹|\n|$)', element.text)
+            if match:
+                return match.group(1)
         elif self.__order_type == '京东国际':
-            return '京东快递'
+            try:
+                element = self.__driver.find_element(By.CLASS_NAME, 'eps-process')
+            except NoSuchElementException:
+                return "NULL"
+            match1 = re.search(r'国际物流承运方：(.*?)\s*货运单号：(.*?)(\n|$)', element.text)
+            match2 = re.search(r'国内物流承运方：(.*?)\s*货运单号：(.*?)(点击查询|\n|$)', element.text)
+            if match1 and match2:
+                return match1.group(1).strip() + ' | ' + match2.group(1).strip()
+            elif match2:
+                return match2.group(1).strip()
     
     def get_courier_number(self):
         """ 获取快递单号 """
+
+        def masking(data):
+            """ 快递单号覆盖脱敏 """
+            masking_intensity = self.__config.get('masking_intensity').get('courier_number', 2)
+            try: 
+                if masking_intensity == 0:
+                    return data
+                elif masking_intensity == 1:
+                    return data[:4] + '*' * (len(data) - 8) + data[-4:]
+                elif masking_intensity == 2:
+                    return '*' * (len(data) - 4) + data[-4:]
+                else:
+                    raise ValueError
+            except ValueError:
+                self.logger.warning('请选择正确的覆盖脱敏强度！')
+
         if self.__order_type == '普通订单':
             try:
-                element = self.__driver.find_element(By.CLASS_NAME, 'p-info')
-                match  = re.search(r'货运单号：(\b[A-Za-z0-9]+\b)', element.text)
-                if match:
-                    return match.group(1)
+                element = self.__driver.find_elements(By.CLASS_NAME, 'p-info')[0]
             except NoSuchElementException:
                 return "NULL"
+            match  = re.search(r'货运单号：(\b[A-Za-z0-9]+\b)', element.text)
+            if match:
+                return masking(match.group(1))
         elif self.__order_type == '京东国际':
             try:
-                elements = self.__driver.find_elements(By.CLASS_NAME, 'black')
-                if len(elements) == 2:
-                    return elements[1].text
-                elif len(elements) == 4:
-                    return elements[3].text
+                element = self.__driver.find_element(By.CLASS_NAME, 'eps-process')
             except NoSuchElementException:
                 return "NULL"
-                    
+            match1 = re.search(r'国际物流承运方：(.*?)\s*货运单号：(.*?)(\n|$)', element.text)
+            match2 = re.search(r'国内物流承运方：(.*?)\s*货运单号：(.*?)(点击查询|\n|$)', element.text)
+            if match1 and match2:
+                return match1.group(2).strip() + ' | ' + match2.group(2).strip()
+            elif match2:
+                return match2.group(2).strip()
+                

@@ -6,6 +6,16 @@
             "length": 12
         },
         {
+            "name": "shop_name",
+            "type": "varchar",
+            "length": 20
+        },
+        {
+            "name": "product_id",
+            "type": "varchar",
+            "length": 16
+        },
+        {
             "name": "product_name",
             "type": "varchar",
             "length": 500
@@ -22,6 +32,10 @@
             "decimal_places": 2
         },
         {
+            "name": "jingdou",
+            "type": "int"
+        },
+        {
             "name": "order_time",
             "type": "datetime",
             "length": null
@@ -29,7 +43,17 @@
         {
             "name": "order_status",
             "type": "varchar",
-            "length": "6"
+            "length": "10"
+        },
+        {
+            "name": "courier_services_company",
+            "type": "varchar",
+            "length": "10"
+        },
+        {
+            "name": "courier_number",
+            "type": "varchar",
+            "length": "18"
         },
         {
             "name": "consignee_name",
@@ -45,6 +69,11 @@
             "name": "consignee_phone_number",
             "type": "varchar",
             "length": "11"
+        },
+        {
+            "name": "order_url",
+            "type": "varchar",
+            "length": 300
         }
     ]
 }

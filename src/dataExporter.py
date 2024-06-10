@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-09 22:13:24
+LastEditTime: 2024-06-10 22:06:39
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -100,7 +100,7 @@ class JDDataExporter:
     def fetch_data(self):
         """ 从网页获取所需数据 """
         orderDetailsCapture = JDOrderDetailsCapture()
-        # 判断是否需要进一步抓取
+        # 判断是否需要进一步获取
         self.__need_details = any(header in orderDetailsCapture.header_owned for header in self.__config['header'])
         form = Form()
         url_login = "https://passport.jd.com/new/login.aspx"
@@ -111,23 +111,28 @@ class JDDataExporter:
                 while True:
                     target_url = f"https://order.jd.com/center/list.action?d={d}&s=4096&page={page}"
                     self.__driver.get(target_url)
-                    self.wait_for_element(6, By.XPATH, '//*[@id="order02"]/div[2]/table', '表单未出现！')  # 等待表单出现
+                    self.wait_for_element(3, By.XPATH, '//*[@id="order02"]/div[2]/table', '表单未出现！')  # 等待表单出现
                     # 获取结束标志
-                    finish_tip = self.wait_for_element(3, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5', '结束标志未出现！')
+                    finish_tip = self.wait_for_element(2, By.XPATH, '//*[@id="order02"]/div[2]/div[2]/div/h5', '结束标志未出现！')
                     if finish_tip:
-                        self.logger.info("当前页面数据获取结束！")
+                        self.logger.info("当前时段数据获取结束！")
                         break
                     # time.sleep(2)
                     orderListCapture = JDOrderListCapture(self.__driver.page_source)
-                    new_form = orderListCapture.filter_data(orderListCapture.extract_data())
+                    level_1_data = orderListCapture.filter_data(orderListCapture.extract_data()) # 订单列表中一页订单的数据
+                    new_form = Form() # 用来储存一页订单数据
+                
                     if self.__need_details:
-                        for order in new_form:
-                            order_url = order.get('order_url', '')
+                        # 进一步获取数据
+                        for order_data in level_1_data:
+                            order_url = order_data.get('order_url', '')
                             if order_url:
                                 orderDetailsCapture = JDOrderDetailsCapture(order_url, self.__driver)
-                                new_data = orderDetailsCapture.extract_data()
-                                order = {**order, **new_data}
-                                print(order)
+                                level_2_data = orderDetailsCapture.extract_data() # 一个订单更详细的数据
+                                new_order_data = {**order_data, **level_2_data} # 将两次获取到的数据整合到一起
+                                new_form.append(new_order_data)
+                    else:
+                        new_form = level_1_data
                     form += new_form  # 将新的一页数据添加到from
                     self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
@@ -140,13 +145,14 @@ class JDDataExporter:
 
     def run(self):
         form = self.fetch_data()
-        if form:
-            if self.__config.get('export_mode') == 'excel':
-                form.save_to_excel(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
-            elif self.__config.get('export_mode') == 'mysql':
-                form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')
+        try:
+            if form:
+                if self.__config.get('export_mode') == 'excel':
+                    form.save_to_excel(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
+                elif self.__config.get('export_mode') == 'mysql':
+                    form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')            
+        except Exception as err:
+            self.logger.error(f'run error: {err}')
+        finally:
             self.close()
-        else:
-            self.close()
-            return
 

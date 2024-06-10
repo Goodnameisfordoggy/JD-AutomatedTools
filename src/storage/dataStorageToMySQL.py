@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-07 10:51:54
+LastEditTime: 2024-06-10 21:59:12
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
 Description: 
 
@@ -39,6 +39,44 @@ class MySQLStorange():
         self.__table_name = table_name 
         self.__existent_order_id = None
 
+    def define_output_fields(self):
+        """ 
+        定义输出字段组合：
+
+        筛除未定义的字段名，将不需要的字段名置于末尾。
+
+        Return: (list) 处理后的字段信息列表。
+        """
+        field_items = self.__config.get('field_items', '') 
+        self.logger.debug(f'field_items: {field_items}\n')
+
+        all_fields_name = [field.get('name', '') for field in field_items] # 全部已定义字段的名称
+        self.logger.debug(f'all_fields_name: {all_fields_name}\n')
+
+        try:
+            self.__fields_needed.remove('order_url')
+        except ValueError:
+            pass
+        # 保证数据表中有主键order_id
+        if 'order_id' not in self.__fields_needed:
+            self.__fields_needed = ['order_id'] + self.__fields_needed
+        # 筛除未定义的字段名
+        self.__fields_needed = [item for item in self.__fields_needed if item in all_fields_name]
+        self.logger.debug(f'__header_needed: {self.__header_needed}\n')
+
+        # 收集不需要的字段名
+        fields_not_needed = [item for item in all_fields_name if item not in self.__fields_needed]
+        self.logger.debug(f'fields_not_needed: {fields_not_needed}\n')
+
+        field_items_sorted = []
+        # 重新排序field_items
+        for name in self.__fields_needed + fields_not_needed:
+            for item in field_items:
+                if item.get('name', '') == name:
+                    field_items_sorted.append(item)
+        self.logger.debug(f'field_items_sorted: {field_items_sorted}\n')
+        return field_items_sorted
+    
     def table_exists(self, cursor):
         """检查表是否存在"""
         try:
@@ -56,9 +94,10 @@ class MySQLStorange():
 
     def creat_table(self, cursor):
         """ 创建表,包含全部字段 """
-        field_items = self.__config.get('field_items', '')
+        
         field_definitions = []
-        for item in field_items:
+        # 每个字段的定义
+        for item in self.define_output_fields(): # 建表时，不需要的字段会置于尾部
             field_name = item['name']
             field_type = item['type']
             if field_type == "varchar":
@@ -70,8 +109,8 @@ class MySQLStorange():
                 field_definitions.append(f"{field_name} {field_type}({field_length}, {decimal_places})")
             else: # 普通类型
                 field_definitions.append(f"{field_name} {field_type}")
-
         fields = ", ".join(field_definitions) # sql字段创建部分
+        
         try:
             cursor.execute(f"""
                 CREATE TABLE {self.__table_name} (
@@ -93,10 +132,10 @@ class MySQLStorange():
         order_id_list = []
         try:
             cursor.execute(f"SELECT order_id FROM {self.__table_name}")
-            results = cursor.fetchall()
+            # results = cursor.fetchall()
         except mysql.connector.Error as err:
             self.logger.error(f"order_id获取失败: {err}")
-        for result in results:
+        for result in cursor.fetchall():
             order_id_list.append(result[0])
         return order_id_list
     
@@ -108,9 +147,8 @@ class MySQLStorange():
         field_names = ", ".join(field_items)  # sql字段名部分
         placeholders = ", ".join(["%s"] * len(field_items))  # sql占位符部分
         values = tuple(order.get(field, None) for field in field_items)  # sql插入值部分
-        # print(values)
-        # print("字段数量:", len(field_items))
-        # print("参数数量:", len(values))
+        self.logger.debug("Values: %s", values)
+        self.logger.debug("字段数量: %d, 参数数量: %d", len(field_items), len(values))
         try:
             cursor.execute(f"""
                 INSERT INTO {self.__table_name} 
