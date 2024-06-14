@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-07 11:34:32
+LastEditTime: 2024-06-13 15:28:54
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataPortector.py
 Description: 
 
@@ -54,24 +54,45 @@ class ConfigManager:
         try:
             with open(self.__config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
+        except FileNotFoundError:
+            self.logger.error(f"配置文件 {self.__config_file} 不存在")
+            return {}
         except json.decoder.JSONDecodeError as err:
             self.logger.error(f"配置文件加载失败: {err}")
+            return {}
+    
+    def save_config(self, config_dict):
+        """ 保存配置文件 """
+        try:
+            with open(self.__config_file, 'w', encoding='utf-8') as f:
+                json.dump(config_dict, f, indent=4, ensure_ascii=False)
+            self.logger.info(f"配置文件 {self.__config_file} 已更新")
+        except Exception as e:
+            self.logger.error(f"配置文件 {self.__config_file} 保存失败: {e}")
     
     def __load_excel_config(self):
         """ 加载配置文件 """
         try:
             with open(self.__excel_config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
+        except FileNotFoundError:
+            self.logger.error(f"配置文件 {self.__excel_config_file} 不存在")
+            return {}
         except json.decoder.JSONDecodeError as err:
             self.logger.error(f"配置文件加载失败: {err}")
+            return {}
     
     def __load_mysql_config(self):
         """ 加载配置文件 """
         try:
             with open(self.__mysql_config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
+        except FileNotFoundError:
+            self.logger.error(f"配置文件 {self.__mysql_config_file} 不存在")
+            return {}
         except json.decoder.JSONDecodeError as err:
             self.logger.error(f"配置文件加载失败: {err}")
+            return {}
     
 
     def __init_date_range_dict(self):

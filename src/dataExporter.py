@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-10 22:06:39
+LastEditTime: 2024-06-13 18:33:58
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -143,13 +143,16 @@ class JDDataExporter:
         time.sleep(1)
         self.__driver.quit()
 
-    def run(self):
+    def run(self, export_mode: str | None = None):
+        mode = self.__config.get('export_mode') # 不传参使用配置文件
+        if export_mode: 
+            mode = export_mode
         form = self.fetch_data()
         try:
             if form:
-                if self.__config.get('export_mode') == 'excel':
+                if mode == 'excel':
                     form.save_to_excel(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order.xlsx')
-                elif self.__config.get('export_mode') == 'mysql':
+                elif mode == 'mysql':
                     form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')            
         except Exception as err:
             self.logger.error(f'run error: {err}')

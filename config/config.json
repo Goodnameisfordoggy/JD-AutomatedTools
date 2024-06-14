@@ -1,15 +1,26 @@
 {
-    "user_name": "Goodnameisfordoggy",
-    "date_range": [""],
+    "user_name": "1",
+    "date_range": "近三个月订单",
     "header": [
-        "order_id", "shop_name", "product_id", "product_name", "goods_number", 
-        "amount", "jingdou", "order_time", "order_status", "courier_services_company", 
-        "courier_number", "consignee_name", "consignee_address", "consignee_phone_number", 
-        "order_url"],
+        "order_id",
+        "shop_name",
+        "product_id",
+        "product_name",
+        "goods_number",
+        "amount",
+        "jingdou",
+        "order_time",
+        "order_status",
+        "courier_services_company",
+        "courier_number",
+        "consignee_name",
+        "consignee_address",
+        "consignee_phone_number"
+    ],
     "filter_config": {
-        "去除券(包)类订单": true,
-        "去除权益类订单": true,
-        "筛选已完成订单": false,
+        "去除券(包)类订单": false,
+        "去除权益类订单": false,
+        "筛选已完成订单": true,
         "自定义筛选": {
             "header_item": "",
             "keyword": []
