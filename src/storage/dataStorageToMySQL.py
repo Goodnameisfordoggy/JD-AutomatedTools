@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-10 21:59:12
+LastEditTime: 2024-06-15 16:13:09
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
 Description: 
 
@@ -34,9 +34,12 @@ class MySQLStorange():
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_mysql_config()
         # 连接的库名
-        self.__database_name = DatabaseManager.get_user().get('database')
+        self.__database_name = DatabaseManager.get_user_info().get('database')
         # 设置生成表的表名
-        self.__table_name = table_name 
+        if table_name:
+            self.__table_name = table_name 
+        else:
+            self.__table_name = 'JD_order_info'
         self.__existent_order_id = None
 
     def define_output_fields(self):
@@ -62,7 +65,7 @@ class MySQLStorange():
             self.__fields_needed = ['order_id'] + self.__fields_needed
         # 筛除未定义的字段名
         self.__fields_needed = [item for item in self.__fields_needed if item in all_fields_name]
-        self.logger.debug(f'__header_needed: {self.__header_needed}\n')
+        self.logger.debug(f'__fields_needed: {self.__fields_needed}\n')
 
         # 收集不需要的字段名
         fields_not_needed = [item for item in all_fields_name if item not in self.__fields_needed]
@@ -158,11 +161,11 @@ class MySQLStorange():
         except mysql.connector.Error as err:
             self.logger.error(f"数据插入失败: {err}")
 
-    def save(self):
+    def save(self, **kwargs):
         """ 
         数据储存 
         """
-        with DatabaseManager() as db_m:
+        with DatabaseManager(**kwargs) as db_m:
             cursor =db_m.connection.cursor()
             # 检测所选表是否存在，否则创建新表        
             if not self.table_exists(cursor):

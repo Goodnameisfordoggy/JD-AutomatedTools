@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-10 21:58:56
+LastEditTime: 2024-06-15 15:32:15
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -35,8 +35,10 @@ class ExcelStorage:
         # 获取配置文件
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_excel_config()
-        
-        self.__file_name = file_name # 设置生成文件的文件名
+        if file_name:
+            self.__file_name = file_name # 设置生成文件的文件名
+        else:
+            self.__file_name = 'JD_order_info.xlsx'
         self.__sheet_name = 'Sheet1' # 设置生成的工作簿名
         self.__existent_order_id = None # 现有表中的id
         self.__output_fields = self.__define_output_fields()
@@ -163,7 +165,7 @@ class ExcelStorage:
             df = pd.read_excel(self.__file_name, sheet_name=self.__sheet_name, engine='openpyxl')
             # 获取表中order_id字段下的所有值
             self.__existent_order_id = df['order_id'].tolist()
-            self.__data = [order for order in self.__data if int(order.get('order_id')) not in self.__existent_order_id]
+            self.__data = [order for order in self.__data if order.get('order_id') not in self.__existent_order_id]
 
         try:
             if self.__data:

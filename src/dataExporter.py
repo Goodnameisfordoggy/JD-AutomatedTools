@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-13 18:33:58
+LastEditTime: 2024-06-15 15:39:17
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -139,7 +139,7 @@ class JDDataExporter:
                 self.logger.info(f"------------d{d}结束---------------")
         return form
 
-    def close(self):
+    def __close(self):
         time.sleep(1)
         self.__driver.quit()
 
@@ -157,5 +157,5 @@ class JDDataExporter:
         except Exception as err:
             self.logger.error(f'run error: {err}')
         finally:
-            self.close()
+            self.__close()
 

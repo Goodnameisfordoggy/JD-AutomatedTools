@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-07 11:14:17
+LastEditTime: 2024-06-15 22:52:45
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\databaseManager.py
 Description: 
 
@@ -15,24 +15,37 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import os
 import logging
 import configparser
 import mysql.connector
 
+WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 日志记录器
         self.logger = logging.getLogger(__name__)
         
         # 获取配置文件
-        self.__uer = self.get_user()
+        self.__user_info = self.get_user_info()
+
+        # 使用kwargs中的参数覆盖配置文件中的配置信息
+        if kwargs:
+            if 'host' in kwargs:
+                self.__user_info.update(host=kwargs['host'])
+            if 'user' in kwargs:
+                self.__user_info.update(user=kwargs['user'])
+            if 'password' in kwargs:
+                self.__user_info.update(password=kwargs['password'])
+            if 'database' in kwargs:
+                self.__user_info.update(database=kwargs['database'])
         self.connection = None
     
     @staticmethod
-    def get_user():
+    def get_user_info():
         config = configparser.ConfigParser()
-        config.read('config/mysql_user.ini')
+        config.read(os.path.join(WORKING_DIRECTORY_PATH, 'config/mysql_user.ini'))
         return {
             'host': config['mysql']['host'],
             'user': config['mysql']['user'],
@@ -44,10 +57,10 @@ class DatabaseManager:
         """连接到MySQL数据库"""
         try:
             self.connection = mysql.connector.connect(
-            host=self.__uer.get('host', ''),
-            user=self.__uer.get('user', ''),
-            password=self.__uer.get('password', ''),
-            database=self.__uer.get('database', '')
+            host=self.__user_info.get('host', ''),
+            user=self.__user_info.get('user', ''),
+            password=self.__user_info.get('password', ''),
+            database=self.__user_info.get('database', '')
             )
             if self.connection.is_connected():
                 self.logger.info("数据库连接成功")

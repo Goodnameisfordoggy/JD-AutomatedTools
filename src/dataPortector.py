@@ -15,18 +15,20 @@ Description:
                 *       不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import os
 import json
 import logging
 
+WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class ConfigManager:
     def __init__(self):
         # 日志记录器
         self.logger = logging.getLogger(__name__)
         
-        self.__config_file = "config/config.json"
-        self.__excel_config_file = "config/excel_config.json"
-        self.__mysql_config_file = "config/mysql_config.json"
+        self.__config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/config.json")
+        self.__excel_config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/excel_config.json")
+        self.__mysql_config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/mysql_config.json")
 
         self.__config = self.__load_config()
         self.__excel_config = self.__load_excel_config()

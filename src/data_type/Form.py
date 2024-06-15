@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-07 11:40:09
+LastEditTime: 2024-06-15 16:10:01
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\data_type\Form.py
 Description: 
 
@@ -48,7 +48,7 @@ class Form(list):
         excelStorage.save()
         self.logger.info('Excel文件已生成, 请于项目目录内查看')
 
-    def save_to_mysql(self, fields_needed: list, table_name: str):
+    def save_to_mysql(self, fields_needed: list, table_name: str, **kwargs):
         mysqlStorage = MySQLStorange(self, fields_needed, table_name)
-        mysqlStorage.save()
+        mysqlStorage.save(**kwargs)
         self.logger.info('数据已存入MySQL服务器, 请查看')
