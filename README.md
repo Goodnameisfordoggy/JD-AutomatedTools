@@ -29,11 +29,12 @@
 ## 使用说明
 
 #### webUI模式
+
 <center>
 <figure>
     <figcaption>
     填入账号昵称(必填，用于登录验证)，在两个下拉列表中选择日期跨度与需要的信息，点击按钮“开始导出”，会跳转浏览器到登录界面，正常登录即可。</figcaption>
-    <img src="image\webUI_1.png" alt="webUI_1" width="600">
+    <img src="image/webUI_1.png" alt="webUI_1" width="600">
     <figcaption>webUI主界面</figcaption>
 </figure>
 </center>
@@ -42,7 +43,7 @@
 <figure>
     <figcaption>
     订单类型筛选设置，如需变动请在点击按钮“开始导出”前进行设置。</figcaption>
-    <img src="image\webUI_2.png" alt="webUI_2" width="600">
+    <img src="image/webUI_2.png" alt="webUI_2" width="600">
     <figcaption>筛选器设置界面</figcaption>
 </figure>
 </center>
@@ -51,7 +52,7 @@
 <figure>
     <figcaption>
     脱敏(覆盖)强度选择(0：无，1：弱，2：强)，如需变动请在点击按钮“开始导出”前进行设置。</figcaption>
-    <img src="image\webUI_3.png" alt="webUI_3" width="600">
+    <img src="image/webUI_3.png" alt="webUI_3" width="600">
     <figcaption>脱敏强度设置界面</figcaption>
 </figure>
 </center>
@@ -63,7 +64,7 @@
         <p>在此界面可以预览数据，并且可以通过(1.先更改Header中的选项数量或顺序；2.再点击按钮“更改所需数据”)来修改数据预览视图。</p>
         <p>保存数据：数据预览视图所见即所得。1.选择导出方式；2.填写对应的保存设置；3.点击按钮“储存”</p>
     </figcaption>
-    <img src="image\webUI_6.png" alt="webUI_4" width="600">
+    <img src="image/webUI_6.png" alt="webUI_4" width="600">
     <figcaption>数据预览与储存界面</figcaption>
 </figure>
 </center>
@@ -72,7 +73,7 @@
 <figure>
     <figcaption>
     </figcaption>
-    <img src="image\webUI_4.png" alt="webUI_5" width="600">
+    <img src="image/webUI_4.png" alt="webUI_5" width="600">
     <figcaption>Excel储存设置界面</figcaption>
 </figure>
 </center>
@@ -81,7 +82,7 @@
 <figure>
     <figcaption>
     </figcaption>
-    <img src="image\webUI_5.png" alt="webUI_6" width="600">
+    <img src="image/webUI_5.png" alt="webUI_6" width="600">
     <figcaption>MySQL储存设置界面</figcaption>
 </figure>
 </center>
