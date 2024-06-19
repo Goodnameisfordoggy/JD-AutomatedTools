@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-08 23:15:50
+LastEditTime: 2024-06-16 15:26:31
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderListCapture.py
 Description: 
 对订单列表页面源代码进行分析，并提取数据 / 
@@ -169,8 +169,9 @@ class JDOrderListCapture:
 
     def get_amount(self, RP_element):
         """ 获取实付款金额 """
-        amount = RP_element.xpath('.//tr/td/div[@class="amount"]/span[1]/text()').get('').strip('¥')
-        return amount
+        amount_text = RP_element.xpath('.//tr/td/div[@class="amount"]/span[1]/text()').get('').strip('¥')
+        match = re.search(r'\d+\.\d+', amount_text)
+        return match.group()
 
     def get_order_time(self, RP_element):
         """ 获取下单时间 """

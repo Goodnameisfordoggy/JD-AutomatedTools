@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-15 15:39:17
+LastEditTime: 2024-06-17 00:39:19
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataExporter.py
 Description: 
 
@@ -57,6 +57,7 @@ class JDDataExporter:
                 self.logger.warning("用户名不匹配，登录失败")
         except TimeoutException:
             self.logger.error("登录超时，请重试！")
+        self.__close()
         return False
 
     def wait_for_element(self, duration, attribute, value, err_text):
@@ -137,6 +138,7 @@ class JDDataExporter:
                     self.logger.info(f"------------d{d}-page{page}结束---------------")
                     page += 1
                 self.logger.info(f"------------d{d}结束---------------")
+        self.__close()
         return form
 
     def __close(self):
@@ -156,6 +158,4 @@ class JDDataExporter:
                     form.save_to_mysql(self.__config['header'], f'{self.__config.get('user_name', '')}_JD_order')            
         except Exception as err:
             self.logger.error(f'run error: {err}')
-        finally:
-            self.__close()
 

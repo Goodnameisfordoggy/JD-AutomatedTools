@@ -19,12 +19,10 @@ import re
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 
 from .dataPortector import ConfigManager
-from .data_type.Form import Form
 
 class JDOrderDetailsCapture:
     
@@ -136,8 +134,8 @@ class JDOrderDetailsCapture:
                 element = self.__driver.find_element(By.CLASS_NAME, 'eps-process')
             except NoSuchElementException:
                 return "NULL"
-            match1 = re.search(r'国际物流承运方：(.*?)\s*货运单号：(.*?)(\n|$)', element.text)
-            match2 = re.search(r'国内物流承运方：(.*?)\s*货运单号：(.*?)(点击查询|\n|$)', element.text)
+            match1 = re.search(r'国际物流承运方：(.*?)\.*?货运单号：(.*?)(\n|$)', element.text)
+            match2 = re.search(r'国内物流承运方：(.*?)\.*?货运单号：(.*?)(点击查询|\n|$)', element.text)
             if match1 and match2:
                 return match1.group(1).strip() + ' | ' + match2.group(1).strip()
             elif match2:
@@ -174,8 +172,8 @@ class JDOrderDetailsCapture:
                 element = self.__driver.find_element(By.CLASS_NAME, 'eps-process')
             except NoSuchElementException:
                 return "NULL"
-            match1 = re.search(r'国际物流承运方：(.*?)\s*货运单号：(.*?)(\n|$)', element.text)
-            match2 = re.search(r'国内物流承运方：(.*?)\s*货运单号：(.*?)(点击查询|\n|$)', element.text)
+            match1 = re.search(r'国际物流承运方：(.*?)\.*?货运单号：(.*?)(\n|$)', element.text)
+            match2 = re.search(r'国内物流承运方：(.*?)\.*?货运单号：(.*?)(点击查询|\n|$)', element.text)
             if match1 and match2:
                 return masking(match1.group(2).strip()) + ' | ' + masking(match2.group(2).strip())
             elif match2:

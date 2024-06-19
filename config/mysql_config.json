@@ -48,12 +48,12 @@
         {
             "name": "courier_services_company",
             "type": "varchar",
-            "length": "10"
+            "length": "22"
         },
         {
             "name": "courier_number",
             "type": "varchar",
-            "length": "18"
+            "length": "36"
         },
         {
             "name": "consignee_name",

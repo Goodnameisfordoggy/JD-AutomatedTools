@@ -16,5 +16,5 @@ if __name__ == '__main__':
     orderDetailsCapture = JDOrderDetailsCapture(url=url, driver=driver)
     time.sleep(10)
     # orderDetailsCapture.get_order_type()
-    orderDetailsCapture.extract_data()
+    print(orderDetailsCapture.extract_data())
     # print(orderDetailsCapture.get_courier_services_company())

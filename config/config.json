@@ -1,6 +1,8 @@
 {
-    "user_name": " ",
-    "date_range": "近三个月订单",
+    "user_name": "abc",
+    "date_range": [
+        "近三个月订单"
+    ],
     "header": [
         "order_id",
         "shop_name",
@@ -12,10 +14,7 @@
         "order_time",
         "order_status",
         "courier_services_company",
-        "courier_number",
-        "consignee_name",
-        "consignee_address",
-        "consignee_phone_number"
+        "courier_number"
     ],
     "filter_config": {
         "去除券(包)类订单": false,

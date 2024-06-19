@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-15 15:32:15
+LastEditTime: 2024-06-16 00:42:29
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -36,9 +36,9 @@ class ExcelStorage:
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_excel_config()
         if file_name:
-            self.__file_name = file_name # 设置生成文件的文件名
+            self.__file_name = file_name + '.xlsx'# 设置生成文件的文件名
         else:
-            self.__file_name = 'JD_order_info.xlsx'
+            self.__file_name = 'JD_order_info' + '.xlsx'
         self.__sheet_name = 'Sheet1' # 设置生成的工作簿名
         self.__existent_order_id = None # 现有表中的id
         self.__output_fields = self.__define_output_fields()
@@ -85,7 +85,7 @@ class ExcelStorage:
             self.logger.info(f"Reading file: {self.__file_name}, sheet: {self.__sheet_name}")
             return True
         else:
-           self.logger.info("文件不存在, 将新建Excel文件。")
+            self.logger.info("文件不存在, 将新建Excel文件。")
 
     def is_file_locked(self):
         """检测文件是否被占用"""
@@ -113,7 +113,7 @@ class ExcelStorage:
     def append_to_excel(self, df):
         """ 在现有的 Excel 文件末尾添加新内容 """
         try:
-           # 尝试打开现有的工作簿
+            # 尝试打开现有的工作簿
             workbook = load_workbook(self.__file_name)
             sheet = workbook[self.__sheet_name]
     
@@ -130,7 +130,7 @@ class ExcelStorage:
             self.logger.error(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写权限。")
         except Exception as e:
             self.logger.critical(f"添加到Excel时发生错误: {e}")
-       
+
     def adjust_column_width(self):
         """ 调整 Excel 表头宽度 """
         try:
