@@ -3,3 +3,4 @@ parsel==1.9.1
 pandas==2.2.2
 openpyxl==3.1.2
 mysql-connector-python==8.4.0
+gradio==4.36.1
