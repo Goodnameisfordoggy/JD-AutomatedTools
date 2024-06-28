@@ -1,15 +1,16 @@
-import mysql.connector
+import os
+import platform
+import argparse
 import gradio as gr
 import pandas as pd
-import argparse
+import mysql.connector
+
+from src.data_type.Form import Form
 from src.dataExporter import JDDataExporter
 from src.dataPortector import ConfigManager
-from src.databaseManager import DatabaseManager
-from src.data_type.Form import Form
 from config.log_config import configure_logging
+from theme import PremiumBox, GorgeousBlack
 configure_logging()
-from theme import PremiumBox
-
 
 custom_css = """
 <style>
@@ -27,6 +28,7 @@ class WebUI():
     def __init__(self) -> None:
         self.configManager = ConfigManager()
         self.form = Form()
+        self.__mode = 'Light'
 
     def export(self,
         username_input,
@@ -183,29 +185,61 @@ class WebUI():
             return [False, gr.update(value=warning, interactive=True, elem_classes="warning")]
         return [True, gr.update(value=database, interactive=True, elem_classes="normal")]
     
-    # @staticmethod
-    # def validate_Table_Name(database):
-    #     """ 检查 Table Name 是否合法 """
-    #     pass
+    def get_current_theme(self):
+        """ 页面明暗主题选择 """
+        def get_system_theme():
+            system = platform.system()
+            if system == 'Darwin':  # macOS
+                return 'Dark' if 'dark' in os.popen('defaults read -g AppleInterfaceStyle').read() else 'Light'
+            elif system == 'Windows':  # Windows
+                import winreg
+                try:
+                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize') as reg_key:
+                        value, _ = winreg.QueryValueEx(reg_key, 'AppsUseLightTheme')
+                        return 'Light' if value == 1 else 'Dark'
+                except FileNotFoundError:
+                    return 'Light'
+            elif system == 'Linux':  # Linux
+                try:
+                    with open('/etc/environment', 'r') as env_file:
+                        for line in env_file:
+                            if line.startswith('GTK_THEME='):
+                                theme = line.strip().split('=')[1]
+                                return 'Dark' if 'dark' in theme.lower() else 'Light'
+                except FileNotFoundError:
+                    pass
+            return 'Light'
+        current_system_theme = get_system_theme()
+
+        if current_system_theme == 'Light':
+            current_theme = PremiumBox()
+            self.__mode = 'Light'
+        else:
+            current_theme = GorgeousBlack()
+            self.__mode = 'Dark'
+        return current_theme
     
     def build(self):
-        with gr.Blocks(title="JD-OrderDataExporter", theme=PremiumBox(), fill_height=True) as demo:
+        
+        with gr.Blocks(title="JD-OrderDataExporter", theme=self.get_current_theme(), fill_height=True) as demo:
             gr.Markdown("# JD-Order-Data-Exporter")
-            gr.Markdown(
-                """
-                <div style="display: inline-block;">
-                    <a href="https://gitee.com/goodnameisfordoggy/jd-pers-order-exporter" style="text-decoration: none; color: white;">
-                        <div style="display: inline-block; padding: 2px 5px; background-color: #FFBD2E; border-radius: 5px;">
-                            <b>[Gitee]</b> 🚀
-                        </div>
-                    </a>
-                    <a href="https://github.com/Goodnameisfordoggy/JD-PersOrderExporter" style="text-decoration: none; color: white;">
-                        <div style="display: inline-block; padding: 2px 5px; background-color: #27C93F; border-radius: 5px;">
-                            <b>[Github]</b> 🚀
-                        </div>
-                    </a>
-                </div>
-                """)
+            with gr.Row():
+                gr.Markdown(
+                    """
+                    <div style="display: inline-block;">
+                        <a href="https://gitee.com/goodnameisfordoggy/jd-pers-order-exporter" style="text-decoration: none; color: white;">
+                            <div style="display: inline-block; padding: 2px 5px; background-color: #FFBD2E; border-radius: 5px;">
+                                <b>[Gitee]</b> 🚀
+                            </div>
+                        </a>
+                        <a href="https://github.com/Goodnameisfordoggy/JD-PersOrderExporter" style="text-decoration: none; color: white;">
+                            <div style="display: inline-block; padding: 2px 5px; background-color: #27C93F; border-radius: 5px;">
+                                <b>[Github]</b> 🚀
+                            </div>
+                        </a>
+                    </div>
+                    """
+                )
             with gr.Tabs():
                 with gr.Tab(label="Basic config(基础配置)"):
                     with gr.Column():
@@ -213,7 +247,7 @@ class WebUI():
                         username_input = gr.Textbox(label="User name(账号昵称)", lines=1, placeholder="Please input user name...", elem_classes = "normal")
                         date_range_input = gr.Dropdown(
                             label="Date Range(日期跨度)",
-                            choices= ["ALL (新增)", "近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
+                            choices= ["ALL", "近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
                             value=["近三个月订单"],
                             interactive=True,
                             multiselect=True

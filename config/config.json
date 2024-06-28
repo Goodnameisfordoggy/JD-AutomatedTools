@@ -1,7 +1,7 @@
 {
-    "user_name": "abc",
+    "user_name": "Goodnameisfordoggy",
     "date_range": [
-        "近三个月订单"
+        "ALL"
     ],
     "header": [
         "order_id",
@@ -17,8 +17,8 @@
         "courier_number"
     ],
     "filter_config": {
-        "去除券(包)类订单": false,
-        "去除权益类订单": false,
+        "去除券(包)类订单": true,
+        "去除权益类订单": true,
         "筛选已完成订单": true,
         "自定义筛选": {
             "header_item": "",
