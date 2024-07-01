@@ -13,9 +13,9 @@ if __name__ == '__main__':
     driver = webdriver.Chrome(options=chrome_options)
 
     # url = r'https://home.jd.hk/order.html?orderId=293165945693'
-    url = r'https://details.jd.com/normal/item.action?orderid=291035254390&PassKey=8A6126DCDEEDE2CCD59377A19A1F112B'
+    url = r'https://details.jd.com/normal/item.action?orderid=287908025379&PassKey=B035075190D62A38BD7A92C4962B7689'
     orderDetailsCapture = JDOrderDetailsCapture(url=url, driver=driver)
     time.sleep(10)
     # orderDetailsCapture.get_order_type()
-    print(orderDetailsCapture.extract_data())
+    print(orderDetailsCapture.get())
     # print(orderDetailsCapture.get_courier_services_company())

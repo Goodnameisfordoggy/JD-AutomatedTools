@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-26 20:31:35
+LastEditTime: 2024-07-01 20:58:37
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderDetailsCapture.py
 Description: 
 
@@ -22,7 +22,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .dataPortector import ConfigManager
@@ -81,7 +81,7 @@ class JDOrderDetailsCapture:
             self.__driver.find_element(By.XPATH, '/html/body/div[@id="container"]')
             self.__order_type = '普通订单'
             find_sign = True
-        except NoSuchElementException:
+        except TimeoutException:
             pass
         except Exception as e:
             self.logger.error(f'订单类型获取失败：{e}')
@@ -90,12 +90,12 @@ class JDOrderDetailsCapture:
             self.__driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/a[@class="logo"]')
             self.__order_type = '京东国际'
             find_sign = True
-        except NoSuchElementException:
+        except TimeoutException:
             pass
         except Exception as e:
             self.logger.error(f'订单类型获取失败：{e}')
         if not find_sign:
-            self.logger.error(f'NoSuchElementException: get_order_type')
+            self.logger.error(f'TimeoutException: get_order_type')
 
     def get_shop_name(self):
         """ 获取店铺名称 """
@@ -103,8 +103,8 @@ class JDOrderDetailsCapture:
             try:
                 element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "shop-name")))
                 return element.text
-            except NoSuchElementException:
-                self.logger.error(f'NoSuchElementException: get_shop_name')
+            except TimeoutException:
+                self.logger.error(f'TimeoutException: get_shop_name')
         elif self.__order_type == '京东国际':
             return '京东国际自营'
     
@@ -114,8 +114,8 @@ class JDOrderDetailsCapture:
             try:
                 element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container"]/div[2]/div/div[5]/div[2]/div[1]/table/tbody/tr[1]/td[3]')))
                 return element.text
-            except NoSuchElementException:
-                self.logger.error(f'NoSuchElementException: get_product_id')
+            except TimeoutException:
+                self.logger.error(f'TimeoutException: get_product_id')
         elif self.__order_type == '京东国际':
             return None
         
@@ -125,8 +125,8 @@ class JDOrderDetailsCapture:
             try:
                 element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container"]/div[2]/div/div[5]/div[2]/div[1]/table/tbody/tr[1]/td[contains(@id,"jingdou")]')))
                 return element.text
-            except NoSuchElementException:
-                self.logger.error(f'NoSuchElementException: get_jingdou')
+            except TimeoutException:
+                self.logger.error(f'TimeoutException: get_jingdou')
         elif self.__order_type == '京东国际':
             return None
 
@@ -135,19 +135,28 @@ class JDOrderDetailsCapture:
         find_sign = False
         if self.__order_type == '普通订单':
             try:
-                element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "p-info")))
+                element = WebDriverWait(self.__driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, "track-rcol")))
                 find_sign = True
-            except NoSuchElementException:
+            except TimeoutException:
                 pass
-            match = re.search(r'承运人：(.*?)(快递咨询|包裹|\n|$)', element.text)
+            match = re.search(r'交付([\u4e00-\u9fa5]+)，', element.text) # 匹配物流信息列表中的物流公司名称
             if match:
                 return match.group(1)
+            else:
+                try:
+                    element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "p-info")))
+                    print(element.text)
+                except TimeoutException:
+                    pass
+                match = re.search(r'承运人：(.*?)(快递咨询|包裹|\n|$)', element.text)
+                if match:
+                    return match.group(1)
         elif self.__order_type == '京东国际':
             time.sleep(0.2)
             try:
                 element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "eps-process")))
                 find_sign = True
-            except NoSuchElementException:
+            except TimeoutException:
                 pass
             match1 = re.search(r'国际物流承运方：(.*?)\.*?货运单号：(.*?)(\n|$)', element.text)
             match2 = re.search(r'国内物流承运方：(.*?)\.*?货运单号：(.*?)(点击查询|\n|$)', element.text)
@@ -156,7 +165,7 @@ class JDOrderDetailsCapture:
             elif match2:
                 return match2.group(1).strip()
         if not find_sign:
-            self.logger.error(f'NoSuchElementException: get_courier_services_company')
+            self.logger.error(f'TimeoutException: get_courier_services_company')
 
     def get_courier_number(self):
         """ 获取快递单号 """
@@ -178,19 +187,28 @@ class JDOrderDetailsCapture:
 
         if self.__order_type == '普通订单':
             try:
-                element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "p-info")))
+                element = WebDriverWait(self.__driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, "track-rcol")))
                 find_sign = True
-            except NoSuchElementException:
+            except TimeoutException:
                 pass
-            match  = re.search(r'货运单号：(\b[A-Za-z0-9]+\b)', element.text)
+            match = re.search(r'运单号为([a-zA-Z0-9]+)', element.text) # 匹配物流信息列表中的物流单号
             if match:
                 return masking(match.group(1))
+            else:
+                try:
+                    element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "p-info")))
+                    find_sign = True
+                except TimeoutException:
+                    pass
+                match  = re.search(r'货运单号：(\b[A-Za-z0-9]+\b)', element.text)
+                if match:
+                    return masking(match.group(1))
         elif self.__order_type == '京东国际':
             time.sleep(0.2)
             try:
                 element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "eps-process")))
                 find_sign = True
-            except NoSuchElementException:
+            except TimeoutException:
                 pass
             match1 = re.search(r'国际物流承运方：(.*?)\.*?货运单号：(.*?)(\n|$)', element.text)
             match2 = re.search(r'国内物流承运方：(.*?)\.*?货运单号：(.*?)(点击查询|\n|$)', element.text)
@@ -199,4 +217,11 @@ class JDOrderDetailsCapture:
             elif match2:
                 return masking(match2.group(2).strip())
         if not find_sign:
-            self.logger.error(f'NoSuchElementException: get_courier_services_company')
+            self.logger.error(f'TimeoutException: get_courier_services_company')
+    
+    def get(self):
+        try:
+            element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "track-rcol")))
+            print(element.text)
+        except TimeoutException:
+            pass
