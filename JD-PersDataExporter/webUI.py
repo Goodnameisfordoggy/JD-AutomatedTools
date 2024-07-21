@@ -12,6 +12,8 @@ from config.log_config import configure_logging
 from theme import PremiumBox, GorgeousBlack
 configure_logging()
 
+WORKING_DIRECTORY_PATH = os.path.dirname(os.path.abspath(__file__))
+
 custom_css = """
 <style>
     .warning textarea {
@@ -113,7 +115,7 @@ class WebUI():
                 "database": database_input,
             }
             try:
-                self.form.save_to_mysql(header_input, table_name_input, **mysql_user_info)
+                self.form.save_to_mysql(header_input, table_name_input, config_file_path = os.path.join(WORKING_DIRECTORY_PATH, 'config/mysql_user.ini'), **mysql_user_info)
             except AttributeError:
                 return [gr.update(visible=True), gr.update(value="Database not exist ! | 数据库不存在 !", interactive=True, elem_classes="warning"), gr.update(), gr.update()]
             except mysql.connector.errors.ProgrammingError:

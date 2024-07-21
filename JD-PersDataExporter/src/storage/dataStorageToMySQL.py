@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-15 16:13:09
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToMySQL.py
+LastEditTime: 2024-07-21 23:29:36
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\storage\dataStorageToMySQL.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -15,12 +15,14 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import os
 import logging
 import mysql.connector
 
 from ..dataPortector import ConfigManager
 from ..databaseManager import DatabaseManager
 
+WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class MySQLStorange():
     
@@ -34,7 +36,7 @@ class MySQLStorange():
         self.__configManager = ConfigManager()
         self.__config = self.__configManager.get_mysql_config()
         # 连接的库名
-        self.__database_name = DatabaseManager.get_user_info().get('database')
+        self.__database_name = DatabaseManager.get_config_info(os.path.join(WORKING_DIRECTORY_PATH, 'config/mysql_user.ini')).get('database')
         # 设置生成表的表名
         if table_name:
             self.__table_name = table_name 
@@ -161,24 +163,24 @@ class MySQLStorange():
         except mysql.connector.Error as err:
             self.logger.error(f"数据插入失败: {err}")
 
-    def save(self, **kwargs):
+    def save(self, config_file_path = os.path.join(WORKING_DIRECTORY_PATH, 'config/mysql_user.ini'), **kwargs):
         """ 
         数据储存 
         """
-        with DatabaseManager(**kwargs) as db_m:
-            cursor =db_m.connection.cursor()
-            # 检测所选表是否存在，否则创建新表        
-            if not self.table_exists(cursor):
-                self.creat_table(cursor)
-            # 获取表中存在的order_id
-            self.__existent_order_id = self.get_order_id(cursor)
-            new_orders = 0
-            for order in self.__data:
-                if order.get('order_id', 0) not in self.__existent_order_id:
-                    self.insert_data(cursor, order)
-                    new_orders += 1
-            db_m.connection.commit()
-            if not new_orders:
-                self.logger.info(f'没有新数据, 储存结束。')
-            else:
-                self.logger.info(f'新增数据 {new_orders}条')
+        with DatabaseManager(config_file_path = config_file_path, **kwargs) as db_m:
+            with db_m.connection.cursor() as cursor:
+                # 检测所选表是否存在，否则创建新表        
+                if not self.table_exists(cursor):
+                    self.creat_table(cursor)
+                # 获取表中存在的order_id
+                self.__existent_order_id = self.get_order_id(cursor)
+                new_orders = 0
+                for order in self.__data:
+                    if order.get('order_id', 0) not in self.__existent_order_id:
+                        self.insert_data(cursor, order)
+                        new_orders += 1
+                db_m.connection.commit()
+                if not new_orders:
+                    self.logger.info(f'没有新数据, 储存结束。')
+                else:
+                    self.logger.info(f'新增数据 {new_orders}条')

@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-06-15 16:10:01
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\data_type\Form.py
+LastEditTime: 2024-07-21 23:28:24
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\data_type\Form.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -48,7 +48,7 @@ class Form(list):
         excelStorage.save()
         self.logger.info('Excel文件已生成, 请于项目目录内查看')
 
-    def save_to_mysql(self, fields_needed: list, table_name: str, **kwargs):
+    def save_to_mysql(self, fields_needed: list, table_name: str, config_file_path: str, **kwargs):
         mysqlStorage = MySQLStorange(self, fields_needed, table_name)
-        mysqlStorage.save(**kwargs)
+        mysqlStorage.save(config_file_path, **kwargs)
         self.logger.info('数据已存入MySQL服务器, 请查看')
