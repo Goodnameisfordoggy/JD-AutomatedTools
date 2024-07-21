@@ -1,4 +1,5 @@
-# JD-PersDataExporter
+# JD-Automated-Tool
+
 [**Chinese**](./README.md) | [**English**](./README.en.md)
 
 ## Space safety claim
@@ -20,11 +21,73 @@
 
 9. This project complies with the Apache-2.0 License agreement. If there is any conflict between this special notice and the Apache-2.0 License agreement, this special notice shall prevail.
 
+# JD-PersDataExporter
+
 ## One-sentence introduction
 - The project is a local automated tool for exporting order information for personal accounts on JD.com.
 
-
 ## instructions
+
+#### webUI mode
+<center>
+<figure>
+<figcaption>
+Fill in the account number nickname (required, for login verification), select the date span and the required information in the two drop-down lists, click the button "Start export", the browser will jump to the login interface, normal login can be. </figcaption>
+<img src="image/webUI_1.png" alt="webUI_1" width="600">
+<figcaption>webUI main interface </figcaption>
+</figure>
+</center>
+<hr>
+<center>
+<figure>
+<figcaption>
+Order type filtering Settings, if you need to change, please set before clicking the button "Start export". </figcaption>
+<img src="image/webUI_2.png" alt="webUI_2" width="600">
+<figcaption> Filter setup screen </figcaption>
+</figure>
+</center>
+<hr>
+<center>
+<figure>
+<figcaption>
+Desensitization (overlay) intensity selection (0: none, 1: weak, 2: strong), if you need to change, please set before clicking the button "Start export". </figcaption>
+<img src="image/webUI_3.png" alt="webUI_3" width="600">
+<figcaption> Desensitization intensity setting interface </figcaption>
+</figure>
+</center>
+<hr>
+<center>
+<figure>
+<figcaption>
+<p> Click the button "Start Export" and after the operation is complete, the interface will be loaded in the main interface. </p>
+<p> In this interface, you can preview the data, and you can change the number or order of the options in the Header first; 2. Click the button "Change Required Data") to modify the data preview view. </p>
+<p> Save data: What you see in the data preview view is what you get. 1. Select an export mode. 2. Enter the corresponding save Settings. 3. Click the button "Save" </p>
+</figcaption>
+<img src="image/webUI_6.png" alt="webUI_4" width="600">
+<figcaption> Data preview and storage interface </figcaption>
+</figure>
+</center>
+<hr>
+<center>
+<figure>
+<figcaption>
+</figcaption>
+<img src="image/webUI_4.png" alt="webUI_5" width="600">
+<figcaption>Excel Store Setup screen </figcaption>
+</figure>
+</center>
+<hr>
+<center>
+<figure>
+<figcaption>
+</figcaption>
+<img src="image/webUI_5.png" alt="webUI_6" width="600">
+<figcaption>MySQL Storage Settings screen </figcaption>
+</figure>
+</center>
+<hr>
+
+#### pure script mode
 1. Follow these instructions after downloading the unzipped project package
 - Open config.json (configuration file)
 - Fill in the complete account name in "" after "" user_name" ". This account name is used only for login verification.
@@ -33,7 +96,7 @@ Example: `["ALL"]` will get all order information in the account; `["2022 order 
 
 | Time groups optional (same as on my order page)|
 |---|
-|ALL (added)
+|ALL 
 | Orders in the last three months
 | Order within this year
 | Order for 2023

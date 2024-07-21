@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-07-01 20:58:37
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\orderDetailsCapture.py
+LastEditTime: 2024-07-21 21:22:46
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\orderDetailsCapture.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -70,15 +70,14 @@ class JDOrderDetailsCapture:
                 row[item] = self.__func_dict.get(item)()
             except TypeError:
                     row[item] = '暂无'
-        # print(row)
         return row
     
     def get_order_type(self):
         """ 获取订单类型"""
         find_sign = False
-        wait_an_element = WebDriverWait(self.__driver, 5).until(EC.presence_of_element_located((By.XPATH, '/html/body/div')))
+        wait_an_element = WebDriverWait(self.__driver, 5).until(EC.presence_of_element_located((By.XPATH, '/html/body/div'))) # 等待页面主体组件
         try:
-            self.__driver.find_element(By.XPATH, '/html/body/div[@id="container"]')
+            element = WebDriverWait(self.__driver, 1).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[@id="container"]')))
             self.__order_type = '普通订单'
             find_sign = True
         except TimeoutException:
@@ -87,7 +86,7 @@ class JDOrderDetailsCapture:
             self.logger.error(f'订单类型获取失败：{e}')
         
         try:
-            self.__driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/a[@class="logo"]')
+            element = WebDriverWait(self.__driver, 1).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[1]/a[@class="logo"]')))
             self.__order_type = '京东国际'
             find_sign = True
         except TimeoutException:
@@ -145,7 +144,6 @@ class JDOrderDetailsCapture:
             else:
                 try:
                     element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "p-info")))
-                    print(element.text)
                 except TimeoutException:
                     pass
                 match = re.search(r'承运人：(.*?)(快递咨询|包裹|\n|$)', element.text)
@@ -218,10 +216,3 @@ class JDOrderDetailsCapture:
                 return masking(match2.group(2).strip())
         if not find_sign:
             self.logger.error(f'TimeoutException: get_courier_services_company')
-    
-    def get(self):
-        try:
-            element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "track-rcol")))
-            print(element.text)
-        except TimeoutException:
-            pass
