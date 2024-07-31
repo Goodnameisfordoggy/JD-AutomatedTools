@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-07-26 20:56:37
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-GetCookie\getCookies.py
+LastEditTime: 2024-07-31 15:13:51
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\getCookies.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -40,7 +40,7 @@ def getCookies():
         cookies = driver.get_cookies()
         with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(cookies, f, ensure_ascii=False, indent=4)
-            logger.info(f'ookies已保存到{os.getcwd()}/cookies.json')
+            logger.info(f'cookies已保存到{os.getcwd()}/cookies.json')
 
 
 if __name__ == '__main__':

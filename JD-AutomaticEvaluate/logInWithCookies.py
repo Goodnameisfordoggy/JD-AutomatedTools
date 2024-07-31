@@ -5,27 +5,27 @@ import logging
 from selenium import webdriver
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__) # ÈÕÖ¾¼ÇÂ¼Æ÷
+logger = logging.getLogger(__name__) # æ—¥å¿—è®°å½•å™¨
 
 def logInWithCookies(target_url: str = "https://www.jd.com/"):
     """ 
-    Ê¹ÓÃ±£´æµÄcookiesÄ£ÄâµÇÂ¼ 
+    ä½¿ç”¨ä¿å­˜çš„cookiesæ¨¡æ‹Ÿç™»å½• 
     
     Return: webdriver
     """
     cookie_file = 'cookies.json'
     driver = webdriver.Chrome()
-    if os.path.exists(cookie_file): # ¼ì²éÊÇ·ñ´æÔÚcookieÎÄ¼ş
+    if os.path.exists(cookie_file): # æ£€æŸ¥æ˜¯å¦å­˜åœ¨cookieæ–‡ä»¶
         driver.maximize_window()
         driver.get(target_url)
         # time.sleep(2)
         with open(cookie_file, 'r') as f:
-            # ¶ÁÈ¡ÎÄ¼şÖĞµÄ cookie
+            # è¯»å–æ–‡ä»¶ä¸­çš„ cookie
             cookies = json.load(f)
-            # ¼ÓÔØcookieĞÅÏ¢
+            # åŠ è½½cookieä¿¡æ¯
             for cookie in cookies:
                 driver.add_cookie(cookie)
-        logging.info('Ê¹ÓÃÒÑ±£´æµÄcookieµÇÂ¼')
+        logging.info('ä½¿ç”¨å·²ä¿å­˜çš„cookieç™»å½•')
         # time.sleep(1)
         driver.refresh()
         # time.sleep(2)
