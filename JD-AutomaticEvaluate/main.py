@@ -98,13 +98,20 @@ class AutomaticEvaluate():
                 self.logger.info('已到最后一页，抓取页数小于设定数！')
                 break
             
+        def is_bmp_compliant(text: str):
+            """ 检测所有字符是否符合基本多文种平面 BMP(Basic Multilingual Plane)"""
+            for char in text:
+                if ord(char) > 0xFFFF:
+                    return False
+            return True
+        
         # 取随机评价
         def get_random_text(text_list):
             if not text_list:
                 self.logger.info('get_random_text：未找到当前商品相关的评论文本！')
                 return
             selected_value = random.choice(text_list)
-            if len(selected_value) > 60: # 取长度大于规定个字符的评价。JD:60字以上为优质评价
+            if len(selected_value) > 60 and is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价。JD:60字以上为优质评价
                 return selected_value
             else:
                 return get_random_text(text_list)
@@ -194,24 +201,39 @@ class AutomaticEvaluate():
             pass
 
         return image_files_path
-
+                
     def generate_task_queue(self):
-        """ 生成任务队列 """
+        """ 
+        生成任务队列
+        
+        task_queue = [
+            {
+                index: ,
+                orderVouche_url: ,
+                order_id: ,
+                text_to_input: ,
+                image_path_to_input: ,
+            }, ...
+        ]
+        """
         info_list = self.getOrderVoucherInfo()
         for index, order_info in enumerate(info_list, start=1):
             text_to_input = self.getText(order_info['product_html_url_list'][0])
             image_path_to_input = self.getImage(order_info['order_id'], order_info['product_html_url_list'][0])
-            task = dict(index=index, order_id=order_info['order_id'], text_to_input=text_to_input, image_path_to_input=image_path_to_input)
+            task = dict(index=index, order_id=order_info['order_id'], orderVouche_url=order_info['orderVouche_url'], text_to_input=text_to_input, image_path_to_input=image_path_to_input)
             self.__task_queue.append(task)
             print(json.dumps(task, indent=4, ensure_ascii=False))
-            # if index > 3:
+            yield task
+            # if index == 1:
             #     break
 
-    def automaticEvaluate(self, url: str, text_input: str, image_files_path: list):
+    def automaticEvaluate(self, order_id: str, url: str, text_input: str, image_files_path: list):
         """ 自动评价操作，限单个评价页面"""
         self.__driver.get(url)
-
         # 商品评价文本
+        if not text_input:
+            text_input = '非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！'
+            self.logger.info(f'单号{order_id}的订单使用默认文本。')
         try:
             text_input_element = WebDriverWait(self.__driver, 3).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea')))
             text_input_element.send_keys(text_input)
@@ -223,26 +245,28 @@ class AutomaticEvaluate():
         try:
             commstar_element =  self.__driver.find_elements(By.CLASS_NAME, 'commstar')
             star5_elements = [el for el in commstar_element if el.get_attribute("class") == "commstar"] # 筛选出类名完全匹配 'commstar' 的元素
-            logging.info(f'识别到{len(star5_elements)} 个五星级评分组件, 全部给予五星好评。')
             for star5_element in star5_elements:
                 # 获取元素的位置
                 location = star5_element.location
                 size = star5_element.size
                 # 在特定位置（第五颗星）点击元素
-                x_offset = int(location['x'] + size['width'] / 5 * 4) # 相对于元素左上角的 X 坐标
-                y_offset = int(location['y'] + size['height'] / 2)  # 相对于元素左上角的 Y 坐标
+                x_offset = int(size['width'] / 5 * 4 * 0.5) # 相对于待点击元素中心点的 X 坐标
+                y_offset = 0 # 相对于待点击元素中心点的 Y 坐标
                 actions = ActionChains(self.__driver)
-                actions.move_by_offset(x_offset, y_offset).click().perform()
-                actions.move_by_offset(-x_offset, -y_offset).perform() # 移动鼠标回到起点，防止影响后续操作
+                actions.move_to_element_with_offset(star5_element, x_offset, y_offset).click().perform() # 使用相对元素位移模拟点击
+            self.logger.info(f'单号{order_id}识别到{len(star5_elements)}个五星级评分组件, 全部给予五星好评。')
         except NoSuchElementException:
             self.logger.error("automaticEvaluate：未识别到星级评分组件！")
 
         # 商品评价图片
+        if not image_files_path:
+            self.logger.info(f'单号{order_id}的订单未上传评价图片。')
+            return
         try:
-            file_input = self.__driver.find_element(By.XPATH, '//input[@type="file"]') # 查找隐藏的文件上传输入框
+            file_input_element = self.__driver.find_element(By.XPATH, '//input[@type="file"]') # 查找隐藏的文件上传输入框
             # 发送文件路径到文件上传输入框
             for path in image_files_path:
-                file_input.send_keys(path)
+                file_input_element.send_keys(path)
         except NoSuchElementException:
             self.logger.error("automaticEvaluate：未识别到评价图片路径输入框！")
 
@@ -250,23 +274,37 @@ class AutomaticEvaluate():
         time.sleep(5) # QWQ:尚未想到更好的检测所有图片上传完成的方法
         try:
             btn_submit = self.__driver.find_element(By.CLASS_NAME, 'btn-submit')
-            # btn_submit.click()
+            ActionChains(self.__driver).move_to_element_with_offset(btn_submit, 0, 0).perform()
+            btn_submit.click()
         except NoSuchElementException:
             self.logger.error("automaticEvaluate：未识别到提交按钮！")
 
-
-
+    def init_image_directory(self, directory_path):
+        # 确保目标路径存在
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+            return
+        # 确保目标是路径指向目录
+        if not os.path.isdir(directory_path):
+            return
+        # 清空目录文件
+        for filename in os.listdir(directory_path):
+            file_path = os.path.join(directory_path, filename)
+            if os.path.isfile(file_path):
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    self.logger.error(f"Error deleting {file_path}: {e}")
 
     def execute(self):
+        self.init_image_directory(IMAGE_DIRECTORY_PATH)
         self.generate_task_queue()
-        # self.getImage()
-        # print(self.getText())
-        # self.getOrderVoucherInfo()
-        # self.automaticEvaluate(
-        #     url='https://club.jd.com/myJdcomments/orderVoucher.action?ruleid=293795793052',
-        #     text_input='这款拜杰高硼硅玻璃刻度杯非常实用！500ML的容量适中，刻度清晰方便测量各种液体，耐高温的硼硅玻璃质感很好，耐用且易清洗。透明设计让内容一目了然，适合冷泡饮料和果汁。使用起来很方便，推荐给需要精准测量的朋友们！',
-        #     image_files_path = [r"C:\Users\HDJ\Desktop\1.png",r"C:\Users\HDJ\Desktop\2.png"])
-        # time.sleep(10)
+        for task in self.generate_task_queue():
+            self.automaticEvaluate(
+                order_id=task['order_id'], url=task['orderVouche_url'], 
+                text_input=task['text_to_input'], image_files_path=task['image_path_to_input']) 
+            time.sleep(3)
+        self.logger.info('QwQ脚本运行结束，如有遗漏订单请再次运行！')
 
 if __name__ == '__main__':
     automaticEvaluate = AutomaticEvaluate()
