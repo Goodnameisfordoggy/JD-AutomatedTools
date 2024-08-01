@@ -23,10 +23,10 @@
 
 ## 简介
 👏JD-PersDataExporter
-- Jingdong personal order information crawling. | 京东个人订单信息爬取。
+- 京东个人订单信息爬取。
 
 👏JD-GetCookie
-- Get cookies after login jd.com. | 登录京东后获取cookie。
+- 登录京东后获取cookie。
 
 👏JD-AutomaticEvaluate
-- Jingdong order automation evaluation, are given five-star praise, picture and text. | 京东订单自动化评价，均给予五星好评以及图文。
+- 京东订单自动化评价，均给予五星好评以及图文。
