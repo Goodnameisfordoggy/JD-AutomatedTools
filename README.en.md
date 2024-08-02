@@ -1,6 +1,6 @@
 # JD-Automated-Tools
 
-[**ÖĞÎÄ¼òÌå**](./README.md) | [**English**](./README.en.md)
+[**ç®€ä½“ä¸­æ–‡**](./README.md) | [**English**](./README.en.md)
 
 ## Safety statement
 1. Any scripts involved in the `JD-Automated-Tools` project published by this warehouse are only used for testing and learning research, prohibited for commercial use, and cannot guarantee their legality, accuracy, completeness and effectiveness, please judge by yourself according to the situation.
@@ -22,11 +22,11 @@
 9. This project is subject to the Apache-2.0 License agreement. If there is any conflict between this special notice and the Apache-2.0 License agreement, this special notice shall prevail.
 
 ## Intro
-”9Ñ3JD-PersDataExporter
+ğŸ‘JD-PersDataExporter
 - Jingdong personal order information crawling.
 
-”9Ñ3JD-GetCookie
+ğŸ‘JD-GetCookie
 - Get cookies after login jd.com.
 
-”9Ñ3JD-AutomaticEvaluate
+ğŸ‘JD-AutomaticEvaluate
 - Jingdong order automation evaluation, are given five-star praise, picture and text.
