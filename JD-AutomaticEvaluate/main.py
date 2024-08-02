@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-08-02 00:18:45
+LastEditTime: 2024-08-02 23:32:19
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\main.py
 Description: 
 
@@ -27,6 +27,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from PIL import Image, ImageFilter
 from logInWithCookies import logInWithCookies
 
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -210,6 +211,11 @@ class AutomaticEvaluate():
                     with open(image_file_path, 'wb') as f:
                         f.write(response.content)
                     image_files_path.append(image_file_path)
+                    # 处理图片
+                    img = Image.open(image_file_path)
+                    img = img.resize((img.width * 5, img.height * 5), Image.LANCZOS) # 提高分辨率
+                    img = img.filter(ImageFilter.SHARPEN) # 增加清晰度
+                    img.save(image_file_path)
                 else:
                     self.logger.error(f'{image_file_name} 文件下载失败！Status code: {response.status_code}')
         except RecursionError:
@@ -263,8 +269,6 @@ class AutomaticEvaluate():
             commstar_element =  self.__driver.find_elements(By.CLASS_NAME, 'commstar')
             star5_elements = [el for el in commstar_element if el.get_attribute("class") == "commstar"] # 筛选出类名完全匹配 'commstar' 的元素
             for star5_element in star5_elements:
-                # 获取元素的位置
-                location = star5_element.location
                 size = star5_element.size
                 # 在特定位置（第五颗星）点击元素
                 x_offset = int(size['width'] / 5 * 4 * 0.5) # 相对于待点击元素中心点的 X 坐标
