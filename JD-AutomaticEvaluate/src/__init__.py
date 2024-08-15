@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-08-12 18:27:39
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\main.py
+LastEditTime: 2024-08-15 19:08:57
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\__init__.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -15,20 +15,3 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
-from src.AutomaticEvaluate import AutomaticEvaluate
-
-if __name__ == '__main__':
-    automaticEvaluate = AutomaticEvaluate()
-    automaticEvaluate.execute()
-
-
-
-
-
-
-
-
-
-
-
-
