@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-16 00:42:29
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\storage\dataStorageToExcel.py
+LastEditTime: 2024-09-02 23:44:58
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\storage\dataStorageToExcel.py
 Description: 
 
                 *       写字楼里写字间，写字间里程序员；
@@ -123,7 +123,7 @@ class ExcelStorage:
                 
             # 保存工作簿
             workbook.save(self.__file_name)
-            self.logger.info(f"数据成功添加到 '{self.__file_name}'")
+            self.logger.info(f"数据成功添加到 '{self.__file_name}'，新增数据{len(self.__data)}条")
         except FileNotFoundError:
             pass
         except PermissionError as e:
@@ -131,8 +131,8 @@ class ExcelStorage:
         except Exception as e:
             self.logger.critical(f"添加到Excel时发生错误: {e}")
 
-    def adjust_column_width(self):
-        """ 调整 Excel 表头宽度 """
+    def adjust_column_format(self):
+        """ 调整 Excel 表头格式，以及单元格数据类型 """
         try:
             workbook = load_workbook(self.__file_name)
             worksheet = workbook.active
@@ -147,6 +147,33 @@ class ExcelStorage:
                         worksheet.column_dimensions[uppercase_letters[index]].width = float(header_item.get('width', default_width))
                         index += 1  # 下一个表头字母的索引
                         break
+                if header == 'amount':
+                    amount_col = self.__output_fields.index('amount') + 1
+                    # 设置 amount 列的所有单元格为人民币格式
+                    for row in worksheet.iter_rows(min_col=amount_col, max_col=amount_col, min_row=1, max_row=worksheet.max_row):
+                        for cell in row:
+                            # 确保数据为数字类型
+                            if isinstance(cell.value, str):
+                                try:
+                                    cell.value = float(cell.value.replace(',', ''))
+                                except ValueError:
+                                    # 如果无法转换为浮点数，可能数据格式有问题，跳过处理
+                                    continue
+                            # 设置单元格格式为人民币 ¥
+                            cell.number_format = '¥#,##0.00'
+                if header == 'jingdou':
+                    # 格式
+                    amount_col = self.__output_fields.index('jingdou') + 1
+                    # 设置 amount 列的所有单元格为人民币格式
+                    for row in worksheet.iter_rows(min_col=amount_col, max_col=amount_col, min_row=1, max_row=worksheet.max_row):
+                        for cell in row:
+                            # 确保数据为数字类型
+                            if isinstance(cell.value, str):
+                                try:
+                                    cell.value = float(cell.value.replace(',', ''))
+                                except ValueError:
+                                    # 如果无法转换为浮点数，可能数据格式有问题，跳过处理
+                                    continue
             # 保存修改后的 Excel 文件
             workbook.save(self.__file_name)
         except zipfile.BadZipFile:
@@ -164,7 +191,10 @@ class ExcelStorage:
             # 读取Excel文件
             df = pd.read_excel(self.__file_name, sheet_name=self.__sheet_name, engine='openpyxl')
             # 获取表中order_id字段下的所有值
+            df['order_id'] = df['order_id'].fillna(0) # 将 NaN 值替换为一个默认值（例如0或其他适合的值）
+            df['order_id'] = df['order_id'].astype(int) # 将列转换为整数
             self.__existent_order_id = df['order_id'].tolist()
+            self.__existent_order_id = [str(item) for item in self.__existent_order_id]
             self.__data = [order for order in self.__data if order.get('order_id') not in self.__existent_order_id]
 
         try:
@@ -174,7 +204,7 @@ class ExcelStorage:
                     df = pd.DataFrame(self.__data, columns=self.__output_fields)
                     self.append_to_excel(df)
                     # 设置Excel文件列宽
-                    self.adjust_column_width()
+                    self.adjust_column_format()
             else:
                 self.logger.info(f'没有新数据, 储存结束。')
                 return
