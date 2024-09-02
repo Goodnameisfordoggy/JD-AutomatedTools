@@ -5,4 +5,6 @@ Cookie.txt
 getCookies.py
 *.xlsx
 mysql_user.ini
+commit.bat
+commit_message.txt
 
