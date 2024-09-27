@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: 1.0.1
+version: 2.0.0
 
 #### 简介
 自动化评价脚本，给予五星好评加图文。
@@ -21,6 +21,8 @@ version: 1.0.1
 `btn_submit.click()`
 
 # Update log
+- 2.0.0: 自动化测试框架由 selenium 更换为 playwright
+- 2.0.0: �Զ������Կ���� selenium ����Ϊ playwright
 - 1.0.1: update .gitignore
 - 1.0.1：对获取到的评论图片进行了简单的处理。
 - 1.0.0：Last edit time 2024-08-02
