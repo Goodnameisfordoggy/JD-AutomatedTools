@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-27 16:44:45
+LastEditTime: 2024-09-28 14:57:27
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\getCookies.py
 Description: 
 
@@ -18,12 +18,10 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 import os
 import time
 import json
-import logging
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from src.logger import get_logger
+LOG = get_logger()
 
-# 日志配置
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__)
 
 login_url = 'https://passport.jd.com/new/login.aspx'  # 京东登录页面
 save_path = "cookies.json"  # 保存 cookies 的路径
@@ -34,23 +32,23 @@ def getCookies():
         browser = p.chromium.launch(headless=False)  # 启动浏览器
         page = browser.new_page()
         page.goto(login_url)  # 打开登录界面
-        logger.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 cookies。")
+        LOG.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 cookies。")
         
         # 等待用户手动登录京东
         while True:
             try:
                 # 检查页面是否已经跳转到京东主页
                 page.wait_for_url('https://www.jd.com/', timeout=3000)
-                logger.info("成功登录京东！")
+                LOG.success("成功登录京东！")
                 break
             except PlaywrightTimeoutError:
-                logger.info("等待用户完成登录...")
+                LOG.info("等待用户完成登录...")
 
         # 获取 cookies 并保存到文件
         cookies = page.context.cookies()
         with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(cookies, f, ensure_ascii=False, indent=4)
-            logger.info(f'cookies 已保存到 {os.getcwd()}/cookies.json')
+            LOG.info(f'cookies 已保存到 {os.getcwd()}/cookies.json')
 
         browser.close()
 

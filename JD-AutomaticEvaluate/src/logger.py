@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-28 17:39:53
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\main.py
+LastEditTime: 2024-09-28 14:20:28
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logger.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -15,20 +15,13 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
-from src.AutomaticEvaluate import AutomaticEvaluate
+import os
+import sys
+from loguru import logger
 
-if __name__ == '__main__':
-    automaticEvaluate = AutomaticEvaluate()
-    automaticEvaluate.execute()
+logger.remove()
 
+logger.add(sys.stdout, level="INFO")
 
-
-
-
-
-
-
-
-
-
-
+def get_logger():
+    return logger

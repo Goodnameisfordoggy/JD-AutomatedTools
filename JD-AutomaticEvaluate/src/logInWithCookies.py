@@ -17,11 +17,10 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 '''
 import os
 import json
-import logging
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from src.logger import get_logger
+LOG = get_logger()
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__)  # 日志记录器
 
 def logInWithCookies(target_url: str = "https://www.jd.com/"):
     """ 
@@ -42,16 +41,15 @@ def logInWithCookies(target_url: str = "https://www.jd.com/"):
             cookies = json.load(f)
             # 加载 cookies 到页面上下文
             page.context.add_cookies(cookies)
-            logger.info('使用已保存的 cookies 登录')
         page.reload()  # 刷新页面以应用 cookies
         try:
             # 检查是否成功登录
             page.wait_for_url(target_url, timeout=10000)
-            logger.info('页面已成功加载，模拟登录完成')
+            LOG.success('使用已保存的 cookies 登录')
         except PlaywrightTimeoutError:
-            logger.warning('模拟登录超时，请检查 cookies 是否有效')
+            LOG.warning('模拟登录超时，请检查 cookies 是否有效')
     else:
-        logger.error('cookie 文件不存在，请先获取并保存 cookies。')
+        LOG.error('cookie 文件不存在，请先获取并保存 cookies。')
     return page, browser  # 返回页面和浏览器实例
 
 
