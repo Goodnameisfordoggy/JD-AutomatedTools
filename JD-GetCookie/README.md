@@ -1,5 +1,9 @@
 # JD-GetCookie
-version 1.0.0
+version: JD-GetCookie-2.0.0
 
-#### ¼ò½é 
-»ñÈ¡¾©¶«µÇÂ¼ºó£¨https://www.jd.com/£©µÄcookies´¢´æÎªjson
+#### ç®€ä»‹ 
+è·å–äº¬ä¸œç™»å½•åï¼ˆhttps://www.jd.com/ï¼‰çš„cookieså‚¨å­˜ä¸ºjson
+
+# Update log
+- JD-GetCookie-2.0.0: è‡ªåŠ¨åŒ–æµ‹è¯•æ¡†æ¶ç”± selenium æ›´æ¢ä¸º playwright
+
