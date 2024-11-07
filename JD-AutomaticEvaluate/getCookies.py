@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-28 14:57:27
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\getCookies.py
+LastEditTime: 2024-11-06 19:03:37
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\getCookies.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -16,20 +16,26 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import os
+import sys
+
 import time
 import json
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from src.logger import get_logger
 LOG = get_logger()
 
-
+    
 login_url = 'https://passport.jd.com/new/login.aspx'  # 京东登录页面
 save_path = "cookies.json"  # 保存 cookies 的路径
 
 def getCookies():
     """ 获取登录后的 cookies """
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  # 启动浏览器
+        if getattr(sys, 'frozen', False): # 打包模式
+            temp_dir = os.path.join(sys._MEIPASS, "chromium-1134/chrome-win")
+            browser = p.chromium.launch(headless=False, executable_path=os.path.join(temp_dir, "chrome.exe"))  # 启动浏览器
+        else:
+            browser = p.chromium.launch(headless=False)
         page = browser.new_page()
         page.goto(login_url)  # 打开登录界面
         LOG.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 cookies。")

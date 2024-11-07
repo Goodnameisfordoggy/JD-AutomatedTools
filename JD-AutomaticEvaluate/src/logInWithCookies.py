@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-27 16:57:32
+LastEditTime: 2024-11-06 19:36:15
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logInWithCookies.py
 Description: 
 
@@ -16,6 +16,7 @@ Description:
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
 import os
+import sys
 import json
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from src.logger import get_logger
@@ -28,12 +29,20 @@ def logInWithCookies(target_url: str = "https://www.jd.com/"):
     """
     cookie_file = 'cookies.json'
     p = sync_playwright().start()
-    browser = p.chromium.launch(
-        headless=False, 
-        args=["--disable-blink-features","--disable-blink-features=AutomationControlled"]
-    )
+    if getattr(sys, 'frozen', False): # 打包模式
+        temp_dir = os.path.join(sys._MEIPASS, "chromium-1134/chrome-win")
+        print(temp_dir)
+        browser = p.chromium.launch(
+            headless=False, 
+            args=["--disable-blink-features","--disable-blink-features=AutomationControlled"],
+            executable_path=os.path.join(temp_dir, "chrome.exe")
+        )  # 启动浏览器
+    else:
+        browser = p.chromium.launch(
+            headless=False,
+            args=["--disable-blink-features","--disable-blink-features=AutomationControlled"]
+        )
     page = browser.new_page()
-    # page.set_viewport_size({"width": 1920, "height": 1080})  # 设置窗口为 1920x1080 分辨率，模拟最大化
     if os.path.exists(cookie_file):  # 检查是否存在 cookie 文件
         page.goto(target_url)  # 打开目标页面
         with open(cookie_file, 'r', encoding='utf-8') as f:

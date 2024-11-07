@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.0.2
+version: JD-AutomaticEvaluate-2.0.3
 
 #### 简介
 自动化评价脚本，给予五星好评加图文。
@@ -21,6 +21,7 @@ version: JD-AutomaticEvaluate-2.0.2
 `btn_submit.click()`
 
 # Update log
+- JD-AutomaticEvaluate-2.0.3: 支持单文件打包模式运行。
 - JD-AutomaticEvaluate-2.0.2: 优化了项目结构；
 - JD-AutomaticEvaluate-2.0.1: 日志优化、细微调整
 - JD-AutomaticEvaluate-2.0.0: 自动化测试框架由 selenium 更换为 playwright

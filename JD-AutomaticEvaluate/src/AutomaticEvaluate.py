@@ -66,9 +66,12 @@ class AutomaticEvaluate():
                 # 单号
                 order_id_element = self.__page.wait_for_selector(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr[2]/td/span[3]/a', timeout=2000)
                 order_id = order_id_element.inner_text()
-                # 订单评价页面url
-                btn_element = self.__page.wait_for_selector(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr[3]/td[4]/div/a[2]', timeout=2000)
-                orderVouche_url = 'https:' + btn_element.get_attribute('href')
+                try:
+                    # 订单评价页面url
+                    btn_element = self.__page.wait_for_selector(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr[3]/td[4]/div/a[@class="btn-def"]', timeout=2000)
+                    orderVouche_url = 'https:' + btn_element.get_attribute('href')
+                except Exception as e:
+                    LOG.critical(f"获取订单评价页面url失败：{e}")
                 # 商品详情页面url
                 p_name_elements = self.__page.locator(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr/td/div/div/div[@class="p-name"]/a').element_handles()
                 product_html_url_list = ['https:' + p_name_element.get_attribute('href') for p_name_element in p_name_elements]

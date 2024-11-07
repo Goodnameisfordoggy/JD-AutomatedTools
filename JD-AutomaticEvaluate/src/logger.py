@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-28 14:20:28
+LastEditTime: 2024-11-08 00:05:35
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logger.py
 Description: 
 
@@ -22,6 +22,8 @@ from loguru import logger
 logger.remove()
 
 logger.add(sys.stdout, level="INFO")
+
+logger.add("logs/log_{time:YYYY-MM-DD}.log", level="INFO", rotation="00:00", retention="7 days")
 
 def get_logger():
     return logger
