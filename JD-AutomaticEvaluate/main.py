@@ -18,8 +18,8 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 from src.AutomaticEvaluate import AutomaticEvaluate
 
 if __name__ == '__main__':
-    automaticEvaluate = AutomaticEvaluate()
-    automaticEvaluate.execute()
+    QwQ = AutomaticEvaluate()
+    QwQ.exec_()
 
 
 

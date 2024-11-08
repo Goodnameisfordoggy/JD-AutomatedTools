@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-09-28 22:45:40
+LastEditTime: 2024-11-09 00:43:20
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -15,19 +15,17 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
-
 import os
 import time
-import json
 import random
-import logging
 import requests
 from PIL import Image, ImageFilter
-from .logInWithCookies import logInWithCookies
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
-from src.logger import get_logger
-LOG = get_logger()
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
 
+from .logInWithCookies import logInWithCookies
+from .data import EvaluationTask
+from .logger import get_logger
+LOG = get_logger()
 
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'image')
@@ -37,57 +35,107 @@ class AutomaticEvaluate():
     
     def __init__(self) -> None:
         self.__page, browser = logInWithCookies()
-        self.__task_queue = [] # 任务队列
-    
-    def getOrderVoucherInfo(self):
-        """ 
-        获取所有待评价订单部分必要信息 
+        self.__task_list: list[EvaluationTask] = []
+        self.__start_time = time.time()
         
-        info_list = [
-            {order_id:, orderVouche_url:, product_html_url_list:}, {}, ...
-        ]
+    def exec_(self):
+        self.__init_image_directory(IMAGE_DIRECTORY_PATH)
+        
+        for task in self.__generate_task():
+            LOG.trace(f"任务已生成：{task}")
+            self.__automatic_evaluate(task)
+
+        LOG.success(f"脚本运行结束--耗时:{int(time.time()-self.__start_time)}秒")
+    
+    def __step_1(self):
         """
-        info_list = []
+        创建任务，获取 `orderVoucher_url`
+        """
         page = 1 # 起始页
         while True:
-            url = f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=0&page={page}'
+            url_1 = f'https://club.jd.com/myJdcomments/myJdcomment.action?sort=0&page={page}' # 待评价订单页面
             try:
                 # 等待结束标志
-                if self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[2]/div[2]/div/div/div/h5', timeout=2000):
+                if self.__page.wait_for_selector('.tip-icon', timeout=5000):
                     LOG.info('识别到结束标志，所有待评价页面url获取结束！')
                     break
             except PlaywrightTimeoutError:
                 LOG.info('结束标志未出现！')
-            self.__page.goto(url)
 
-            # 订单的tbody
-            tbody_elements = self.__page.locator('xpath=//*[@id="main"]/div[2]/div[2]/table/tbody').element_handles()
-            for i in range(1, len(tbody_elements) + 1):
-                # 单号
-                order_id_element = self.__page.wait_for_selector(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr[2]/td/span[3]/a', timeout=2000)
-                order_id = order_id_element.inner_text()
-                try:
-                    # 订单评价页面url
-                    btn_element = self.__page.wait_for_selector(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr[3]/td[4]/div/a[@class="btn-def"]', timeout=2000)
-                    orderVouche_url = 'https:' + btn_element.get_attribute('href')
-                except Exception as e:
-                    LOG.critical(f"获取订单评价页面url失败：{e}")
-                # 商品详情页面url
-                p_name_elements = self.__page.locator(f'xpath=//*[@id="main"]/div[2]/div[2]/table/tbody[{i}]/tr/td/div/div/div[@class="p-name"]/a').element_handles()
-                product_html_url_list = ['https:' + p_name_element.get_attribute('href') for p_name_element in p_name_elements]
-                info_list.append(dict(order_id=order_id, orderVouche_url=orderVouche_url, product_html_url_list=product_html_url_list))
-
+            self.__page.goto(url_1)
+            btn_elements: list = self.__page.locator('.btn-def').element_handles()
+            for btn_element in btn_elements:
+                orderVoucher_url: str = 'https:' + btn_element.get_attribute('href')
+                task = EvaluationTask()
+                task.orderVoucher_url = orderVoucher_url
+                # LOG.debug(f"{task}")
+                self.__task_list.append(task)
             page += 1
-        return info_list
+
+    def __step_2(self):
+        """
+        进入评价页面，获取 `order_id` `productHtml_url` `product_name`；
+        """
+        # new_task_index = len(self.__task_list)
+        for task in self.__task_list:
+            self.__page.goto(task.orderVoucher_url)
+            self.__page.wait_for_timeout(2000)  # 等待加载资源
+            order_id_element = self.__page.wait_for_selector('//*[@id="o-info-orderinfo"]/div/div/span[1]/a', timeout=5000)
+            order_id = order_id_element.inner_text()  # 评价页面的订单编号
+            task.order_id = order_id
+
+            goods_elements: Locator = self.__page.locator('.comment-goods')
+            child_task_list: list[EvaluationTask] = [] # 一个评论页面下的所有子商品
+            for i in range(goods_elements.count()):
+                goods_element: Locator = goods_elements.nth(i)
+                try:
+                    product_link: Locator = goods_element.locator('div.p-name a[href*="item.jd.com"]').first  # 使用第一个符合条件的 <a> 标签
+                    product_link.wait_for(timeout=5000)
+                except PlaywrightTimeoutError:
+                    LOG.error(f"商品详情页面链接获取超时")
+                    continue
+                
+                productHtml_url = "https:" + product_link.get_attribute("href")  # 获取 href 属性
+                product_name = product_link.inner_text()  # 获取文本内容
+
+                child_task = task.copy() # 同步任务信息 order_id, orderVoucher_url
+                child_task.productHtml_url = productHtml_url 
+                child_task.product_name = product_name
+                # LOG.debug(f"{task}")
+                child_task_list.append(child_task)
+            # self.__task_list.extend(child_task_list)
+            yield child_task_list
+        # self.__task_list = self.__task_list[new_task_index:]
     
-    def getText(self, product_url: str):
+    def __step_3(self, task: EvaluationTask) -> EvaluationTask:
+        """
+        获取评论文本与图片
+        """
+        input_text: str = self.__getText(task.productHtml_url)
+        input_image: list = self.__getImage(task.order_id, task.productHtml_url)
+        task.input_text = input_text
+        task.input_image = input_image
+        # LOG.debug(f"{task}")
+        return task
+    
+    def __generate_task(self):
+        self.__step_1()
+        # new_task_index = len(self.__task_list)
+
+        for child_task_list in self.__step_2():
+            for child_task in child_task_list:
+                self.__page.wait_for_timeout(2000)
+                task = self.__step_3(child_task)
+                yield task
+        
+    def __getText(self, product_url: str) -> (str | None):
         """ 从网页上获取已有的评价文本 """
         if self.__page.goto(product_url):
             LOG.trace(f'getText({product_url})')
         # 点击“商品评价”
         element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
         element_to_click_1.click()
-        time.sleep(1)
+        self.__page.wait_for_timeout(1000)
         # 点击“只看当前商品”
         element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
         element_to_click_2.click()
@@ -95,7 +143,7 @@ class AutomaticEvaluate():
         text_list = []
         for page in range(1, 4):
             LOG.trace(f'Turn to page {page}')
-            time.sleep(1) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            self.__page.wait_for_timeout(1000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
             try:
                 comment_con_elements = self.__page.locator('.comment-con').element_handles()
                 for comment_con_element in comment_con_elements:
@@ -138,7 +186,7 @@ class AutomaticEvaluate():
         
         return text 
     
-    def getImage(self, order_id: str, product_url: str):
+    def __getImage(self, order_id: str, product_url: str) -> list:
         """ 
         根据商品从网页上获取已有的评价图片(部分)，筛选(随机取一组)后以订单编号为命名依据，并储存到本地。
         
@@ -149,7 +197,7 @@ class AutomaticEvaluate():
         # 点击“商品评价”
         element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
         element_to_click_1.click()
-        time.sleep(1)
+        self.__page.wait_for_timeout(1000)
         # 点击“只看当前商品”
         element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
         element_to_click_2.click()
@@ -159,7 +207,7 @@ class AutomaticEvaluate():
 
         for page in range(1, 4):
             LOG.trace(f'Turn to page {page}')
-            time.sleep(4) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            self.__page.wait_for_timeout(4000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
             # 评价主体组件
             comment_item_elements = self.__page.locator('.comment-item').element_handles()
             for comment_item_element in comment_item_elements:
@@ -167,9 +215,9 @@ class AutomaticEvaluate():
                 # 图片预览组件(小图)
                 thumb_img_elements = comment_item_element.query_selector_all('.J-thumb-img')
                 for thumb_img_element in thumb_img_elements:
-                    LOG.debug(f'Visible: {thumb_img_element.is_visible()}')
+                    # LOG.debug(f'Visible: {thumb_img_element.is_visible()}')
                     thumb_img_element.click() # 模拟点击后会出现更大的图片预览组件
-                    time.sleep(0.2)
+                    self.__page.wait_for_timeout(200)
                     # 图片预览组件(大图)
                     pic_view_elements = comment_item_element.query_selector_all('xpath=//div[@class="pic-view J-pic-view"]/img')
                     if pic_view_elements: # 起始预览组件为非image组件会导致pic_view_elements为空
@@ -224,44 +272,17 @@ class AutomaticEvaluate():
             pass
 
         return image_files_path
-                
-    def generate_task_queue(self):
-        """ 
-        生成任务队列
-        
-        task_queue = [
-            {
-                index: ,
-                orderVouche_url: ,
-                order_id: ,
-                text_to_input: ,
-                image_path_to_input: ,
-            }, ...
-        ]
-        """
-        info_list = self.getOrderVoucherInfo()
-        for index, order_info in enumerate(info_list, start=1):
-            # if index < 5: # 起始 1 
-            #     continue
-            LOG.info('正在生成任务......')
-            text_to_input = self.getText(order_info['product_html_url_list'][0])
-            image_path_to_input = self.getImage(order_info['order_id'], order_info['product_html_url_list'][0])
-            task = dict(index=index, order_id=order_info['order_id'], orderVouche_url=order_info['orderVouche_url'], text_to_input=text_to_input, image_path_to_input=image_path_to_input)
-            self.__task_queue.append(task)
-            LOG.trace(f'当前任务：{json.dumps(task, indent=4, ensure_ascii=False)}')
-            yield task
-            
-
-    def automaticEvaluate(self, order_id: str, url: str, text_input: str, image_files_path: list):
+    
+    def __automatic_evaluate(self, task: EvaluationTask):
         """ 自动评价操作，限单个评价页面"""
-        self.__page.goto(url)
+        self.__page.goto(task.orderVoucher_url)
         # 商品评价文本
-        if not text_input:
-            text_input = '非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！'
-            LOG.warning(f'单号{order_id}的订单使用默认文本。')
+        if not task.input_text:
+            task.input_text = '非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！'
+            LOG.warning(f'单号{task.order_id}的订单使用默认文本。')
         try:
             text_input_element = self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea', timeout=3000)
-            text_input_element.fill(text_input)
+            text_input_element.fill(task.input_text)
         except PlaywrightTimeoutError:
             LOG.error("超时，未识别到评价文本输入框！")
             return
@@ -286,34 +307,36 @@ class AutomaticEvaluate():
                     # 模拟点击
                     self.__page.mouse.move(x_offset, y_offset)
                     self.__page.mouse.click(x_offset, y_offset)
-            LOG.info(f'单号{order_id}识别到{len(star5_elements)}个星级评分组件, 全部给予五星好评。')
+            LOG.info(f'单号{task.order_id}识别到{len(star5_elements)}个星级评分组件, 全部给予五星好评。')
         except Exception as err:
             LOG.error("未识别到星级评分组件！")
 
-        # 商品评价图片
-        if not image_files_path:
-            LOG.warning(f'单号{order_id}的订单未上传评价图片。')
-            return
+        
         try:
             file_input_element = self.__page.wait_for_selector('xpath=//input[@type="file"]', timeout=2000) # 查找隐藏的文件上传输入框
+            # 商品评价图片
+            if file_input_element and not task.input_image:
+                LOG.warning(f'单号{task.order_id}的订单未上传评价图片。')
+                return
             # 发送文件路径到文件上传输入框
-            for path in image_files_path:
+            for path in task.input_image:
                 file_input_element.set_input_files(path)
         
         except Exception as err:
             LOG.error("未识别到评价图片路径输入框！")
 
-        LOG.success(f'单号{order_id}的订单评价页面填充完成。')
+        LOG.success(f'单号{task.order_id}的订单评价页面填充完成。')
         # 提交评价
-        time.sleep(8) # QWQ:尚未想到更好的检测所有图片上传完成的方法
+        self.__page.wait_for_timeout(max(5, len(task.input_image) * 2.5) * 1000)
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
-            # btn_submit.click()
+            self.__page.wait_for_timeout(2000)
+            btn_submit.click()
         except Exception as err:
             LOG.error("未识别到提交按钮！")
 
-    def init_image_directory(self, directory_path):
+    def __init_image_directory(self, directory_path):
         # 确保目标路径存在
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
@@ -329,12 +352,3 @@ class AutomaticEvaluate():
                     os.remove(file_path)
                 except Exception as e:
                     LOG.error(f"Error deleting {file_path}: {e}")
-
-    def execute(self):
-        self.init_image_directory(IMAGE_DIRECTORY_PATH)
-        for task in self.generate_task_queue():
-            self.automaticEvaluate(
-                order_id=task['order_id'], url=task['orderVouche_url'], 
-                text_input=task['text_to_input'], image_files_path=task['image_path_to_input']) 
-            time.sleep(10)
-        LOG.info('QwQ脚本运行结束，如有遗漏订单请再次运行！')
