@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.1.3
+version: JD-AutomaticEvaluate-2.1.4
 
 #### 简介
 自动化评价脚本，给予五星好评加图文。
@@ -21,6 +21,7 @@ version: JD-AutomaticEvaluate-2.1.3
 `btn_submit.click()`
 
 # Update log
+- JD-AutomaticEvaluate-2.1.4: 内置了默认评价文案池；添加了获取已有评价文案、图片的最小现存数量限制；
 - JD-AutomaticEvaluate-2.1.3: 优化了登录逻辑；优化了任务构建逻辑，
 - JD-AutomaticEvaluate-2.0.3: 支持单文件打包模式运行。
 - JD-AutomaticEvaluate-2.0.2: 优化了项目结构；

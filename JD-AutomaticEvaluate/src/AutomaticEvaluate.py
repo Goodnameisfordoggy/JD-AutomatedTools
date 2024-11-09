@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-09 00:43:20
+LastEditTime: 2024-11-09 23:57:26
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -23,7 +23,7 @@ from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
 
 from .logInWithCookies import logInWithCookies
-from .data import EvaluationTask
+from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
 from .logger import get_logger
 LOG = get_logger()
 
@@ -33,6 +33,10 @@ IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'image')
 
 class AutomaticEvaluate():
     
+    MIN_EXISTING_PRODUCT_DESCRIPTIONS = 15  # 商品已有文案的最少数量 | 真实评论文案多余这个数脚本才会正常获取已有文案。
+    MIN_EXISTING_PRODUCT_IMAGES = 15        # 商品已有图片的最少数量 | 真实评论图片多余这个数脚本才会正常获取已有图片。
+    MIN_DESCRIPTION_CHAR_COUNT = 60         # 评论文案的最少字数 | 随机筛选文案限制，JD:优质评价要求60字以上。
+
     def __init__(self) -> None:
         self.__page, browser = logInWithCookies()
         self.__task_list: list[EvaluationTask] = []
@@ -172,16 +176,19 @@ class AutomaticEvaluate():
             if not text_list:
                 LOG.info('未找到当前商品相关的评论文本！')
                 return
+            if len(text_list) * 2 < self.MIN_EXISTING_PRODUCT_DESCRIPTIONS:
+                LOG.info("当前商品已有评论文案过少，暂不获取！")
+                return
             selected_value = random.choice(text_list)
-            if len(selected_value) > 60 and is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价。JD:60字以上为优质评价
+            if len(selected_value) > self.MIN_DESCRIPTION_CHAR_COUNT and is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价文案。
                 return selected_value
             else:
                 return get_random_text(text_list)
         
         try:
-            text = get_random_text(text_list[int(len(text_list) / 2):]) # 取后半部分评价                
+            text = get_random_text(text_list[int(len(text_list) / 2):]) # 取后半部分评价进行筛选            
         except RecursionError:
-            LOG.info('未找到当前商品下符合要求的评论文本！')
+            LOG.info('未筛出当前商品下符合要求的评论文案！')
             return
         
         return text 
@@ -202,7 +209,7 @@ class AutomaticEvaluate():
         element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
         element_to_click_2.click()
 
-        image_url_lists = []
+        image_url_lists: list[list] = []
         previous_image_url = ''
 
         for page in range(1, 4):
@@ -241,6 +248,9 @@ class AutomaticEvaluate():
             if not image_url_lists:
                 LOG.info('未找到当前商品相关的评论图片！')
                 return
+            if sum(len(image_url_list) for image_url_list in image_url_lists) < self.MIN_EXISTING_PRODUCT_IMAGES:
+                LOG.info("当前商品已有评论图片过少，暂不获取！")
+                return
             selected_value = random.choice(image_url_lists)
             if len(selected_value) >= 2: # 组内图片数量 
                 return selected_value
@@ -267,7 +277,7 @@ class AutomaticEvaluate():
                 else:
                     LOG.error(f'{image_file_name} 文件下载失败！Status code: {response.status_code}')
         except RecursionError:
-            LOG.info('未找到当前商品下符合要求的图片组！')
+            LOG.info('未筛出当前商品下符合要求的图片组！')
         except TypeError: # get_random_image_group返回结果为None时忽略
             pass
 
@@ -278,8 +288,8 @@ class AutomaticEvaluate():
         self.__page.goto(task.orderVoucher_url)
         # 商品评价文本
         if not task.input_text:
-            task.input_text = '非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！'
-            LOG.warning(f'单号{task.order_id}的订单使用默认文本。')
+            task.input_text = random.choice(DEFAULT_COMMENT_TEXT_LIST)
+            LOG.warning(f'单号{task.order_id}的订单使用默认评价方式。')
         try:
             text_input_element = self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea', timeout=3000)
             text_input_element.fill(task.input_text)
@@ -331,7 +341,7 @@ class AutomaticEvaluate():
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
-            self.__page.wait_for_timeout(2000)
+            self.__page.wait_for_timeout(5000)
             btn_submit.click()
         except Exception as err:
             LOG.error("未识别到提交按钮！")
