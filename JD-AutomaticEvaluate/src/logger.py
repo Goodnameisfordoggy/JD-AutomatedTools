@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-08 00:05:35
+LastEditTime: 2024-11-12 00:26:16
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logger.py
 Description: 
 
@@ -21,9 +21,16 @@ from loguru import logger
 
 logger.remove()
 
-logger.add(sys.stdout, level="INFO")
-
 logger.add("logs/log_{time:YYYY-MM-DD}.log", level="INFO", rotation="00:00", retention="7 days")
+
+if getattr(sys, 'frozen', False):
+	logger.add(
+		sink=sys.stdout,
+		format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+		level="INFO"
+	)
+else:
+    logger.add(sys.stdout, level="INFO")
 
 def get_logger():
     return logger

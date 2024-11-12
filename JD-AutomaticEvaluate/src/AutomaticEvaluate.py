@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-09 23:57:26
+LastEditTime: 2024-11-12 19:37:16
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -128,6 +128,7 @@ class AutomaticEvaluate():
 
         for child_task_list in self.__step_2():
             for child_task in child_task_list:
+                LOG.info("正在生成任务.....")
                 self.__page.wait_for_timeout(2000)
                 task = self.__step_3(child_task)
                 yield task
@@ -295,7 +296,7 @@ class AutomaticEvaluate():
             text_input_element.fill(task.input_text)
         except PlaywrightTimeoutError:
             LOG.error("超时，未识别到评价文本输入框！")
-            return
+            return False
         
         # 星级评分
         try:
@@ -326,8 +327,8 @@ class AutomaticEvaluate():
             file_input_element = self.__page.wait_for_selector('xpath=//input[@type="file"]', timeout=2000) # 查找隐藏的文件上传输入框
             # 商品评价图片
             if file_input_element and not task.input_image:
-                LOG.warning(f'单号{task.order_id}的订单未上传评价图片。')
-                return
+                LOG.warning(f'单号{task.order_id}的订单未上传评价图片，跳过该任务。')
+                return False
             # 发送文件路径到文件上传输入框
             for path in task.input_image:
                 file_input_element.set_input_files(path)
@@ -341,8 +342,9 @@ class AutomaticEvaluate():
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
-            self.__page.wait_for_timeout(5000)
             btn_submit.click()
+            self.__page.wait_for_timeout(5000)
+            return True
         except Exception as err:
             LOG.error("未识别到提交按钮！")
 

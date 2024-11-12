@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.1.4
+version: JD-AutomaticEvaluate-2.1.5
 
 #### 简介
 自动化评价脚本，给予五星好评加图文。
@@ -16,11 +16,16 @@ version: JD-AutomaticEvaluate-2.1.4
 - 本脚本以订单对应的评价页面地址(orderVoucher_url)作为标识来组织评价任务，消除了部分商品没有商品编号(product_id)的影响。
 - 本脚本支持单任务线性运行(符合一般真实用户操作逻辑): `订单列表`->`评价页面`->`商品详情页面copy文案，图片`->`评价页面填写`
 
-#### 使用
+#### 快速使用
+- 打包命令(chromium-xxxx为浏览器版本号)
+```
+pyinstaller --onefile --add-data="C:\Users\your_username\AppData\Local\ms-playwright\chromium-1134\chrome-win;chromium" main.py
+```
 - 如不需要请注释掉:
 `btn_submit.click()`
 
 # Update log
+- JD-AutomaticEvaluate-2.1.5: 日志优化
 - JD-AutomaticEvaluate-2.1.4: 内置了默认评价文案池；添加了获取已有评价文案、图片的最小现存数量限制；
 - JD-AutomaticEvaluate-2.1.3: 优化了登录逻辑；优化了任务构建逻辑，
 - JD-AutomaticEvaluate-2.0.3: 支持单文件打包模式运行。

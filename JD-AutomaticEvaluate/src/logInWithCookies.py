@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-09 00:02:18
+LastEditTime: 2024-11-12 17:58:35
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logInWithCookies.py
 Description: 
 
@@ -33,7 +33,7 @@ def logInWithCookies(target_url: str = "https://www.jd.com/"):
     """
     p = sync_playwright().start()
     if getattr(sys, 'frozen', False): # 打包模式
-        temp_dir = os.path.join(sys._MEIPASS, "chromium-1134/chrome-win")
+        temp_dir = os.path.join(sys._MEIPASS, "chromium")
         browser = p.chromium.launch(
             headless=False, 
             args=["--disable-blink-features","--disable-blink-features=AutomationControlled"],
