@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-06-13 15:28:54
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\dataPortector.py
+LastEditTime: 2024-11-19 22:18:17
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\dataPortector.py
 Description: 
 
                 *       写字楼里写字间，写字间里程序员；
@@ -17,101 +17,69 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 '''
 import os
 import json
-import logging
+from src.logger import get_logger
+LOG = get_logger()
 
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH = os.path.join(WORKING_DIRECTORY_PATH, "config\config.json")
 
-class ConfigManager:
-    def __init__(self):
-        # 日志记录器
-        self.logger = logging.getLogger(__name__)
-        
-        self.__config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/config.json")
-        self.__excel_config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/excel_config.json")
-        self.__mysql_config_file = os.path.join(WORKING_DIRECTORY_PATH, "config/mysql_config.json")
+class OrderExportConfig:
+    def __init__(
+        self,
+        data_retrieval_mode: str,
+        high_search: str,
+        date_search: str,
+        status_search: str,
+        headers: list[str],
+        masking_intensity: dict[str, int],
+        excel_storage_settings: dict[str, any],
+    ):
+        self.data_retrieval_mode = data_retrieval_mode
+        self.high_search = high_search
+        self.date_search = date_search
+        self.status_search = status_search
+        self.headers = headers
+        self.masking_intensity = masking_intensity
+        self.excel_storage_settings = excel_storage_settings
 
-        self.__config = self.__load_config()
-        self.__excel_config = self.__load_excel_config()
-        self.__mysql_config = self.__load_mysql_config()
-        self.__date_range_dict = self.__init_date_range_dict()
-    
-    def get_config(self):
-        """ 获取配置 """
-        return self.__config
-    
-    def get_excel_config(self):
-        """ 获取配置 """
-        return self.__excel_config
-    
-    def get_mysql_config(self):
-        """ 获取配置 """
-        return self.__mysql_config
+    @classmethod
+    def from_json_file(cls, file_path: str = CONFIG_PATH) -> "OrderExportConfig":
+        """从配置文件初始化配置对象"""
+        with open(file_path, "r", encoding="utf-8") as file:
+            config_data = json.load(file)  # 假设配置文件是 JSON 格式
+        return cls(
+            data_retrieval_mode=config_data.get("data_retrieval_mode", ""),
+            high_search=config_data.get("high_search", ""),
+            date_search=config_data.get("date_search", ""),
+            status_search=config_data.get("status_search", ""),
+            headers=config_data.get("headers", []),
+            masking_intensity=config_data.get("masking_intensity", {}),
+            excel_storage_settings=config_data.get("excel_storage_settings", {}),
+        )
 
-    def get_date_range_dict(self):
-        """ 获取日期范围字典 """
-        return self.__date_range_dict
+    def validate(self):
+        """验证配置是否符合要求"""
+        if not self.data_retrieval_mode or not isinstance(self.data_retrieval_mode, str):
+            raise ValueError("data_retrieval_mode 必须是非空字符串")
+        if not isinstance(self.headers, list) or not all(isinstance(header, str) for header in self.headers):
+            raise ValueError("headers 必须是包含字符串的非空列表")
+        if not isinstance(self.masking_intensity, dict):
+            raise ValueError("masking_intensity 必须是字典")
+        if not isinstance(self.excel_storage_settings, dict):
+            raise ValueError("excel_storage_settings 必须是字典")
+        return True
 
-    def __load_config(self):
-        """ 加载配置文件 """
-        try:
-            with open(self.__config_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            self.logger.error(f"配置文件 {self.__config_file} 不存在")
-            return {}
-        except json.decoder.JSONDecodeError as err:
-            self.logger.error(f"配置文件加载失败: {err}")
-            return {}
-    
-    def save_config(self, config_dict):
-        """ 保存配置文件 """
-        try:
-            with open(self.__config_file, 'w', encoding='utf-8') as f:
-                json.dump(config_dict, f, indent=4, ensure_ascii=False)
-            self.logger.info(f"配置文件 {self.__config_file} 已更新")
-        except Exception as e:
-            self.logger.error(f"配置文件 {self.__config_file} 保存失败: {e}")
-    
-    def __load_excel_config(self):
-        """ 加载配置文件 """
-        try:
-            with open(self.__excel_config_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            self.logger.error(f"配置文件 {self.__excel_config_file} 不存在")
-            return {}
-        except json.decoder.JSONDecodeError as err:
-            self.logger.error(f"配置文件加载失败: {err}")
-            return {}
-    
-    def __load_mysql_config(self):
-        """ 加载配置文件 """
-        try:
-            with open(self.__mysql_config_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            self.logger.error(f"配置文件 {self.__mysql_config_file} 不存在")
-            return {}
-        except json.decoder.JSONDecodeError as err:
-            self.logger.error(f"配置文件加载失败: {err}")
-            return {}
-    
+    def get_headers_settings(self) -> dict[str, any]:
+        """返回 Excel 表头配置信息"""
+        return self.excel_storage_settings.get("headers_settings", {})
 
-    def __init_date_range_dict(self):
-        """ 初始化日期范围字典 """
-        return {
-            "ALL": -1,
-            "近三个月订单": 1,
-            "今年内订单": 2,
-            "2023年订单": 2023,
-            "2022年订单": 2022,
-            "2021年订单": 2021,
-            "2020年订单": 2020,
-            "2019年订单": 2019,
-            "2018年订单": 2018,
-            "2017年订单": 2017,
-            "2016年订单": 2016,
-            "2015年订单": 2015,
-            "2014年订单": 2014,
-            "2014年以前订单": 3,
-        }
+    def get_masking_level(self, field: str) -> int:
+        """获取指定字段的屏蔽级别"""
+        return self.masking_intensity.get(field, 0)
+
+    def __repr__(self):
+        return (
+            f"<OrderExportConfig(data_retrieval_mode={self.data_retrieval_mode}, "
+            f"date_search={self.date_search}, status_search={self.status_search})>"
+        )
+    

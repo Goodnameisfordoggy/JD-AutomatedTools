@@ -1,64 +1,72 @@
 {
-    "header_items": [
-        {
-            "name": "order_id",
+    "header_items": {
+        "order_id": {
+            "name": "订单编号",
             "width": "14"
         },
-        {
-            "name": "shop_name",
+        "parent_order_id": {
+            "name": "父订单编号",
+            "width": "14"
+        },
+        "order_shop_name": {
+            "name": "店铺名称",
             "width": "20"
         },
-        {
-            "name": "product_id",
+        "product_id":  {
+            "name": "商品编号",
             "width": "20"
         },
-        {
-            "name": "product_name",
+        "product_name":  {
+            "name": "商品名称",
             "width": "39"
         },
-        {
-            "name": "goods_number",
-            "width": "6"
+        "goods_number":  {
+            "name": "商品数量",
+            "width": "8"
         },
-        {
-            "name": "amount",
+        "actual_payment_amount":  {
+            "name": "实付金额",
             "width": "13"
         },
-        {
-            "name": "jingdou",
-            "width": "6"
+        "jingdou_increment":  {
+            "name": "订单返豆",
+            "width": "8"
         },
-        {
-            "name": "order_time",
+        "order_time":  {
+            "name": "下单时间",
             "width": "25"
         },
-        {
-            "name": "order_status",
-            "width": "8"
-        },
-        {
-            "name": "courier_services_company",
+        "order_status":  {
+            "name": "订单状态",
             "width": "10"
         },
-        {
-            "name": "courier_number",
-            "width": "20"
+        "consignee_name":  {
+            "name": "收货人姓名",
+            "width": "10"
         },
-        {
-            "name": "consignee_name",
+        "consignee_address":  {
+            "name": "收货地址",
+            "width": "40"
+        },
+        "consignee_phone_number":  {
+            "name": "收货人电话",
+            "width": "12"
+        },
+        "jingdou_decrement":  {
+            "name": "订单用豆",
             "width": "8"
         },
-        {
-            "name": "consignee_address",
-            "width": "50"
+        "product_total_price":  {
+            "name": "商品总价",
+            "width": "13"
         },
-        {
-            "name": "consignee_phone_number",
-            "width": "22"
+        "courier_services_company":  {
+            "name": "物流公司",
+            "width": "10"
         },
-        {
-            "name": "order_url",
-            "width": "30"
+        "courier_number":  {
+            "name": "快递单号",
+            "width": "18"
         }
-    ]
+    }
 }

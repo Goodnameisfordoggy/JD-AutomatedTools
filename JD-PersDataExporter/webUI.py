@@ -5,12 +5,8 @@ import gradio as gr
 import pandas as pd
 import mysql.connector
 
-from src.data_type.Form import Form
-from src.dataExporter import JDDataExporter
 from src.dataPortector import ConfigManager
-from config.log_config import configure_logging
 from theme import PremiumBox, GorgeousBlack
-configure_logging()
 
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +25,7 @@ class WebUI():
     
     def __init__(self) -> None:
         self.configManager = ConfigManager()
-        self.form = Form()
+        # self.form = Form()
         self.__mode = 'Light'
 
     def export(self,
@@ -48,14 +44,15 @@ class WebUI():
         """ 
         按钮绑定操作: 
         
-        Return: [ 
-            basic_config_warring_update,
-            username_input_update,
-            data_preview_update,
-            change_header_button_update,
-            storage_button_update,
-            storage_mode_update,
-            export_button_update]
+        Returns:
+            list: 返回一个包含更新状态的列表，具体说明如下：
+                - basic_config_warring_update (str): 基本配置警告更新信息，提示用户配置是否有效或已更新。
+                - username_input_update (str): 用户名输入框的状态更新信息。
+                - data_preview_update (str): 数据预览的更新信息，显示数据是否正确加载。
+                - change_header_button_update (str): 表头切换按钮的更新信息，指示是否启用表头选项。
+                - storage_button_update (str): 存储按钮的更新信息，指示存储操作是否成功。
+                - storage_mode_update (str): 存储模式的更新信息，显示当前存储模式设置。
+                - export_button_update (str): 导出按钮的状态更新信息，指示是否准备好执行导出操作
         """
         self.chage_configuration(username_input, date_range_input, header_input, exclude_coupon_orders, exclude_privilege_orders, filter_completed_orders, order_id_slider, consignee_name_slider, consignee_address_slider, consignee_phone_number_slider, courier_number_slider)
         # username非空验证
@@ -256,8 +253,8 @@ class WebUI():
                         ) 
                         header_input = gr.Dropdown(
                             label="Header(需要的信息)",
-                            choices= ["order_id", "shop_name", "product_id", "product_name", "goods_number", "amount", "jingdou", "order_time", "order_status", "courier_services_company", "courier_number", "consignee_name", "consignee_address", "consignee_phone_number"], 
-                            value=["order_id", "shop_name", "product_id", "product_name", "goods_number", "amount", "jingdou", "order_time", "order_status", "courier_services_company", "courier_number"],
+                            choices= ["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话"], 
+                            value=["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话"],
                             interactive=True,
                             multiselect=True
                         )   
