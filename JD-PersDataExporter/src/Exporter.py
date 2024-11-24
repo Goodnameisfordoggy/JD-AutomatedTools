@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-20 00:34:52
+LastEditTime: 2024-11-25 00:12:17
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\Exporter.py
 Description: 
 
@@ -22,7 +22,6 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from .logInWithCookies import logInWithCookies
 from .data import PerOrderInfoSlim, PerOrderInfoFull, DATE, STATUS
-from .storage.dataStorageToExcel import ExcelStorage
 from .dataPortector import OrderExportConfig
 from .logger import get_logger
 
@@ -56,7 +55,7 @@ class JDOrderDataExporter():
     
     def exec_(self):
         """ 终端运行 """
-        mode = self.__config.data_retrieval_mode | self.DATA_RETRIEVAL_MODE
+        mode = self.__config.data_retrieval_mode or self.DATA_RETRIEVAL_MODE
         match mode:
             case "精简":
                 self.__slim_step_1()
@@ -68,8 +67,8 @@ class JDOrderDataExporter():
         """
         根据筛选条件导航到订单列表，获取精简信息
         """
-        date_search = self.__config.date_search | self.DATE_SEARCH
-        status_search = self.__config.status_search | self.STATUS_SEARCH
+        date_search = self.__config.date_search or self.DATE_SEARCH
+        status_search = self.__config.status_search or self.STATUS_SEARCH
         page = 1
         while True:
             url_1 = f"https://order.jd.com/center/list.action?d={DATE.get(date_search)}&s={STATUS.get(status_search, 4096)}&page={page}"
@@ -217,5 +216,5 @@ class JDOrderDataExporter():
             if jingdou_decrement_match:
                 orderInfo.jingdou_decrement = int(float(jingdou_decrement_match.group(1)) * 100)
             
-            print(orderInfo)
+            # print(orderInfo)
             self.__orderInfo_list[index] = orderInfo

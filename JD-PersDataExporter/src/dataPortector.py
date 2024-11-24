@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-11-19 22:18:17
+LastEditTime: 2024-11-21 01:09:12
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\dataPortector.py
 Description: 
 
@@ -26,13 +26,14 @@ CONFIG_PATH = os.path.join(WORKING_DIRECTORY_PATH, "config\config.json")
 class OrderExportConfig:
     def __init__(
         self,
-        data_retrieval_mode: str,
-        high_search: str,
-        date_search: str,
-        status_search: str,
-        headers: list[str],
-        masking_intensity: dict[str, int],
-        excel_storage_settings: dict[str, any],
+        *,
+        data_retrieval_mode: str = "",
+        high_search: str = "",
+        date_search: str = "",
+        status_search: str = "",
+        headers: list[str] = [],
+        masking_intensity: dict[str, int] = {},
+        excel_storage_settings: dict[any] = {},
     ):
         self.data_retrieval_mode = data_retrieval_mode
         self.high_search = high_search
@@ -79,7 +80,13 @@ class OrderExportConfig:
 
     def __repr__(self):
         return (
-            f"<OrderExportConfig(data_retrieval_mode={self.data_retrieval_mode}, "
-            f"date_search={self.date_search}, status_search={self.status_search})>"
+            "<OrderExportConfig("
+            f"data_retrieval_mode={self.data_retrieval_mode}, "
+            f"high_search={self.high_search}, "
+            f"date_search={self.date_search}, "
+            f"status_search={self.status_search}, "
+            f"masking_intensity={self.masking_intensity}, "
+            f"excel_storage_settings={self.excel_storage_settings}, "
+            ")>"
         )
     

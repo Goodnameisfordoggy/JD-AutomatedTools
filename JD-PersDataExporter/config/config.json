@@ -1,27 +1,24 @@
 {
-    "data_retrieval_mode": "详细",
+    "data_retrieval_mode": "精简",
     "high_search": "全部类型",
     "date_search": "近三个月订单",
     "status_search": "已完成",
     "headers": [
-        "order_id",
-        "shop_name",
-        "product_id",
-        "product_name",
-        "goods_number",
-        "amount",
-        "jingdou",
-        "order_time",
-        "order_status",
-        "courier_services_company",
-        "courier_number"
+        "订单编号",
+        "父订单编号",
+        "店铺名称",
+        "商品名称",
+        "商品数量",
+        "实付金额",
+        "订单返豆",
+        "下单时间",
+        "订单状态"
     ],
     "masking_intensity": {
         "order_id": 0,
         "consignee_name": 2,
         "consignee_address": 2,
-        "consignee_phone_number": 2,
-        "courier_number": 2
+        "consignee_phone_number": 2
     },
     "excel_storage_settings": {
         "storage_path": "",

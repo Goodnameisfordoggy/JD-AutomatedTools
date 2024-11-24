@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-11-18 08:47:37
+LastEditTime: 2024-11-25 00:21:25
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -22,7 +22,7 @@ import pandas as pd
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Alignment
 
-from ..dataPortector import ConfigManager
+from ..dataPortector import OrderExportConfig
 from src.logger import get_logger
 LOG = get_logger()
 
@@ -32,14 +32,12 @@ class ExcelStorage:
         self.__data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
         self.__header_needed = header_needed  # 用户选择的表头字段列表
         # 获取配置文件
-        self.__configManager = ConfigManager()
-        self.__config = self.__configManager.get_excel_config()
-        if file_name:
-            if os.path.splitext(file_name) > 1:
-                self.__file_name = file_name + '.xlsx'# 设置生成文件的文件名
-            else:
-                self.__file_name = file_name
-            
+        self.__config = OrderExportConfig().from_json_file()
+
+        if any(file_name.endswith(ext) for ext in ['.xlsx', '.xlsm', '.xltx', '.xltm']):
+            self.__file_name = file_name
+        else:
+            self.__file_name = file_name + '.xlsx'# 设置生成文件的文件名
         self.__sheet_name = sheet_name # 设置生成的工作簿名
         self.__existent_order_id = None # 现有表中的id
         self.__output_fields = self.__define_output_fields()
@@ -52,7 +50,7 @@ class ExcelStorage:
 
         Return: (list) 处理后的字段名称列表。
         """
-        field_items = self.__config.get('header_items', '') 
+        field_items = [value for _, value in self.__config.excel_storage_settings["headers_settings"].items()]
         # LOG.debug(f'field_items: {field_items}\n')
 
         all_fields_name = [field.get('name', '') for field in field_items] # 全部已定义字段的名称
@@ -138,10 +136,10 @@ class ExcelStorage:
             index = 0
             default_width = 16
             for header in self.__output_fields:  # 获取用户选择的表头名称，以此为顺序
-                for header_item in self.__config['header_items']:  # 获取表头的设置信息
-                    if header_item['name'] == header:
+                for key, header_item in self.__config.excel_storage_settings["headers_settings"].items():  # 获取表头的设置信息
+                    if header_item["name"] == header:
                         # 设置表头宽度
-                        worksheet.column_dimensions[uppercase_letters[index]].width = float(header_item.get('width', default_width))
+                        worksheet.column_dimensions[uppercase_letters[index]].width = float(header_item.get("width", default_width))
                         index += 1  # 下一个表头字母的索引
                         break
                     
@@ -211,14 +209,15 @@ class ExcelStorage:
         if not self.is_file_exists():
             self.create_new_file()
         else:
-            # 读取Excel文件
-            df = pd.read_excel(self.__file_name, sheet_name=self.__sheet_name, engine='openpyxl')
-            # 获取表中 "订单编号" 字段下的所有值
-            df['订单编号'] = df['订单编号'].fillna(0) # 将 NaN 值替换为一个默认值（例如0或其他适合的值）
-            df['订单编号'] = df['订单编号'].astype(int) # 将列转换为整数
-            self.__existent_order_id = df['订单编号'].tolist()
-            self.__existent_order_id = [str(item) for item in self.__existent_order_id]
-            self.__data = [order for order in self.__data if order.get('订单编号') not in self.__existent_order_id]
+            if not self.is_file_locked():
+                # 读取Excel文件
+                df = pd.read_excel(self.__file_name, sheet_name=self.__sheet_name, engine='openpyxl')
+                # 获取表中 "订单编号" 字段下的所有值
+                df['订单编号'] = df['订单编号'].fillna(0) # 将 NaN 值替换为一个默认值（例如0或其他适合的值）
+                df['订单编号'] = df['订单编号'].astype(int) # 将列转换为整数
+                self.__existent_order_id = df['订单编号'].tolist()
+                self.__existent_order_id = [str(item) for item in self.__existent_order_id]
+                self.__data = [order for order in self.__data if order.get('订单编号') not in self.__existent_order_id]
 
         try:
             if self.__data:
