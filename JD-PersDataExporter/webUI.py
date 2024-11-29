@@ -1,348 +1,347 @@
+'''
+Author: HDJ
+StartDate: please fill in
+LastEditTime: 2024-11-30 00:03:11
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\webUI.py
+Description: 
+
+				*		写字楼里写字间，写字间里程序员；
+				*		程序人员写程序，又拿程序换酒钱。
+				*		酒醒只在网上坐，酒醉还来网下眠；
+				*		酒醉酒醒日复日，网上网下年复年。
+				*		但愿老死电脑间，不愿鞠躬老板前；
+				*		奔驰宝马贵者趣，公交自行程序员。
+				*		别人笑我忒疯癫，我笑自己命太贱；
+				*		不见满街漂亮妹，哪个归得程序员？    
+Copyright (c) 2024 by HDJ, All Rights Reserved. 
+'''
+
 import os
+import copy
+import shutil
+import asyncio
+import aiofiles
 import platform
 import argparse
 import gradio as gr
 import pandas as pd
-import mysql.connector
 
 from theme import PremiumBox, GorgeousBlack
+from src.Exporter import JDOrderDataExporter
+from src.dataPortector import OrderExportConfig
+from src.data import PerOrderInfoSlim
+from src.storage import dataStorageToExcel
 
-WORKING_DIRECTORY_PATH = os.path.dirname(os.path.abspath(__file__))
-
-custom_css = """
-<style>
-    .warning textarea {
-        color: red !important;  /* 警告文本颜色 */
-    }
-    .normal textarea {
-        color: black !important;  /* 正常文本颜色 */
-    }
-</style>
-"""
-
+EXCEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 确保目录存在
+if not os.path.exists(EXCEL_DIR):
+    os.makedirs(EXCEL_DIR)
+    
 class WebUI():
-    
     def __init__(self) -> None:
-        # self.form = Form()
-        self.__mode = 'Light'
+        self.config = OrderExportConfig().from_json_file()
 
-    def export(self,
-        username_input,
-        date_range_input,
-        header_input,
-        exclude_coupon_orders, 
-        exclude_privilege_orders, 
-        filter_completed_orders,
-        order_id_slider,
-        consignee_name_slider,
-        consignee_address_slider,
-        consignee_phone_number_slider,
-        courier_number_slider
-        ):
-        """ 
-        按钮绑定操作: 
-        
-        Returns:
-            list: 返回一个包含更新状态的列表，具体说明如下：
-                - basic_config_warring_update (str): 基本配置警告更新信息，提示用户配置是否有效或已更新。
-                - username_input_update (str): 用户名输入框的状态更新信息。
-                - data_preview_update (str): 数据预览的更新信息，显示数据是否正确加载。
-                - change_header_button_update (str): 表头切换按钮的更新信息，指示是否启用表头选项。
-                - storage_button_update (str): 存储按钮的更新信息，指示存储操作是否成功。
-                - storage_mode_update (str): 存储模式的更新信息，显示当前存储模式设置。
-                - export_button_update (str): 导出按钮的状态更新信息，指示是否准备好执行导出操作
-        """
-        self.chage_configuration(username_input, date_range_input, header_input, exclude_coupon_orders, exclude_privilege_orders, filter_completed_orders, order_id_slider, consignee_name_slider, consignee_address_slider, consignee_phone_number_slider, courier_number_slider)
-        # username非空验证
-        sign, username_input_update = WebUI.validate_Username(username_input)
-        if sign is False:
-            return [gr.update(visible=True), username_input_update, gr.update(), gr.update(), gr.update(), gr.update(), gr.update()]
-        # dataExporter = JDDataExporter()
-        # self.form = dataExporter.fetch_data()
-
-        self.form += [{'order_id': 'UszhDl5ONZkg', 'shop_name': 'NIICAXRMJKa53OD1FFuD', 'product_id': 'ZkbX4579AAdnORuf', 'product_name': 'cTAw3vznpqBW0Cj9UVNJnDWL0mHi66JpRWmuVOyw3wXCRQmUhj5UZDQDbv28hM5f5SHIxmWkmWPE74C06ue64sdYNb1BG7OnnLyQPnJ24hGNPdxCWOCGvUU1eRJmY6pjUgkipvlVWcQCoMGUee5h7KBEKH2duUDEiMA9CfWqsEAsT99FfCdinWeFZBjv9b8zkh1Qk7TpZykmIhbJXCRRwSgW1v6iQ22UTXJ7OcLk1jTO1rTHMC4LyfV8Kzw3PHyxhIccUIaFwtXwFHEMgAxPvBlGIWf2i1Ki4h5iXUp5AAFBS9hDDD7ZZsbn3RjUdNLa3w9NdTTe922jDgHICCczZf6STbV2MK4fMigzzkUfqa69eiSfgP41qv11OEbWcmvpJtSZeEDJdnAuiO8OKJhANSRk41a5aHPbfcYu3WeJNnfLxSDJs0yZyvIJvk845byg2HPp1ipyWghMB261KVX74P1KfjXHwMORZmKsC9qyVWIyMs58w2eO', 'goods_number': 'XLd6Orytp7nbito7auvxxh6dBBNTInXLA0E8mwuxszub63NXc4', 'amount': '60176187.00', 'jingdou': 2822, 'order_time': '2021-07-16 13:27:44', 'order_status': 'delivered', 'courier_services_company': 'UPS', 'courier_number': 'I6RcoOlvLZ7R3hewSA', 'consignee_name': '3rHiPs', 'consignee_address': 'TJntnq5OMCnZVOXIX0LdV05JlB4pjvbJFxRngcTCPc4HqALTnI', 'consignee_phone_number': 'OSFXIl49LJ0', 'order_url': 'laEXr1LKokGZ4i0gFihk0PMJ1V8rfOk9F0Hue51YC31p5TIuPPcqIECDJgEMRj6JmYyqVVtCGZwohlAUUbTT2XwqweZXnHvF8hpiokKZqZSW3mzwRDYS0dlebhTft8qMcEr1so9uibax9GP9G8yDSJpCWxKaYwwwpMknmneLJMXlFqxHY9uSvZkIK1gXsht0ezjtDjecgKcIvWaRwIY1f0oMDVRKyTnGqdfl7wYxI6WaHmytfaimP3sADKJ3u8ZaEVuCnpwqT11vhOshUCoOGw6HG02a7ivk8v1F58u5bkzR'},
-{'order_id': '8N85yp1gVlor', 'shop_name': '21rRG2fAfA00JSQ4Nz08', 'product_id': 'yXe0AFWu2SsHl8oo', 'product_name': 'Ijc6qViPOp49UFkgWuuFlA4jGPICxssTkiitDiX0ycaBv4rbJibD5pQmbC00TEZtQqXNyYaPBzZ91qjQUIP9IEo0dV8fDaut9obDSsvd4EK0MBcYXanpUMt0nQiUdr5g00nhoJ3lPZKpMqAwsPEmmqjgKHF5aKVZnYoP3C1t9c9mXTd3wZMUIlIJV3IW8d7VtVTpYxQsfRBhzPLMeHWXencXBx0wsFNX3iB8kFTURTvr0JN9bsvABAzolum65Iw2PmuHVF8fxEq8QRtEaz0e5ZqnNu8Qeh5I5MmNA3NqczuK0e63J71o54rYiUBCmR9ikWNxDh2KRyY2FBWp4p3weQJVftzbcFBv8XuEgyanBakfPS1N9uMfQkskjBAEa4XI5KZZtBRorrhUhgqZHILFdPXAOku56TWIHqIkkuhXs1Ff6S5szbist1gAdmqEoDDVO3WWUZDipKduwh3zXgfhm40NZxXWSeZBw0bxLlna9Uyi0dr9ZUxw', 'goods_number': 'Lr5K5cLjAeBIpYhe13hsOZcI8EWxH2D5ZDhIipbzNN0VSkyMbo', 'amount': '3416472.17', 'jingdou': 5348, 'order_time': '2022-08-04 13:51:15', 'order_status': 'delivered', 'courier_services_company': 'FedEx', 'courier_number': 'mpBxio8hKtiFju011k', 'consignee_name': 'CrN22o', 'consignee_address': 'BdxPHnZXwPA1uiaAnor0ULtZvTDLQpoM2MqL2tPulp7TMnwaeV', 'consignee_phone_number': 'WIHDQRJEooa', 'order_url': 'MjV1BdVKNoFO6cYsMVJLWfVTCaE7cVMeQqcs4deot5hWH1KPyanUVJgPUFynZovfYcHc6iI3ehr6q6KlN10F3Nx2ATPSVligewKf8PdWXXr53bIu4kcOoxs5SpXbKbBrzX3c3bszdfgdBktcda0iIdstR6dsOHsYTGLoygaEvgO9GbbPwfqZnEQC2iMi4HjH2z7z3VF6rGFRqyHkB4TE9YZSSUuuNZ6GDWgIdo9KQnqBQ3LKf5MDdKTLb2OA4uOVTL7OyU4KmvwrvNEEvb2i5T6IwZwiAMhhttncxTh4O2zM'},
-{'order_id': 'qX6lA12cQTvn', 'shop_name': 'OOW062cbGxqoGEeO7X45', 'product_id': 'SuzdxovMqvMAKfWb', 'product_name': 'cQhRH0RR79ZKNpLiLcDgaCGk0AFYSRPC4pYpOuuId8mB3GDSUavQJ8AnbnZzH2p5DipslqOuVJCJAuYYi7fF7tj0v6aaSEFBLdEj0jCOS3dQSv1u7bQXHiyZiUtruTaqnykmN0wxaotQCIO8jvMtJVrpNhu5tZe26PMOsqkjgh6QySwFK09A3vzkgd6oyaOcBDOFu77A2kce5PL2MjpKC0xwy6e32Hh5zRlSABsoKj8aGGvWQOzJMh5PhEnUafHiGGlrvPCXAASQRm9X6yT99pRyZy76rXEkpNB98FySkgxHS72kIk8uDbzfLuiqHj5hF1ikf34sIxlgOnw4c19k8sj2CmGXwiLYp4FpRZdTZFhZxSpirY5ptxaRNJrsdk6tCgESziD4RGhtiSt4QmATcoifuL3vdM2YRr2qsGrlFMRFeqHgi6x4e2AjQPQboGPB0jhAf0UKs5FV9G3jZHJQHMd0iodRMyuCVaz2uEIGgZbak8c6ZIk3', 'goods_number': 'TS32pKdIuBT7co92Jerky3CTRwy1rX3oPLIIPOjdYUT460I73d', 'amount': '65178740.07', 'jingdou': 5907, 'order_time': '2020-04-03 21:50:03', 'order_status': 'delivered', 'courier_services_company': 'DHL', 'courier_number': 'eNKYKwMpzxAtfjW3Aw', 'consignee_name': '3yDLAJ', 'consignee_address': 'K4MooDdVkWjukoMxUxpiBx09jzxUcn9UOpnVVSDJHgaLZlCZiz', 'consignee_phone_number': 'neXm1VuAdTk', 'order_url': 'yTDassHtzqsOE8kpJbRQpaXdCNCENqTAY5jDQwFkHMAFVpR1u6QhigkokcyhPJx1QPCBwcOQxOVaLvCs90H53xHlEeAoINq2GRnP60mx6FQJniPy3gSggh4ztAs9Cv79hYxLjUQCstNcf6Y6yRdT4mZwNULjj9IQEJBADEwQmcbWpO0G7JqLBrMsoevxgQJPnUVNafsYUIo6K6V59bgMxv1nXsYztQkMQaImTtddnXNDx0nMkWC8E3nNSzVW6gdrpXQdn1ZOSXrwLXFZhmGI8Ovqn7DLORledxjRa8naTZY2'},
-{'order_id': 'W8JlbKWEKHd5', 'shop_name': 'jj8SfW6U2aSFtvVRkr5W', 'product_id': 'w8CNTIO7nJo0rcCr', 'product_name': 'dkHHuYwxAkvyZBKZZTlvyAKBBxEPjlv8lIJagzmn01YnjipHvvuj8mc33t6qVDXbjHc4eLxqiESfimOdz1z492fHNm8PQhlnijWba3TeO1VOZ7ZypwtioIJcZAsH4wvWQQwMU6L4YHkaoRkBzPkYfAqecxQoQhmSivLG3tzIHse2EJnkTGsvaKfTdk0sBsG4TiRCQnqqkwOgm8ujc4r2Y6FO2Af37WzWErYSgztlv98bDRTdd7M9O9WeRzkE2J93EhjZiQBrpN2pYt5BvuSGjfh09uxJfAQz424QSm213OTrmUa3YrAm5r8VGJGac68AhZ8p9zKadOZ9b4kK3cu36TOvC5sRHtYR0BQoVfah3skq39xQ2YeyGRM2Kt3UTO3Zb8BCV0A1ApdNlcbaR4OmZVuGK3SeZ18w8CMPslCxUC9eijdWo478lHQexvzRBB45WTLYlFPNVCO7quWa5wpYjKyg9ZPiRHitXZMu0TyYnkwzch7tRExJ', 'goods_number': 'v7qhdlQVkgPuw9WzHvkQ1iAeSvhyw0BC20QsJ0Gb9hpemAQ1eJ', 'amount': '6784995.48', 'jingdou': 6386, 'order_time': '2020-08-27 09:14:24', 'order_status': 'pending', 'courier_services_company': 'UPS', 'courier_number': 'JeNwkE4yrvfMKT0HKV', 'consignee_name': 'DNyvdG', 'consignee_address': 'wlc3PnTCXMnogrRcSZ1gIt2pBjkDKHNiLRbMm72ax7v2hE2Fdn', 'consignee_phone_number': 's6GQOdyNHga', 'order_url': 'Ya0ITf28VwFzmkmKE6LfUHTNnkcjWILTvpTYMOzGZ4jSDfg1pn31awPSCQd2FzbsrBYaYK2xOPEKYGTDbMp7VlNejZmGsM9zwoi5zya8I32aG047sidjHXNs266MpaEUH8phn5rD5Ee1kkczL0K8lRuTtFvq1ylmwofsP2SukipRD5mMhZzAtuTgKMktdZPczpmqAnGl1mBlu1WEE848h2VO8g5BQ1EqOI8uC2xxt4gT06UvUpzabgpPQhtAUPWn6HzRhkfFA8StKDL1y0rhe6rT5oE1mTkQsyeQrDQuSlPH'},
-{'order_id': 'FHlMZyxwiCib', 'shop_name': 'SZ5ybXHbM4CFNYlnfwUL', 'product_id': 'yRSnyQJwYP6hmKJV', 'product_name': '6xSNaQkbw7XMMub2cPrldex4GTFhU2FY6A4eeD1v4tJ07M0oDDuwtxTKv5cwcABNGdYgUQjmwSCzUBtTGNi4MwVlMVSA4raCXuS27iLiscUlz7azfMOvLySyRIqB0a49YcjXU8sjbKyRJkQRXaHX3SMm2Uys4nRJDNaJw4YNLhSrostowok1BpiouoO24RAPa36BoRF6jgkisf6P1ZDfDpjnfVpsNmnnXWAiJm6Z2sFOP86t4DzncMDUAEbUhFEN1wwY5UNoki3RrlKIOqMmOvvDXU3D0CXNI3XMprH3rsVHD0iF4vH8CBMD7KKVsR8S4OVwOaytJPRdSJlmK9OLIc0DRTJM52V9b2QIAlLA2DbovUWj5Ki5sS4zvKDl97SZpYO7x15TZDUKyLTeEC1clWSmdz5ME27ebXw3vi9DpSEQtA28LOYKbAi1CUVrIL0yiVL5RXKEuwSZGzP3jLbd3ZC1ZWFOV95X3Yybhpa0i5NSxk7iUjGd', 'goods_number': 'IK1uIaJz0VOUyFMcdWGS2sdc8vW0xGd2maLwA4KUlMY84gA7dP', 'amount': '93902542.49', 'jingdou': 3228, 'order_time': '2020-09-25 02:53:18', 'order_status': 'cancelled', 'courier_services_company': 'DHL', 'courier_number': 'cS9qhiFQc7weSTIA9V', 'consignee_name': 'HZ3GWf', 'consignee_address': 'xY0mkO5NFGiYgs8iaOza4AWn9RRCcZKQzlUBMyB0wz5RHD3jGI', 'consignee_phone_number': 'LEHHq7Gefuw', 'order_url': 'auDSy3VDzrkBpmpnQjzQfoaJVBXL2YuYdNy3vXnRixDV0njDaWpOdHOQj6hk1G7YtdmfazT5OjNQpOH2GoEKep72sMQf58iR32x3HtRR59NXLbwCTf0HbcVi9LBk03bZ4RMjjeraAehe9x6dGr4dHUZOswpn4eFbhR0xaZ6QLaiWQKqRu6sf9mXofMOuXY4HWQhgxP2JiIwzeg7fewulQPThhsXG9t1XYGgCSOfFyfVo5CCqpo3sgPjUOgenKGopPIKMg1vlgyksGv85BDY1kDCxyv9kikyhJkFhfwI6wu8d'},
-{'order_id': 'tRxBzC23m18o', 'shop_name': 'W7pWhFH94Hbm9Xfmkfd0', 'product_id': 'cSPlh5hihXlKSNqR', 'product_name': '9nWVMQIvHfSmsxieNEAYBCCnyRXHi27yPBBzIthfkygelO6Ts9wjlFVj7Ze3Ib6yfBOuSs4gpE1H6XtAQ85X5nH6e2uVxWB5K4s0OeGGpjd2ny8cBFFZhJ3B7dSdQxGIFzQ2UbVTRlMoTU8cMseL0IuXOstc7Hz7muUk2JylARSMuoVzXZEm5llfznn7r0fP3MHlG1xShvVHbojGUPslitgjmiB9hnyfrvpP62qHbEHmt2CYlkGeq8mbhkolIDUh3CV43QmfOFH9IJ1JvaZ3lrw3ZUouI7CDWXRfjI6QMWaU8InaQZFh13qlq2mCIvkSPSrfKiXCbXBwx8Ta7NuBseT86pTcL2ZO4OcXZ8aqpxKDvM9X4RtI0KLRXwZjnoVz3fxy2MmR8Vu3TRpy8h0KwFOVOMOd13YPDZls3dArI5bjHXfdefdFeZ6xHwckQtNiy31O2Tc0AfkDvQY1kmMRyqbykZEpjTiZdOsOqf1RRHPcl7wXbb1p', 'goods_number': 'hsWECqGq6HcHW4GMwVQdZVCjCzJEHNqIPpl6D6cuqVpLOBZIbi', 'amount': '11424129.01', 'jingdou': 6936, 'order_time': '2022-09-15 02:57:59', 'order_status': 'shipped', 'courier_services_company': 'FedEx', 'courier_number': 'p2G7E0bPGCdVN9AfCZ', 'consignee_name': 'mZ9QHr', 'consignee_address': 'ScZTTRzynFjUw0HIA1w8QoaXuWonm3dqEUKAuOnKoOzedVidzE', 'consignee_phone_number': 'u1fWvah4UOs', 'order_url': 'MjasUSVAPc0pPpnLXikNc11xVJ38nYbCYM7E8HSXA9BdAIVdXAcxI5UO1GxQNgRROWJmcB8y6AvfmGmHGJyYevYvlf4DB2Da0KE6H4haHc5eybB3EOLav9wc3Qej2UoSA1BzlJeqTaqW7ilvd5aH2yeXHKB5vNfSwZaoPkitl554VypPIOE4sy1ygebGK7fLHoeeKsxUQa9kQYEz2sWsFKh4JwikpyytsS6jMka3ba2wFQtJHS3JhpZBKjsviflx2tczFx6yT3bRb8UvBl1znp17331D4qYPd5hQY0xG6EPr'},
-{'order_id': 'ClZa2Nt9pSpF', 'shop_name': 'ri6BHokTiZSjLkZpF24u', 'product_id': 'Lwf4q9fZ326Gvtky', 'product_name': '96E1D6slp2StutTXGTDWxtWaGalndJsEYvS6qnhv98YYGKnEQecYn6vDoQKILW8zkPY5c5UPLEtxXgy7X3UGqEnuEnUtWiqUSYIjr8JGMj7UrwxO5auWxNoJXVGYDCPOZr544t67VAdgn4XAQ7jhTdlIWMHdKMjWVWiuJ2NrheSiw2NzYEegGYpfiIlsoQL05hAVTKETFQAjQ6rdDXYaRhxtAMJ2HzvufEWyhLovo7Xc1luBNEXeJCIYV4iHkFbtMrZHDXTpdaQxC4VwWV4DSC7mW5ZKDtHQG1Ve5VX90fghVVLPvVCH6p46JFrlgeJwFRvQZqiXCF7cLiyx7KLRV3OO0UEtNHfg52MSxDbp8L44fDPK5ZZ3S1JIfcwxuqgZ0uqv1wdZY41YH7LO9qPJcT87UN4Eu5Z4dAT9veCvdKlpo4saNHwI2bFf3FGs9MIyW8AXu4z1ABH3jZtApezEDLMSpxE7aSzvjj3FkYcQRY4CnvHWxBOq', 'goods_number': 'yYQ8INgbymSjIeyqRPNl1T3DPnm18i38o90rluhhiRZ9Z1XgNs', 'amount': '52427982.86', 'jingdou': 4037, 'order_time': '2020-08-27 17:39:46', 'order_status': 'delivered', 'courier_services_company': 'USPS', 'courier_number': '8eusi5dT4LGw0DmEIq', 'consignee_name': 'BqMSUb', 'consignee_address': '1Tiqk385HhGuBzlSdT4bkmZcYZXWBNgt0dN02XmCDUJecyyuYp', 'consignee_phone_number': '0GPqjo9hIfC', 'order_url': 'ME5jab1UnoN72X9GkVsvMnPh03a91AtA473zPOl861tn5ddq8ZnUHLuprt9T8ptg4JUV5BGHsrd9MchU1szturltsguabdV1NChj8iAR2Wxzv5QECXFk42NKoKgqygHTqGEl77ZL75TRYBMUtompd3w2XMBL9x8W7EGPUUfigMd43vV7UkxBuxUPjrMUcbbjFjhGLwZxdedHfkuVOkEXqrgFKQotTK02tmdv8FFWSREK2KlFO8h8ol1rMOKQtt37rMzD88TDO3N3xjdow1P9AzWDACkGhipBqoM1CvC43dLV'},
-{'order_id': 'wJiAYx303I9y', 'shop_name': 'bsLfDW46r0md29tlIJ6z', 'product_id': 'UHFPYgxgnQ3i5sJh', 'product_name': 'BksGPNJuvmbFPCeBgjKCmJikjlhqgWpb5je0kLG81BRR63wy2ZDo3Iv17llbq56V5jKEEyb3jHK2L0tXvURyLd0Wjp9blCS8M4YBdV8uqwXhuo2Dpf5ZJEDa1AAfX0KgZQa9LoSP1A6fe0Rq2ReykumvvNG5c1NoFrtkbUgyRU2p3iCNQoAwAMeTrHIaAgOtluTLKlj5vtiJ3dYqAB4v8wh6tohWXJbweQY9SYNpMKkYNGFEvqnMkEaSQOrgRJRuvpAyOBK0w0qZ7UoWy2lyeDiZRjVnV33G1ZSL4SgzVl6LygIKCCos4FANy05jk6PpPl8gRkUshJrencE1GbG9qP2lgvencbu457jR33ZQtBBNpkjpF3KRYf6o27YGiua01OCNoVju2hxUObmOexiHXef8HF6EZd9wvjGSv4bDEpWkYPoygFWf00V22ao5sk6LCoputerbJEI9jdlYWU7P6JKMcGSgLmGmcP5ZRlIpdSciIWR3t6RZ', 'goods_number': 'z6P4napsva0YJIcBOu39q4agU5b9UUHDVmuV0GQrWaelvaxC5J', 'amount': '15220549.07', 'jingdou': 6592, 'order_time': '2023-07-29 10:03:38', 'order_status': 'pending', 'courier_services_company': 'DHL', 'courier_number': 'kQB7O6mwgjel84QSmX', 'consignee_name': 'x9gAy7', 'consignee_address': 'e59rwsbfv6dhRtdNXnM0IbNQy7T7OPLuRsKhuykjDUTVqZJ4q1', 'consignee_phone_number': 'dZ3BeyBKGKV', 'order_url': '91v9kNw5izDcyIZE8f0tIMF1VB40hJ8ISaMWjnyC439bdWPy3fhHJvudWgPfomTHq1y998o2ZY559UGih7gaAN2cahpKOf4Mt3MOvcPpOhM1URN0pZBVg4O0nkfPSwZXlGTo8NPsSXW75usXGAayeq4nrs06ABqhbejlF0xkH8SCxeJapQx3EPAqtoZlXaP3BgMWckFgdWwS2M4CaMImu3wzDoOQTX64pil3l53YIDrh7JncIKzleXCeS2lDiBsS1G2gWYXcpdGfRNFz31Rb3Tb679Qk561C3nf1oHimNJin'},
-{'order_id': 'kkHQz3jVNYqB', 'shop_name': 'b6BDv65V9oTuTfBHiH1g', 'product_id': '9D3vET2Zt742APB0', 'product_name': 'zV9M7SAUdpPb0l9Ps7HkvU5WffUg6ERq5bgePxm8w6P7nv9bJ4NIppgu68Lp89SWFQDuC9t3Nq0jBSj3cctKitS5UPytnnjTIRu9IMoNC9FMs8CAK1YE7cbk7SPmufBBlkPK4S4YZUQ22pJGBTcwPiQuxAOFZgKtoLhv6QhEcP0mR85bdLWL3qF1rsh4bXU0KahHxmMxTYDzUPfkcHlWILCPQGIdVRsV0uvLpqjOcHuXAUXy6IJnBmnMYp9zbQmJ0KstvazkjQ87MaIXcjXpyUK9QfUXVMOzDZ2KNothuhdqNsgsiRYgoTnVeMubwOVvDI5XcPzUzAm3eXAGEdTx8YHfEBHV54NpwTbSUeoflZuaAu3R2516QInnbh0Nk49jcv8jKh4cqpuxA156A2Wpi8m7M2lVDPUrzCk9ibbWBREMz6UYr0Mwx0LeU3ueJBMXNkejgbabY055TOnzGyyPee94SAT5O8yRpjmsSH0YBDxTMKXhLD5S', 'goods_number': '0rGd0PqqqUSZJ2bqdoHkhUydopXneSsYrprhBP0my389tqavJL', 'amount': '70873124.81', 'jingdou': 3169, 'order_time': '2023-11-01 01:23:20', 'order_status': 'cancelled', 'courier_services_company': 'USPS', 'courier_number': 'qoInoZU6X6cYe9V0u9', 'consignee_name': 'i4YqBi', 'consignee_address': 'rcxi7wwFuNIQzEwQ4J41vAoDzCn8sJ1yemhluCRpF9tFyAicMN', 'consignee_phone_number': 'jeSz0Ee7XEF', 'order_url': 'OIbEJDyGN6KPtAYT5kCHed5sdExrn8Zy4H3t0s1h7dcDJQTyTEITNVxLpWj9Bc74lOHieBdAgsUTFReUTvADHEB70C7copW3DrVmtcLikHHXR62JnhWVyY7CCJ7dNx6tFcLW4VsnrCHb84dEru8LKXiMPdpdfFzIo6yzL3ADTLJuEkshimDqKOytSiHThtVU4e2CYTRXwvdt3vl7VMlXnDApyXf2euKaO7PKgCCXLkc6YoYf5oGyv14FCAgbfkQNb9XjaMVAUFVJDqFgu3XcZtnIOYRCAUsBhJQ1tC6AmScb'},
-{'order_id': 'Dko9sCHbJfZP', 'shop_name': 'zDGeHWEA77vTYztdqZCn', 'product_id': 'snNb8aJQOKwjSbw1', 'product_name': 'ISc7MEfTLgWvW1W0i5pZfJr4Up9CS3nKdgZHADHR2CwgRp44wYJu2sGsvoOyKCqZLC1oL6M2BvUqRTRN2GdesF8m61sN5vGSrZp5vou6QkxvM1D6YdURMKYilvF1olTBcmr7OKy8BDxNqOwTftiFI5H3P9XfgCUXoN5bsWFwvaIXiKwbY0qhtp9jsRbaqqHT8UWigjFcQZvDnHOLcEIKeytHGXaL6BIDRSBs2OM5zNolpweQC2lUcVsrLZgFo3FwFrd0lUmvZDLmLh10f6EJyih0ATquGw55KEgz8z6UuUJ3xaitmNOFbZDWwLN76qXb5FoJQYlUrY5EIGN7b0cCH0DTgjm7S1tlIlLXf4EK2tHDWgYbzitecChGAoYdeOrjIJds8E4XsP6IjwjCRT47W1gXfSW6brFMYhmUvzQjHZ0ImcYN2qDntspPbUZgApuWcbGPL9RQVtoSJB2kCuQ2VARZlg114Y4lUyjneaENH0J3qNRUKVxE', 'goods_number': 'vCPEFVAu9b9LzUXPg7lti2hM81t4YmOUeqB361tgUFpZclKLb7', 'amount': '63136256.40', 'jingdou': 1341, 'order_time': '2021-01-27 23:26:37', 'order_status': 'shipped', 'courier_services_company': 'FedEx', 'courier_number': '2fLzzoQmZf2eY8nosY', 'consignee_name': 'jHdhlU', 'consignee_address': 'kPJ90vIvREYQ6Vk59i2TsS8jhaIjms2inF0JWS8dETVakEpp5A', 'consignee_phone_number': 'BRAZ4GQHzDU', 'order_url': 'cIP6skOMER5AsnmHEGSzCV4c1EAhgliuhCDNcdWBPVelBHlL1svHnIejzZD2G3SzpVRayrdAY5H1z7L8XFW2UBjv6aVQG1Dl8vKOG6716s6KaktuM3rlGT3HNVJPhlEwzCAn1ufvRYJYKSutmgj8UtJcRXAmdnQW7j5uB9pGwvnAwNnyUPqQZoFVUuu4ZRY6tDUD3cK1cCkhRBJ4bLZZnVQgJDuzN3IjM24KErUEcWPD22BVFska0P8iczCYukZmkiRhjKaGaMgUpFJ737BjGiRNVezR0BRkBRVtbIDEn11H'}]
-        
-        df = pd.DataFrame(self.form)
-        form_preview = df[header_input]
-        
-        return [gr.update(visible=False), username_input_update, gr.update(value=form_preview, visible=True), 
-            gr.update(visible=True, variant="primary"), gr.update(visible=True, variant="primary"),  gr.update(visible=True), gr.update(variant="stop")]
-    
-    def storage(self,
-            storage_mode, 
-            header_input, 
-            excel_file_path,
-            host_input,
-            user_input,
-            password_input,
-            database_input,
-            table_name_input
-        ):
-        """ 
-        按钮绑定操作: 
-        
-        Return: [
-            storage_config_warring_update,
-            database_input_update,
-            table_name_input_update,
-            storage_button_update
-        ]
-        """
-        if storage_mode == 'excel':
-            self.form.save_to_excel(header_input, excel_file_path)
-        elif storage_mode == 'mysql':
-            sign, database_input_update = WebUI.validate_Database(database_input)
-            if sign is False:
-                return [gr.update(visible=True), database_input_update, gr.update(), gr.update()]
-            mysql_user_info = {
-                "host": host_input,
-                "user": user_input,
-                "password" :password_input,
-                "database": database_input,
-            }
-            try:
-                self.form.save_to_mysql(header_input, table_name_input, config_file_path = os.path.join(WORKING_DIRECTORY_PATH, 'config/mysql_user.ini'), **mysql_user_info)
-            except AttributeError:
-                return [gr.update(visible=True), gr.update(value="Database not exist ! | 数据库不存在 !", interactive=True, elem_classes="warning"), gr.update(), gr.update()]
-            except mysql.connector.errors.ProgrammingError:
-                return [gr.update(visible=True), gr.update(elem_classes="normal"), gr.update(value="The table name is invalid ! | 表名不合法 !", elem_classes="warning"), gr.update()]  
-        return [gr.update(visible=False), gr.update(elem_classes="normal"), gr.update(elem_classes="normal"), gr.update(value="✔️")]
-    
-    def update_data_preview(self, header_input):
-        """ 
-        改变数据预览视图: 
-        
-        Return: [data_preview_update]
-        """
-        df = pd.DataFrame(self.form)
-        form_preview = df[header_input]
-
-        return gr.update(value=form_preview)
-    
-    def chage_configuration(
-        self,
-        username_input,
-        date_range_input,
-        header_input,
-        exclude_coupon_orders, 
-        exclude_privilege_orders, 
-        filter_completed_orders,
-        order_id_slider,
-        consignee_name_slider,
-        consignee_address_slider,
-        consignee_phone_number_slider,
-        courier_number_slider
-        ):
-        config = {
-        "user_name": username_input,
-        "date_range": date_range_input,
-        "header": header_input,
-        "filter_config": {
-            "去除券(包)类订单": exclude_coupon_orders,
-            "去除权益类订单": exclude_privilege_orders,
-            "筛选已完成订单": filter_completed_orders,
-            "自定义筛选": {
-                "header_item": "",
-                "keyword": []
-            }
-        },
-        "masking_intensity": {
-            "order_id": order_id_slider,
-            "consignee_name": consignee_name_slider,
-            "consignee_address": consignee_address_slider,
-            "consignee_phone_number": consignee_phone_number_slider,
-            "courier_number": courier_number_slider
-        },
-        "export_mode": "excel"
-        }
-        self.configManager.save_config(config)
-    
-    @staticmethod
-    def validate_Username(username):
-        """ 检查 Username 是否填入 """
-        warning = "Username cannot be empty ! 该项不能为空 !"
-        if not username or username == warning:
-            return [False, gr.update(value=warning, interactive=True, elem_classes="warning")]
-        return [True, gr.update(value=username, interactive=True, elem_classes="normal")]
-    
-    @staticmethod
-    def validate_Database(database):
-        """ 检查 Database 是否填入 """
-        warning = "Database cannot be empty ! | 该项不能为空 !"
-        if not database or database == warning:
-            return [False, gr.update(value=warning, interactive=True, elem_classes="warning")]
-        return [True, gr.update(value=database, interactive=True, elem_classes="normal")]
-    
-    def get_current_theme(self):
-        """ 页面明暗主题选择 """
-        def get_system_theme():
-            system = platform.system()
-            if system == 'Darwin':  # macOS
-                return 'Dark' if 'dark' in os.popen('defaults read -g AppleInterfaceStyle').read() else 'Light'
-            elif system == 'Windows':  # Windows
-                import winreg
-                try:
-                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize') as reg_key:
-                        value, _ = winreg.QueryValueEx(reg_key, 'AppsUseLightTheme')
-                        return 'Light' if value == 1 else 'Dark'
-                except FileNotFoundError:
-                    return 'Light'
-            elif system == 'Linux':  # Linux
-                try:
-                    with open('/etc/environment', 'r') as env_file:
-                        for line in env_file:
-                            if line.startswith('GTK_THEME='):
-                                theme = line.strip().split('=')[1]
-                                return 'Dark' if 'dark' in theme.lower() else 'Light'
-                except FileNotFoundError:
-                    pass
-            return 'Light'
-        current_system_theme = get_system_theme()
-
-        if current_system_theme == 'Light':
-            current_theme = PremiumBox()
-            self.__mode = 'Light'
-        else:
-            current_theme = GorgeousBlack()
-            self.__mode = 'Dark'
-        return current_theme
-    
-    def build(self):
-        
-        with gr.Blocks(title="JD-OrderDataExporter", theme=self.get_current_theme(), fill_height=True) as demo:
+    def construct(self):
+        with gr.Blocks(title="JD-OrderDataExporter", theme=PremiumBox(), fill_height=True) as demo:
             gr.Markdown("# JD-Order-Data-Exporter")
             with gr.Row():
                 gr.Markdown(
                     """
-                    <div style="display: inline-block;">
-                        <a href="https://gitee.com/goodnameisfordoggy/jd-pers-order-exporter" style="text-decoration: none; color: white;">
-                            <div style="display: inline-block; padding: 2px 5px; background-color: #FFBD2E; border-radius: 5px;">
-                                <b>[Gitee]</b> 🚀
-                            </div>
+                    <div style="display: flex; align-items: center;">
+                        <a href="https://github.com/Goodnameisfordoggy/JD-PersOrderExporter" style="margin-right: 10px;">
+                            <img src="https://img.shields.io/badge/🚀-Github-gree" alt="Github Badge">
                         </a>
-                        <a href="https://github.com/Goodnameisfordoggy/JD-PersOrderExporter" style="text-decoration: none; color: white;">
-                            <div style="display: inline-block; padding: 2px 5px; background-color: #27C93F; border-radius: 5px;">
-                                <b>[Github]</b> 🚀
-                            </div>
+                        <a href="https://gitee.com/goodnameisfordoggy/jd-pers-order-exporter">
+                            <img src="https://img.shields.io/badge/🚀-Gitee-red" alt="Gitee Badge">
                         </a>
                     </div>
                     """
                 )
             with gr.Tabs():
-                with gr.Tab(label="Basic config(基础配置)"):
+                with gr.Tab(label="基础配置(Basic config)"):
                     with gr.Column():
-                        gr.HTML(custom_css)
-                        username_input = gr.Textbox(label="User name(账号昵称)", lines=1, placeholder="Please input user name...", elem_classes = "normal")
-                        date_range_input = gr.Dropdown(
-                            label="Date Range(日期跨度)",
-                            choices= ["ALL", "近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
-                            value=["近三个月订单"],
+                        self.data_retrieval_mode_input = gr.Dropdown(
+                            label="数据获取模式",
+                            info="Data Retrieval Mode (精简模式仅含：订单编号，父订单编号，订单店铺名称，商品编号，商品名称，商品数量，实付金额，订单返豆，下单时间，订单状态，收货人姓名，收货地址，联系方式)",
+                            choices= ["精简", "详细"], 
+                            value=self.config.data_retrieval_mode or "详细",
                             interactive=True,
-                            multiselect=True
-                        ) 
-                        header_input = gr.Dropdown(
-                            label="Header(需要的信息)",
-                            choices= ["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话"], 
-                            value=["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话"],
-                            interactive=True,
-                            multiselect=True
-                        )   
-                with gr.Tab(label="Filter Config(筛选器配置)"):       
-                    with gr.Column():
-                        exclude_coupon_orders = gr.Checkbox(label="Remove coupon (package) orders | 去除券(包)类订单", value=False)
-                        exclude_privilege_orders = gr.Checkbox(label="Remove equity orders | 去除权益类订单", value=False)
-                        filter_completed_orders = gr.Checkbox(label="Filter completed orders | 筛选已完成订单", value=True)
-                with gr.Tab(label="Masking Intensity(覆盖强度)"): 
-                    gr.Markdown("Intensity of desensitization (coverage) at data output | 数据输出时的脱敏(覆盖)强度")
-                    with gr.Row():
-                        # 滑块组件
-                        order_id_slider = gr.Slider(label="Order ID(订单号)", minimum=0, maximum=2, step=1, value=0, interactive=True)
-                        consignee_name_slider = gr.Slider(label="Consignee Name(收件人)", minimum=0, maximum=2, step=1, value=2, interactive=True)
-                        consignee_address_slider = gr.Slider(label="Consignee Address(收货地址)", minimum=0, maximum=2, step=1, value=2, interactive=True)
-                        consignee_phone_number_slider = gr.Slider(label="Consignee Phone Number(联系方式)", minimum=0, maximum=2, step=1, value=2, interactive=True)
-                        courier_number_slider = gr.Slider(label="Courier Number(物流单号)", minimum=0, maximum=2, step=1, value=2, interactive=True)
-                with gr.Tab(label="Storage config(储存配置)"):
-                    with gr.Column():
-                        with gr.Tabs():
-                            with gr.Tab(label="excel"):
-                                excel_file_path = gr.Textbox(label="Excel file output path(Excel文件输出路径)", lines=1, placeholder="please input output path or we will use defult one...")
-                            with gr.Tab(label="mysql"):
-                                host_input = gr.Textbox(label="Host", lines=1, placeholder="Please input host...", value="localhost", interactive= True)
-                                user_input = gr.Textbox(label="User", lines=1, placeholder="Please input user...", value="root", interactive= True)
-                                password_input = gr.Textbox(label="Password", lines=1, placeholder="Please input your password...", value="root", interactive= True)
-                                database_input = gr.Textbox(label="Database", lines=1, placeholder="Please input your database...", value="", interactive= True)
-                                table_name_input = gr.Textbox(label="Table Name", lines=1, placeholder="Please input your table name or we will use defult one...", value="", interactive= True)
-            with gr.Column():
-                with gr.Row():
-                    export_button = gr.Button("Start exporting(开始导出)", variant="primary")
-                    change_header_button = gr.Button("Change header(更改所需数据)", visible=False)
-                basic_config_warring = gr.Markdown('<span style="color: red; font-size: larger;"> There are some problems with the Basic config! | 基础配置有一些问题! </span>', visible=False)
-                data_preview = gr.DataFrame(visible=False)
-                with gr.Column():
-                    with gr.Row():
-                        storage_button = gr.Button("storage(储存)", visible=False)
-                        # 创建下拉列表组件
-                        storage_mode = gr.Dropdown(
-                            label="Select an mode(选择一种储存方式)",
-                            choices=["excel", "mysql"],
-                            value="excel",
-                            visible=False,
-                            interactive=True
                         )
-                    with gr.Row():
-                        storage_config_warring = gr.Markdown('<span style="color: red; font-size: larger;"> There are some problems with the Storage config! | 存储配置有一些问题! </span>', visible=False)
+                        self.date_range_input = gr.Dropdown(
+                            label="日期跨度",
+                            info="Date Range",
+                            choices= ["近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
+                            value=self.config.date_search or "近三个月订单",
+                            interactive=True,
+                        )
+                        self.status_search_input = gr.Dropdown(
+                            label="订单状态",
+                            info="Order Status",
+                            choices= ["全部状态", "等待付款", "等待收货", "已完成", "已取消"], 
+                            value=self.config.status_search or "已完成",
+                            interactive=True,
+                        )
+                        self.high_search_input = gr.Dropdown(
+                            label="高级筛选",
+                            info="High Search",
+                            choices= ["全部类型", "实物商品"],
+                            value=self.config.high_search or "全部类型",
+                            interactive=True,
+                        )
+                        self.btn_export = gr.Button("Start exporting(开始导出)", variant="primary")
+                with gr.Tab(label="数据导出配置(Storage config)"):
+                    with gr.Tab(label="数据(Data)"):
+                        with gr.Column():
+                            self.headers_input = gr.Dropdown(
+                                    label="表头",
+                                    info="Headers",
+                                    choices= ["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话", "物流公司", "快递单号", "商品总价", "订单用豆"], 
+                                    value=self.config.headers or ["订单编号", "父订单编号", "店铺名称", "商品名称", "商品数量", "实付金额", "订单返豆", "订单用豆", "下单时间", "订单状态", "快递单号"],
+                                    interactive=True,
+                                    multiselect=True
+                            )
+                            self.btn_change_preview_headers = gr.Button("更新预览视图(Update preview view)", visible=False)
+                            with gr.Row():
+                                gr.Markdown("数据输出时的脱敏(覆盖)强度 | Intensity of desensitization (coverage) at data output")
+                            with gr.Row():
+                                # 滑块组件
+                                self.order_id_slider = gr.Number(label="订单号", info="Order ID", minimum=0, maximum=2, step=1, value=0, interactive=False)
+                                self.consignee_name_slider = gr.Number(label="收件人姓名", info="Consignee Name", minimum=0, maximum=2, step=1, value=2, interactive=True)
+                                self.consignee_address_slider = gr.Number(label="收货地址", info="Consignee Address", minimum=0, maximum=2, step=1, value=2, interactive=True)
+                                self.consignee_phone_number_slider = gr.Number(label="联系方式", info="Consignee Phone Number", minimum=1, maximum=2, step=1, value=2, interactive=True)
+                    with gr.Tab(label="导出到Excel"):
+                        with gr.Row():
+                            with gr.Column():
+                                self.excel_file_path_input = gr.File(label="向已有Excel文件追加", file_types=[".xlsx"])
+                                self.excel_file_name_input = gr.Textbox(label="新建文件", info="New File Name", placeholder="please input output file path(name) or we will use defult one...", interactive=True)
+                            with gr.Column():
+                                gr.Markdown("#### 使用追加模式时，请保持表头一致！")
+                                self.btn_storage_to_excel = gr.Button("储存数据(storage)", variant="primary")
+                                self.file_download_excel = gr.File(label="请下载文件", visible=False, interactive=False)
+                        with gr.Accordion("列宽调节(Col width adjust)", open=False):
+                            with gr.Row():
+                                self.col_order_id_width =  gr.Slider(label="订单编号", info="Order Id", minimum=5, maximum=120, step=1, value=14, interactive=True)
+                                self.col_parent_order_id_width =  gr.Slider(label="父订单编号", info="Parent Order Id", minimum=5, maximum=120, step=1, value=14, interactive=True)
+                                self.col_order_shop_name_width =  gr.Slider(label="店铺名称", info="Order Shop Name", minimum=5, maximum=120, step=1, value=20, interactive=True)
+                                self.col_actual_payment_amount_width =  gr.Slider(label="实付金额", info="Actual Payment Amount", minimum=5, maximum=120, step=1, value=13, interactive=True)
+                            with gr.Row():
+                                self.col_product_id_width =  gr.Slider(label="商品编号",  info="Product Id",minimum=5, maximum=120, step=1, value=20, interactive=True)
+                                self.col_product_name_width =  gr.Slider(label="商品名称", info="Product Name", minimum=5, maximum=120, step=1, value=39, interactive=True)
+                                self.col_goods_number_width =  gr.Slider(label="商品数量", info="Goods Number", minimum=5, maximum=120, step=1, value=8, interactive=True)
+                                self.col_product_total_price_width =  gr.Slider(label="商品总价", info="Product Total Price", minimum=5, maximum=120, step=1, value=13, interactive=True)
+                            with gr.Row():
+                                self.col_order_time_width =  gr.Slider(label="下单时间", info="Order Time", minimum=5, maximum=120, step=1, value=25, interactive=True)
+                                self.col_order_status_width =  gr.Slider(label="订单状态", info="Order Status", minimum=5, maximum=120, step=1, value=10, interactive=True)
+                                self.col_jingdou_increment_width =  gr.Slider(label="订单返豆", info="Jingdou Increment", minimum=5, maximum=120, step=1, value=8, interactive=True)
+                                self.col_jingdou_decrement_width =  gr.Slider(label="订单用豆", info="Jingdou Decrement", minimum=5, maximum=120, step=1, value=8, interactive=True)
+                            with gr.Row():
+                                self.col_consignee_name_width =  gr.Slider(label="收货人姓名", info="Consignee Name", minimum=5, maximum=120, step=1, value=10, interactive=True)
+                                self.col_consignee_address_width =  gr.Slider(label="收货地址", info="Consignee Address", minimum=5, maximum=120, step=1, value=40, interactive=True)
+                                self.col_consignee_phone_number_width =  gr.Slider(label="联系方式", info="Consignee Phone Number", minimum=5, maximum=120, step=1, value=12, interactive=True)
+                                self.col_courier_services_company_width =  gr.Slider(label="物流公司", info="Courier Services Company", minimum=5, maximum=120, step=1, value=10, interactive=True)
+                                self.col_courier_number_width =  gr.Slider(label="快递单号", info="Courier Number", minimum=5, maximum=120, step=1, value=18, interactive=True)
+            with gr.Column():
+                self.frame_data_preview = gr.DataFrame(visible=False)
+                                
+            self.connect()
+        return demo
 
-                export_button.click(
-                    self.export, 
-                    inputs=[username_input,
-                        date_range_input,
-                        header_input,
-                        exclude_coupon_orders, 
-                        exclude_privilege_orders, 
-                        filter_completed_orders,
-                        order_id_slider,
-                        consignee_name_slider,
-                        consignee_address_slider,
-                        consignee_phone_number_slider,
-                        courier_number_slider], 
-                    outputs=[basic_config_warring, username_input, data_preview, change_header_button, storage_button, storage_mode, export_button]
-                )
-                change_header_button.click(
-                    self.update_data_preview,
-                    inputs=[header_input],
-                    outputs=[data_preview]
-                )
-                storage_button.click(
-                    self.storage, 
-                    inputs=[
-                        storage_mode, 
-                        header_input, 
-                        excel_file_path,
-                        host_input,
-                        user_input,
-                        password_input,
-                        database_input,
-                        table_name_input],
-                    outputs=[storage_config_warring, database_input, table_name_input, storage_button]
-                )
+    def connect(self):
+        """
+        绑定各个组件的事件处理
+        """
+        self.data_retrieval_mode_input.change(self.handle_data_retrieval_mode_change, inputs=self.data_retrieval_mode_input)
+        self.date_range_input.change(self.handle_date_range_change, inputs=self.date_range_input)
+        self.status_search_input.change(self.handle_status_search_change, inputs=self.status_search_input)
+        self.high_search_input.change(self.handle_high_search_change, inputs=self.high_search_input)
+        self.headers_input.change(self.handle_header_change, inputs=self.headers_input)
+        # 数据脱敏滑块
+        self.desensitization_sliders = {
+            "order_id": self.order_id_slider,
+            "consignee_name": self.consignee_name_slider,
+            "consignee_address": self.consignee_address_slider,
+            "consignee_phone_number": self.consignee_phone_number_slider
+        }
+        for slider_name, slider in self.desensitization_sliders.items():
+            slider.change(
+                lambda new_value, slider_name=slider_name: self.handle_desensitization_slider_change(new_value, slider_name),
+                inputs=[slider],
+                outputs=[]
+            )
+        # Excel列宽设置滑块
+        self.excel_col_width_sliders = {
+            "order_id": self.col_order_id_width,
+            "parent_order_id": self.col_parent_order_id_width,
+            "order_shop_name": self.col_order_shop_name_width,
+            "actual_payment_amount": self.col_actual_payment_amount_width,
+            "product_id": self.col_product_id_width,
+            "product_name": self.col_product_name_width,
+            "goods_number": self.col_goods_number_width,
+            "product_total_price": self.col_product_total_price_width,
+            "order_time": self.col_order_time_width,
+            "order_status": self.col_order_status_width,
+            "jingdou_increment": self.col_jingdou_increment_width,
+            "jingdou_decrement": self.col_jingdou_decrement_width,
+            "consignee_name": self.col_consignee_name_width,
+            "consignee_address": self.col_consignee_address_width,
+            "consignee_phone_number": self.col_consignee_phone_number_width,
+            "courier_services_company": self.col_courier_services_company_width,
+            "courier_number": self.col_courier_number_width
+        }
+        for slider_name, slider in self.excel_col_width_sliders.items():
+            slider.change(
+                lambda new_value, slider_name=slider_name: self.handle_desensitization_slider_change(new_value, slider_name),
+                inputs=[slider],
+                outputs=[]
+            )
 
-            parser = argparse.ArgumentParser(description='JD-PersOrderExporter demo Launch')
-            parser.add_argument('--server_name', type=str, default='0.0.0.0', help='Server name')
-            parser.add_argument('--server_port', type=int, default=8888, help='Server port')
-            args = parser.parse_args()
+        self.btn_export.click(
+            self.export, 
+            inputs=[],
+            outputs=[
+                self.frame_data_preview,
+                self.frame_data_preview,
+                self.btn_change_preview_headers
+            ]
+        )
+        self.btn_change_preview_headers.click(
+            self.change_preview_headers,
+            inputs=[],
+            outputs=[self.frame_data_preview]
+        )
+        self.btn_storage_to_excel.click(
+            self.storage_to_excel, 
+            inputs=[self.excel_file_path_input, self.excel_file_name_input], 
+            outputs=[self.file_download_excel, self.btn_storage_to_excel]
+        )
 
-            demo.launch(inbrowser=True, server_name=args.server_name, server_port=args.server_port, share=False)
+    def handle_data_retrieval_mode_change(self, new_value):
+        self.config.data_retrieval_mode = new_value
 
+    def handle_date_range_change(self, new_value):
+        self.config.date_search = new_value
+
+    def handle_status_search_change(self, new_value):
+        self.config.status_search = new_value
+
+    def handle_high_search_change(self, new_value):
+        self.config.high_search = new_value
+    
+    def handle_header_change(self, new_value):
+        self.config.headers = new_value
+    
+    def handle_desensitization_slider_change(self, new_value, slider_name):
+        self.config.masking_intensity[slider_name] = new_value  # 动态保存值
+    
+    def handle_excel_col_width_slider_change(self, new_value, slider_name):
+        self.config.excel_storage_settings["headers_settings"][slider_name]["width"] = new_value
+    
+    async def export(self):
+        """
+        按钮绑定操作
+        Returns:
+            list:
+            - frame_data_preview (DataFrame) 
+            - frame_data_preview (update)
+            - btn_change_preview_headers (update)
+        """
+        self.orderInfo_list: list[dict] = await asyncio.to_thread(self.fetch_data)
+        self.temp_orderInfo_list = copy.deepcopy(self.orderInfo_list) # 创建临时副本
+        df = pd.DataFrame(self.temp_orderInfo_list)
+        frame_preview = df[self.config.headers]
+        return [frame_preview, gr.update(visible=True), gr.update(visible=True, variant="primary")]
+
+    def fetch_data(self):
+        """
+        获取数据
+        """
+        exporter = JDOrderDataExporter(self.config)
+        exporter.exec_()
+        return exporter.get_order_info_list()
+        # return [
+        #     {"订单编号": "100001", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品1", "商品数量": 2, "实付金额": 50.0, "订单返豆": 10, "下单时间": "2024-11-23 15:30", "订单状态": "已完成"},
+        #     {"订单编号": "100002", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品2", "商品数量": 1, "实付金额": 30.0, "订单返豆": 5, "下单时间": "2024-11-23 15:31", "订单状态": "已完成"},
+        #     {"订单编号": "100003", "父订单编号": "900002", "店铺名称": "店铺B", "商品名称": "商品3", "商品数量": 3, "实付金额": 75.0, "订单返豆": 15, "下单时间": "2024-11-24 12:00", "订单状态": "待发货"},
+        #     {"订单编号": "100004", "父订单编号": "900003", "店铺名称": "店铺C", "商品名称": "商品4", "商品数量": 1, "实付金额": 20.0, "订单返豆": 2, "下单时间": "2024-11-24 13:45", "订单状态": "已取消"}
+        # ]
+    
+    async def change_preview_headers(self):
+        """
+        更新预览视图，按钮绑定操作
+        Returns:
+            list:
+            - frame_data_preview (DataFrame)
+        """
+        self.temp_orderInfo_list = copy.deepcopy(self.orderInfo_list) # 更新副本
+        for orderInfo in self.temp_orderInfo_list:
+            # 脱敏强度切换
+            if "收货人姓名" in self.config.headers:
+                orderInfo["收货人姓名"] = PerOrderInfoSlim.mask_consignee_name(orderInfo["收货人姓名"], self.config.masking_intensity["consignee_name"])
+            if "收货地址" in self.config.headers:
+                orderInfo["收货地址"] = PerOrderInfoSlim.mask_consignee_address(orderInfo["收货地址"], self.config.masking_intensity["consignee_address"])
+            if "收货人电话" in self.config.headers:
+                orderInfo["收货人电话"] = PerOrderInfoSlim.mask_consignee_phone_number(orderInfo["收货人电话"], self.config.masking_intensity["consignee_phone_number"])
+        
+        try:
+            df = pd.DataFrame(self.temp_orderInfo_list)
+            frame_preview = df[self.config.headers]
+            return gr.update(value=frame_preview)
+        except KeyError as err:
+            import re
+            err_key = re.search(r"\'(.*?)\'", str(err)).group(1)
+            gr.Warning(f"当前模式==“{self.config.data_retrieval_mode}”==存在不可用表头==“{err_key}”！")
+            
+
+    async def storage_to_excel(self, uploaded_file, input_name):
+        """
+        存储数据到 Excel，按钮绑定操作
+        Returns:
+            list:
+            - file_download_excel (update)
+            - btn_storage_to_excel (update)
+        """
+        if uploaded_file:
+            file_name = os.path.basename(uploaded_file.name)
+            save_path = os.path.join(EXCEL_DIR, file_name)
+
+            # 从 gradio 缓存目录中移动到指定目录
+            async with aiofiles.open(uploaded_file.name, 'rb') as src:
+                async with aiofiles.open(save_path, 'wb') as dest:
+                    await dest.write(await src.read())
+            try:
+                excelStorage = dataStorageToExcel.ExcelStorage(self.temp_orderInfo_list, self.config.headers, save_path)
+                excelStorage.save()
+                return [
+                    gr.update(value=save_path, visible=True),
+                    gr.update(value="✔️", variant="secondary")
+                ]
+            except Exception as err:
+                return gr.Warning("文件格式不符合追加要求，请新建文件储存！")
+        else:
+            if not input_name:
+                input_name = "JD_order_info"
+            if not input_name.endswith(('.xlsx', '.xlsm', '.xltx', '.xltm')):
+                input_name += '.xlsx'
+
+            save_path = os.path.join(EXCEL_DIR, input_name)
+            excelStorage = dataStorageToExcel.ExcelStorage(self.temp_orderInfo_list, self.config.headers, save_path)
+            excelStorage.save()
+            return [
+                gr.update(value=save_path, visible=True),
+                gr.update(value="✔️", variant="secondary")
+            ]
 
 if __name__ == "__main__":
-    webui = WebUI()
-    webui.build()
+    async def main():
+        webui = WebUI()
+        demo = webui.construct()
+
+        parser = argparse.ArgumentParser(description='JD-PersOrderExporter demo Launch')
+        parser.add_argument('--server_name', type=str, default='127.0.0.1', help='Server name')
+        parser.add_argument('--server_port', type=int, default=8888, help='Server port')
+        args = parser.parse_args()
+
+        # 异步启动 Gradio 应用
+        await asyncio.to_thread(demo.launch, inbrowser=True, server_name=args.server_name, server_port=args.server_port, share=False)
+
+    asyncio.run(main())

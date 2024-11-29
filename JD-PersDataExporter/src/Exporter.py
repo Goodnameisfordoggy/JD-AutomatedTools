@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-25 00:12:17
+LastEditTime: 2024-11-25 23:21:41
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\Exporter.py
 Description: 
 
@@ -20,7 +20,7 @@ import re
 import time
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-from .logInWithCookies import logInWithCookies
+from .LoginManager import LoginManager
 from .data import PerOrderInfoSlim, PerOrderInfoFull, DATE, STATUS
 from .dataPortector import OrderExportConfig
 from .logger import get_logger
@@ -46,22 +46,29 @@ class JDOrderDataExporter():
     
     def __init__(self, config: OrderExportConfig | None = None) -> None:
         self.__config = config
-        self.__page, browser = logInWithCookies()
+        self.__loginManager = LoginManager()
+        self.__loginManager.login_with_cookies()
+        self.__page = self.__loginManager.page 
         self.__orderInfo_list = []
         self.__start_time = time.time()
     
-    def get_order_info_list(self):
+    def get_order_info_list(self) -> list[dict]:
         return [orderInfo.to_dict() for orderInfo in self.__orderInfo_list]
     
     def exec_(self):
         """ 终端运行 """
         mode = self.__config.data_retrieval_mode or self.DATA_RETRIEVAL_MODE
-        match mode:
-            case "精简":
-                self.__slim_step_1()
-            case "详细":
-                self.__full_step_1()
-        LOG.success(f"脚本运行结束--耗时:{int(time.time()-self.__start_time)}秒")
+        try:
+            match mode:
+                case "精简":
+                    self.__slim_step_1()
+                case "详细":
+                    self.__full_step_1()
+            LOG.success(f"脚本运行结束--耗时:{int(time.time()-self.__start_time)}秒")
+        except Exception as err:
+            raise err
+        finally:
+            self.__loginManager.close()
 
     def __slim_step_1(self):
         """

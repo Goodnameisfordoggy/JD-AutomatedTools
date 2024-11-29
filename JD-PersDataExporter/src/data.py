@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-18 08:48:06
+LastEditTime: 2024-11-25 23:47:18
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\data.py
 Description: 以每个不可拆的订单为最小单元
 
@@ -70,49 +70,49 @@ class PerOrderInfoSlim():
             "订单返豆": self.jingdou_increment,
             "下单时间": self.order_time,
             "订单状态": self.order_status,
-            "收货人姓名": self.__mask_consignee_name(self.consignee_name),
-            "收货地址": self.__mask_consignee_address(self.consignee_address),
-            "收货人电话": self.__mask_consignee_phone_number(self.consignee_phone_number),
+            "收货人姓名": self.consignee_name,
+            "收货地址": self.consignee_address,
+            "收货人电话": self.consignee_phone_number,
         }
     
-    def __mask_consignee_name(self, data):
+    @staticmethod
+    def mask_consignee_name(data, intensity: int = 2):
             """ 姓名覆盖脱敏 """
-            masking_intensity = 2
-            if masking_intensity == 0:
+            if intensity == 0:
                 return data
-            elif masking_intensity == 1:
+            elif intensity == 1:
                 if len(data) == 2:
                     return data[0] + "*"
                 elif len(data) > 2:
                     return data[0] + "*" * (len(data) - 2) + data[-1]
                 else:
                     return data
-            elif masking_intensity == 2:
+            elif intensity == 2:
                 return '*' * (len(data) - 1) + data[-1:]
     
-    def __mask_consignee_address(self, data):
+    @staticmethod
+    def mask_consignee_address(data, intensity: int = 2):
             """ 收货地址覆盖脱敏 """
-            masking_intensity = 2
-            if masking_intensity == 0:
+            if intensity == 0:
                 return data
-            elif masking_intensity == 1:
+            elif intensity == 1:
                 return re.sub(r'\d+', '***', data)
-            elif masking_intensity == 2: # 只保留省，市，区级地址
+            elif intensity == 2: # 只保留省，市，区级地址
                 pattern = r'^([^省市区县]+?(?:省|市))?\s*([^市区县]+?(?:市|自治州|州|区))?\s*([^市区县]+?(?:区|县))?' # QWQ不会真有人地址直接填区级吧？
                 match = re.match(pattern, data)
                 if match:
                     return ''.join(filter(None, match.groups())) + "***"
                 else:
                     return "******"
-    
-    def __mask_consignee_phone_number(self, data):
+                
+    @staticmethod
+    def mask_consignee_phone_number(data, intensity: int = 2):
             """ 电话号码覆盖脱敏 """
-            masking_intensity = 2
-            if masking_intensity == 0:
+            if intensity == 0:
                 return data
-            elif masking_intensity == 1:
+            elif intensity == 1:
                 return data[:3] + "****" + data[7:]
-            elif masking_intensity == 2:
+            elif intensity == 2:
                 return '*' * 7 + data[7:]
 
 class PerOrderInfoFull(PerOrderInfoSlim):

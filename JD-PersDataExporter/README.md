@@ -1,5 +1,5 @@
 # JD-PersDataExporter
-version: JD-AutomaticEvaluate-2.1.6
+version: JD-AutomaticEvaluate-2.2.7
 
 ## 简介
 - 该项目是一个本地自动化工具，用于导出京东个人账户的订单信息。
@@ -157,6 +157,7 @@ version: JD-AutomaticEvaluate-2.1.6
     gradio|4.36.1
   
 # Update log
+- JD-AutomaticEvaluate-2.2.7: 业务逻辑重构完成；webUI重构完成；
 - JD-AutomaticEvaluate-2.1.6: webUI重构，配置微调
 - 2.1.5: 使用 playwrite 框架进行重构，并调整脚本逻辑；
 - 2.1.4: 优化了Excel储存方式中对列数据类型与单元格格式的设置

@@ -1,5 +1,5 @@
 {
-    "data_retrieval_mode": "精简",
+    "data_retrieval_mode": "详细",
     "high_search": "全部类型",
     "date_search": "近三个月订单",
     "status_search": "已完成",
@@ -11,8 +11,10 @@
         "商品数量",
         "实付金额",
         "订单返豆",
+        "订单用豆",
         "下单时间",
-        "订单状态"
+        "订单状态",
+        "快递单号"
     ],
     "masking_intensity": {
         "order_id": 0,
