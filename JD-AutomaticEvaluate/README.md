@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.1.5
+version: JD-AutomaticEvaluate-2.2.5
 
 #### 简介
 自动化评价脚本，给予五星好评加图文。
@@ -25,6 +25,7 @@ pyinstaller --onefile --add-data="C:\Users\your_username\AppData\Local\ms-playwr
 `btn_submit.click()`
 
 # Update log
+- JD-AutomaticEvaluate-2.2.5: 支持了命令行运行；尝试接入AI模型
 - JD-AutomaticEvaluate-2.1.5: 日志优化
 - JD-AutomaticEvaluate-2.1.4: 内置了默认评价文案池；添加了获取已有评价文案、图片的最小现存数量限制；
 - JD-AutomaticEvaluate-2.1.3: 优化了登录逻辑；优化了任务构建逻辑，

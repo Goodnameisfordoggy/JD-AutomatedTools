@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-12 19:37:16
+LastEditTime: 2024-12-06 20:50:16
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -23,6 +23,7 @@ from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
 
 from .logInWithCookies import logInWithCookies
+from .api_service import get_response_xai
 from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
 from .logger import get_logger
 LOG = get_logger()
@@ -33,10 +34,14 @@ IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'image')
 
 class AutomaticEvaluate():
     
-    MIN_EXISTING_PRODUCT_DESCRIPTIONS = 15  # 商品已有文案的最少数量 | 真实评论文案多余这个数脚本才会正常获取已有文案。
-    MIN_EXISTING_PRODUCT_IMAGES = 15        # 商品已有图片的最少数量 | 真实评论图片多余这个数脚本才会正常获取已有图片。
-    MIN_DESCRIPTION_CHAR_COUNT = 60         # 评论文案的最少字数 | 随机筛选文案限制，JD:优质评价要求60字以上。
-
+    MIN_EXISTING_PRODUCT_DESCRIPTIONS: int = None  # 商品已有文案的最少数量 | 真实评论文案多余这个数脚本才会正常获取已有文案。
+    MIN_EXISTING_PRODUCT_IMAGES: int = None        # 商品已有图片的最少数量 | 真实评论图片多余这个数脚本才会正常获取已有图片。
+    MIN_DESCRIPTION_CHAR_COUNT: int = None         # 评论文案的最少字数 | 在已有评论中随机筛选文案的限制条件，JD:优质评价要求60字以上。
+    SELECT_CURRENT_PRODUCT_CLOSE: bool = None      # 关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低
+    AUTO_COMMIT_CLOSE: bool = None                 # 关闭自动提交 | 启用此设置，在自动填充完评价页面后将不会自动点击提交按钮
+    CURRENT_AI_GROUP: str = None                   # AI模型的组别名称 | 使用AI模型生成评论文案
+    CURRENT_AI_MODEL: str = None                   # AI模型的名称 | 使用AI模型生成评论文案
+    
     def __init__(self) -> None:
         self.__page, browser = logInWithCookies()
         self.__task_list: list[EvaluationTask] = []
@@ -115,7 +120,10 @@ class AutomaticEvaluate():
         """
         获取评论文本与图片
         """
-        input_text: str = self.__getText(task.productHtml_url)
+        if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
+            input_text: str = self.__get_text_from_ai(task.product_name)
+        else:
+            input_text: str = self.__getText(task.productHtml_url)
         input_image: list = self.__getImage(task.order_id, task.productHtml_url)
         task.input_text = input_text
         task.input_image = input_image
@@ -193,6 +201,28 @@ class AutomaticEvaluate():
             return
         
         return text 
+    
+    def __get_text_from_ai(self, product_name):
+        content = f"""
+        背景：我在京东上购买了一款商品 "{product_name}"
+        角色：消费者
+        任务：请用一段陈述来评价这个商品
+        要求：
+            [1] 禁止过多的重复商品别名
+            [2] 大约需要120个汉字的文本，且文本长度不少于80个字符
+        """
+        while True:
+            time.sleep(2)
+            match self.CURRENT_AI_MODEL:
+                case "grok-beta":
+                    text = get_response_xai(content, "grok-beta")
+                case "grok-vision-beta":
+                    text = get_response_xai(content, "grok-vision-beta")
+                case _:
+                    LOG.error(f"使用了未支持的AI模型：{self.CURRENT_AI_GROUP}:{self.CURRENT_AI_MODEL}")
+            if len(text) > self.MIN_DESCRIPTION_CHAR_COUNT:
+                LOG.success(f"成功使用{self.CURRENT_AI_GROUP}:{self.CURRENT_AI_MODEL}生成商品评论。")
+                return text
     
     def __getImage(self, order_id: str, product_url: str) -> list:
         """ 
