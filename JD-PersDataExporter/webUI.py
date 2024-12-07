@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-30 00:03:11
+LastEditTime: 2024-12-07 18:11:40
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\webUI.py
 Description: 
 
@@ -18,10 +18,9 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 
 import os
 import copy
-import shutil
+import socket
 import asyncio
 import aiofiles
-import platform
 import argparse
 import gradio as gr
 import pandas as pd
@@ -255,15 +254,15 @@ class WebUI():
         """
         获取数据
         """
-        exporter = JDOrderDataExporter(self.config)
-        exporter.exec_()
-        return exporter.get_order_info_list()
-        # return [
-        #     {"订单编号": "100001", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品1", "商品数量": 2, "实付金额": 50.0, "订单返豆": 10, "下单时间": "2024-11-23 15:30", "订单状态": "已完成"},
-        #     {"订单编号": "100002", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品2", "商品数量": 1, "实付金额": 30.0, "订单返豆": 5, "下单时间": "2024-11-23 15:31", "订单状态": "已完成"},
-        #     {"订单编号": "100003", "父订单编号": "900002", "店铺名称": "店铺B", "商品名称": "商品3", "商品数量": 3, "实付金额": 75.0, "订单返豆": 15, "下单时间": "2024-11-24 12:00", "订单状态": "待发货"},
-        #     {"订单编号": "100004", "父订单编号": "900003", "店铺名称": "店铺C", "商品名称": "商品4", "商品数量": 1, "实付金额": 20.0, "订单返豆": 2, "下单时间": "2024-11-24 13:45", "订单状态": "已取消"}
-        # ]
+        # exporter = JDOrderDataExporter(self.config)
+        # exporter.exec_()
+        # return exporter.get_order_info_list()
+        return [
+            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100001", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品1", "商品数量": 2, "实付金额": 50.0, "订单返豆": 10, "下单时间": "2024-11-23 15:30", "订单状态": "已完成"},
+            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100002", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品2", "商品数量": 1, "实付金额": 30.0, "订单返豆": 5, "下单时间": "2024-11-23 15:31", "订单状态": "已完成"},
+            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100003", "父订单编号": "900002", "店铺名称": "店铺B", "商品名称": "商品3", "商品数量": 3, "实付金额": 75.0, "订单返豆": 15, "下单时间": "2024-11-24 12:00", "订单状态": "待发货"},
+            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100004", "父订单编号": "900003", "店铺名称": "店铺C", "商品名称": "商品4", "商品数量": 1, "实付金额": 20.0, "订单返豆": 2, "下单时间": "2024-11-24 13:45", "订单状态": "已取消"}
+        ]
     
     async def change_preview_headers(self):
         """
@@ -336,9 +335,13 @@ if __name__ == "__main__":
         webui = WebUI()
         demo = webui.construct()
 
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', 0))  # 系统会自动分配一个可用端口
+            dynamic_port = s.getsockname()[1]
+                
         parser = argparse.ArgumentParser(description='JD-PersOrderExporter demo Launch')
         parser.add_argument('--server_name', type=str, default='127.0.0.1', help='Server name')
-        parser.add_argument('--server_port', type=int, default=8888, help='Server port')
+        parser.add_argument('--server_port', type=int, default=dynamic_port, help='Server port')
         args = parser.parse_args()
 
         # 异步启动 Gradio 应用
