@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-06 20:50:16
+LastEditTime: 2024-12-09 22:55:45
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -149,9 +149,11 @@ class AutomaticEvaluate():
         element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
         element_to_click_1.click()
         self.__page.wait_for_timeout(1000)
-        # 点击“只看当前商品”
-        element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
-        element_to_click_2.click()
+        
+        if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
+            # 点击“只看当前商品”
+            element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
+            element_to_click_2.click()
 
         text_list = []
         for page in range(1, 4):
@@ -236,9 +238,11 @@ class AutomaticEvaluate():
         element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
         element_to_click_1.click()
         self.__page.wait_for_timeout(1000)
-        # 点击“只看当前商品”
-        element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
-        element_to_click_2.click()
+
+        if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
+            # 点击“只看当前商品”
+            element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
+            element_to_click_2.click()
 
         image_url_lists: list[list] = []
         previous_image_url = ''
@@ -372,7 +376,8 @@ class AutomaticEvaluate():
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
-            btn_submit.click()
+            if self.AUTO_COMMIT_CLOSE is False:
+                btn_submit.click()
             self.__page.wait_for_timeout(5000)
             return True
         except Exception as err:
