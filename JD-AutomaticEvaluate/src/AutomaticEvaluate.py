@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-09 22:55:45
+LastEditTime: 2024-12-16 15:39:08
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -23,7 +23,7 @@ from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
 
 from .logInWithCookies import logInWithCookies
-from .api_service import get_response_xai
+from .api_service import Http_XAI, Ws_SparkAI
 from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
 from .logger import get_logger
 LOG = get_logger()
@@ -210,20 +210,23 @@ class AutomaticEvaluate():
         角色：消费者
         任务：请用一段陈述来评价这个商品
         要求：
-            [1] 禁止过多的重复商品别名
-            [2] 大约需要120个汉字的文本，且文本长度不少于80个字符
+            [1] 禁止过多的重复商品别名！
+            [2] 大约需要80个汉字的文本，且文本长度不少于80个字符！
+            [3] 仅用一段陈述完成，不要换行！
         """
         while True:
             time.sleep(2)
-            match self.CURRENT_AI_MODEL:
-                case "grok-beta":
-                    text = get_response_xai(content, "grok-beta")
-                case "grok-vision-beta":
-                    text = get_response_xai(content, "grok-vision-beta")
+            match self.CURRENT_AI_GROUP:
+                case "XAI":
+                    text = Http_XAI(content, self.CURRENT_AI_MODEL).get_response()
+                case "SparkAI":
+                    ws_client = Ws_SparkAI(self.CURRENT_AI_MODEL)
+                    ws_client.send_request(content)
+                    text = ws_client.get_response()
                 case _:
                     LOG.error(f"使用了未支持的AI模型：{self.CURRENT_AI_GROUP}:{self.CURRENT_AI_MODEL}")
             if len(text) > self.MIN_DESCRIPTION_CHAR_COUNT:
-                LOG.success(f"成功使用{self.CURRENT_AI_GROUP}:{self.CURRENT_AI_MODEL}生成商品评论。")
+                LOG.info(f"{self.CURRENT_AI_GROUP}({self.CURRENT_AI_MODEL}): {text}")
                 return text
     
     def __getImage(self, order_id: str, product_url: str) -> list:

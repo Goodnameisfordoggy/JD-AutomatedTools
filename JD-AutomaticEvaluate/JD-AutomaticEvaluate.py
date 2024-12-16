@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-10 00:13:05
+LastEditTime: 2024-12-16 10:28:08
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -29,14 +29,22 @@ class ShowSupportedTableAction(argparse.Action):
         # 表格整体缩进两个Tab
         table = """
 		                            Currently supported
-		+------------------------+----------------------+----------------------+
-		| Group                  | Model                | Required env variable|
-		+------------------------+----------------------+----------------------+
-		| None(default)          | None(default)        |                      |			
-		| X                      | grok-beta            | XAI_API_KEY          |
-		| X                      | grok-vision-beta     | XAI_API_KEY          |
-		+------------------------+----------------------+----------------------+
-		"""
+		+------------------------+----------------------+-----------------------+
+		| Group                  | Model                | Required env variables|
+		+------------------------+----------------------+-----------------------+
+		| None(default)          | None(default)        | None                  |
+		+------------------------+----------------------+-----------------------+			
+		| XAI                    | grok-beta            | XAI_API_KEY           |
+		|                        | grok-vision-beta     |                       |
+		+------------------------+----------------------+-----------------------+
+		| SparkAI                | Lite                 | SparkAI_WS_APP_ID     |
+		|                        | Pro                  | SparkAI_WS_API_Secret |
+		|                        | Pro-128K             | SparkAI_WS_API_KEY    |
+		|                        | Max                  |                       |
+		|                        | Max-32K              |                       |
+		|                        | 4.0-Ultra            |                       |
+		+------------------------+----------------------+-----------------------+
+"""
         print(table)
         sys.exit(0)  # 显示后退出程序
     
@@ -45,7 +53,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.2.6')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.6')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
     
 	group1 = parser.add_argument_group(title="限制条件(默认值)")
