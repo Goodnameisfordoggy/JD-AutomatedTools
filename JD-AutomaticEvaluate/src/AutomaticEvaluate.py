@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-16 15:39:08
+LastEditTime: 2024-12-17 17:25:05
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -22,12 +22,12 @@ import requests
 from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
 
-from .logInWithCookies import logInWithCookies
-from .api_service import Http_XAI, Ws_SparkAI
-from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
+from .api_service import *
 from .logger import get_logger
-LOG = get_logger()
+from .logInWithCookies import logInWithCookies
+from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
 
+LOG = get_logger()
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'image')
 
@@ -211,7 +211,7 @@ class AutomaticEvaluate():
         任务：请用一段陈述来评价这个商品
         要求：
             [1] 禁止过多的重复商品别名！
-            [2] 大约需要80个汉字的文本，且文本长度不少于80个字符！
+            [2] 大约需要100个汉字的文本，且文本长度不少于80个字符！
             [3] 仅用一段陈述完成，不要换行！
         """
         while True:

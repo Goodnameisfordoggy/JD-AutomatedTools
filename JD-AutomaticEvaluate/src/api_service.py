@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-16 15:52:50
+LastEditTime: 2024-12-17 23:50:40
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\api_service.py
 Description: 
 
@@ -36,13 +36,17 @@ from urllib.parse import urlparse, urlencode
 from wsgiref.handlers import format_date_time
 
 load_dotenv() # 加载换境变量，如果配置了 .env 文件
+# 日志配置
 LOG = logger
 LOG.remove()
 LOG.add(
 		sink=sys.stdout,
-		format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <cyan>{file.name}</cyan>:<cyan>{line}</cyan> | <level>{level: <8}</level> | <level>{message}</level>",
+		format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <cyan>{module}</cyan>:<cyan>{line}</cyan> | <level>{level: <8}</level> | <level>{message}</level>",
 		level="INFO"
 	)
+
+__all__ = ["Http_XAI", "Ws_SparkAI"]
+
 
 class Http_XAI(object):
     
@@ -65,9 +69,11 @@ class Http_XAI(object):
         data = {
             'model': f'{self.model}',
             'messages': [
-                {'role': 'system', 'content': "You are Grok, a chatbot inspired by the Hitchhikers Guide to the Galaxy."},
+                {'role': 'system', 'content': "你是一个富家千金，时长在各大购物平台购买各类商品，从不吝啬。乐于在每次购物完成后对商品进行客观的评价。"},
                 {'role': 'user', 'content': self.content}
-            ]
+            ],
+            "stream": False,
+            "temperature": 0.9
         }
 
         try:
@@ -273,9 +279,9 @@ class Ws_SparkAI(_WebSocketClient):
             LOG.error(f"不支持的模型：{err}")
             LOG.info("当前使用默认基础模型: Lite ！")
 
-        #初始上下文内容，当前可传 system、user、assistant 等角色
+        #初始上下文内容，当前可传 system、user、assistant 等角色，参考 https://www.xfyun.cn/doc/spark/Web.html
         self.text =[
-            {"role": "system", "content": ""} , # 设置对话背景或者模型角色
+            {"role": "system", "content": ""} , # 设置对话背景或者模型角色，部分模型可用
             # {"role": "user", "content": "你是谁"},  # 用户的历史问题
             # {"role": "assistant", "content": "....."} , # AI的历史回答结果
             # ....... 省略的历史对话
@@ -405,14 +411,4 @@ class Ws_SparkAI(_WebSocketClient):
                 LOG.debug("没有新的消息")
 
 if __name__ == "__main__":
-    ws = Ws_SparkAI("4.0-Ultra")
-    ws.send_request("你好")
-
-    # 保持主线程运行
-    try:
-        while True:
-            time.sleep(0.1)
-            # LOG.success(f"{ws.get_message(timeout=0.1)}")
-            print(ws.get_response())
-    except KeyboardInterrupt:
-        ws.close()
+    print(Http_XAI("你好", "grok-2-1212").get_response())

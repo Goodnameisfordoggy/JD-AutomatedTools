@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-16 10:28:08
+LastEditTime: 2024-12-17 11:12:00
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -28,16 +28,18 @@ class ShowSupportedTableAction(argparse.Action):
         import sys
         # 表格整体缩进两个Tab
         table = """
-		                            Currently supported
-		+------------------------+----------------------+-----------------------+
+									Currently supported
+		+========================+======================+=======================+
 		| Group                  | Model                | Required env variables|
-		+------------------------+----------------------+-----------------------+
+		+========================+======================+=======================+
 		| None(default)          | None(default)        | None                  |
 		+------------------------+----------------------+-----------------------+			
 		| XAI                    | grok-beta            | XAI_API_KEY           |
 		|                        | grok-vision-beta     |                       |
+		|                        | grok-2-vision-1212   |                       |
+		|                        | grok-2-1212     (Rec)|                       |
 		+------------------------+----------------------+-----------------------+
-		| SparkAI                | Lite                 | SparkAI_WS_APP_ID     |
+		| SparkAI                | Lite            (Rec)| SparkAI_WS_APP_ID     |
 		|                        | Pro                  | SparkAI_WS_API_Secret |
 		|                        | Pro-128K             | SparkAI_WS_API_KEY    |
 		|                        | Max                  |                       |
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.6')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.7')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
     
 	group1 = parser.add_argument_group(title="限制条件(默认值)")
