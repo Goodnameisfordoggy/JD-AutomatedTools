@@ -55,7 +55,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.7')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.8')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
     
 	group1 = parser.add_argument_group(title="限制条件(默认值)")
