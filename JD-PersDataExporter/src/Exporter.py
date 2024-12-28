@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-25 23:21:41
+LastEditTime: 2024-12-23 21:57:53
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\Exporter.py
 Description: 
 
@@ -18,12 +18,12 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 import os
 import re
 import time
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Page
 
-from .LoginManager import LoginManager
-from .data import PerOrderInfoSlim, PerOrderInfoFull, DATE, STATUS
-from .dataPortector import OrderExportConfig
-from .logger import get_logger
+from src.LoginManager import LoginManager
+from src.data import PerOrderInfoSlim, PerOrderInfoFull, DATE, STATUS
+from src.dataPortector import OrderExportConfig
+from src.logger import get_logger
 
 LOG = get_logger()
 
@@ -44,11 +44,9 @@ class JDOrderDataExporter():
     DATE_SEARCH = "近三个月订单"          # 日期筛选
     STATUS_SEARCH = "已完成"            # 订单状态筛选
     
-    def __init__(self, config: OrderExportConfig | None = None) -> None:
+    def __init__(self, config: OrderExportConfig, page: Page) -> None:
         self.__config = config
-        self.__loginManager = LoginManager()
-        self.__loginManager.login_with_cookies()
-        self.__page = self.__loginManager.page 
+        self.__page = page
         self.__orderInfo_list = []
         self.__start_time = time.time()
     
@@ -68,7 +66,7 @@ class JDOrderDataExporter():
         except Exception as err:
             raise err
         finally:
-            self.__loginManager.close()
+            self.__page.close()
 
     def __slim_step_1(self):
         """
@@ -216,7 +214,9 @@ class JDOrderDataExporter():
 
             
             # 商品总价 
-            orderInfo.product_total_price = float(re.search(r"商品总(价|额)：\s*?¥(\d+\.\d{2,})", page_text).group(2))
+            product_total_price_match = re.search(r"商品总(价|额)：\s*?¥(\d+\.\d{2,})", page_text)
+            if product_total_price_match:
+                orderInfo.product_total_price = float(product_total_price_match.group(2))
             
             # 订单用豆
             jingdou_decrement_match = re.search(r"京豆：\s*[-+]?\s?¥(\d+\.\d{2,})", page_text)

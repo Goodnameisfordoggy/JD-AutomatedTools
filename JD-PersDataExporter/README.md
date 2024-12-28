@@ -1,5 +1,5 @@
 # JD-PersDataExporter
-version: JD-PersDataExporter-2.2.8
+version: JD-PersDataExporter-2.3.9
 
 ## 简介
 - 该项目是一个本地自动化工具，用于导出京东个人账户的订单信息。
@@ -89,6 +89,8 @@ version: JD-PersDataExporter-2.2.8
 - 部分包为较新版本，并不代表低版本不可用，详见 requirements.txt.
   
 # Update log
+- JD-PersDataExporter-2.3.9: 新增了多账号管理功能；优化了账号登录逻辑；优化了Excel储存设置；更新了webUI；
+- JD-PersDataExporter-2.2.9: 更新了 requirements.txt
 - JD-PersDataExporter-2.2.8: 更新README；修复版本名称错误；
 - JD-PersDataExporter-2.2.7: 业务逻辑重构完成；webUI重构完成；
 - JD-PersDataExporter-2.1.6: webUI重构，配置微调

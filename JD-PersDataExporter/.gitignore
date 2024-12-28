@@ -1,11 +1,9 @@
 # project
 *[0-9].*
-cookies.json
-Cookie.txt
-getCookies.py
 *.xlsx
+*cookies*.*
 mysql_user.ini
-commit.bat
-commit_message.txt
+test/
 output/
+account_cookies/
 

@@ -1,8 +1,8 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-05-24 21:08:21
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\jd-pers-data-exporter\src\_init_.py
+LastEditTime: 2024-12-22 22:55:16
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\__init__.py
 Description: 
 
 				*		写字楼里写字间，写字间里程序员；
@@ -15,3 +15,12 @@ Description:
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024 by HDJ, All Rights Reserved. 
 '''
+import os
+
+current_file_path = os.path.abspath(__file__)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(current_file_path))
+CONFIG_DIR = os.path.join(PROJECT_ROOT, "config")
+LOGS_DIR = os.path.join(PROJECT_ROOT, "logs")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
+STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+JD_ACCOUNT_COOKIES_DIR = os.path.join(CONFIG_DIR, "account_cookies\jd")

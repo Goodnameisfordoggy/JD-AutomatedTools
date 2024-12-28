@@ -22,6 +22,10 @@
         "consignee_address": 2,
         "consignee_phone_number": 2
     },
+    "jd_account_last_used": 1,
+    "jd_accounts_info": [
+
+    ],
     "excel_storage_settings": {
         "storage_path": "",
         "headers_settings": {
@@ -37,63 +41,62 @@
                 "name": "店铺名称",
                 "width": "20"
             },
-            "product_id":  {
+            "product_id": {
                 "name": "商品编号",
                 "width": "20"
             },
-            "product_name":  {
+            "product_name": {
                 "name": "商品名称",
                 "width": "39"
             },
-            "goods_number":  {
+            "goods_number": {
                 "name": "商品数量",
                 "width": "8"
             },
-            "actual_payment_amount":  {
+            "actual_payment_amount": {
                 "name": "实付金额",
                 "width": "13"
             },
-            "jingdou_increment":  {
+            "jingdou_increment": {
                 "name": "订单返豆",
                 "width": "8"
             },
-            "order_time":  {
+            "order_time": {
                 "name": "下单时间",
                 "width": "25"
             },
-            "order_status":  {
+            "order_status": {
                 "name": "订单状态",
                 "width": "10"
             },
-            "consignee_name":  {
+            "consignee_name": {
                 "name": "收货人姓名",
                 "width": "10"
             },
-            "consignee_address":  {
+            "consignee_address": {
                 "name": "收货地址",
                 "width": "40"
             },
-            "consignee_phone_number":  {
+            "consignee_phone_number": {
                 "name": "收货人电话",
                 "width": "12"
             },
-            "jingdou_decrement":  {
+            "jingdou_decrement": {
                 "name": "订单用豆",
                 "width": "8"
             },
-            "product_total_price":  {
+            "product_total_price": {
                 "name": "商品总价",
                 "width": "13"
             },
-            "courier_services_company":  {
+            "courier_services_company": {
                 "name": "物流公司",
                 "width": "10"
             },
-            "courier_number":  {
+            "courier_number": {
                 "name": "快递单号",
                 "width": "18"
             }
         }
     }
-    
 }

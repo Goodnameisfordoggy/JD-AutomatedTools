@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-11-25 00:21:25
+LastEditTime: 2024-12-28 22:03:58
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\storage\dataStorageToExcel.py
 Description: 
 
@@ -22,17 +22,17 @@ import pandas as pd
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Alignment
 
-from ..dataPortector import OrderExportConfig
+from src.dataPortector import OrderExportConfig
 from src.logger import get_logger
 LOG = get_logger()
 
 
 class ExcelStorage:
-    def __init__(self, data: list[dict], header_needed: list, file_name: str = "JD_order_info", sheet_name: str = "Sheet1"):
+    def __init__(self, data: list[dict]= [], header_needed: list = [], file_name: str = "JD_order_info", sheet_name: str = "Sheet1"):
         self.__data = data  # 需python3.7及以上，利用字典键值对的插入顺序。
         self.__header_needed = header_needed  # 用户选择的表头字段列表
         # 获取配置文件
-        self.__config = OrderExportConfig().from_json_file()
+        self.__config = OrderExportConfig().load_from_json()
 
         if any(file_name.endswith(ext) for ext in ['.xlsx', '.xlsm', '.xltx', '.xltm']):
             self.__file_name = file_name
@@ -75,14 +75,14 @@ class ExcelStorage:
         # LOG.debug(f'field_items_sorted: {field_items_sorted}\n')
         return [item.get('name', '') for item in field_items_sorted]
     
-    def is_file_exists(self):
+    def __is_file_exists(self):
         if os.path.exists(self.__file_name):
             LOG.info(f"Reading file: {self.__file_name}, sheet: {self.__sheet_name}")
             return True
         else:
             LOG.info("文件不存在, 将新建Excel文件。")
 
-    def is_file_locked(self):
+    def __is_file_locked(self):
         """检测文件是否被占用"""
         try:
             # 尝试以写入模式打开文件
@@ -93,7 +93,7 @@ class ExcelStorage:
             LOG.error(f"Permission error: {e}. 请确保文件没有在其他程序中打开，并且您有写入权限。")
             return True  # 文件被占用
     
-    def create_new_file(self):
+    def __create_new_file(self):
         """ 创建新的Excel文件 """
         workbook = Workbook()
         sheet = workbook.active
@@ -105,7 +105,7 @@ class ExcelStorage:
         workbook.save(self.__file_name)
         LOG.info(f"新文件 '{self.__file_name}' 创建成功。")
     
-    def append_to_excel(self, df):
+    def __append_to_excel(self, df):
         """ 在现有的 Excel 文件末尾添加新内容 """
         try:
             # 尝试打开现有的工作簿
@@ -126,7 +126,7 @@ class ExcelStorage:
         except Exception as e:
             LOG.critical(f"添加到Excel时发生错误: {e}")
 
-    def adjust_column_format(self):
+    def __adjust_column_format(self):
         """ 调整 Excel 表头格式，以及单元格数据类型 """
         try:
             workbook = load_workbook(self.__file_name)
@@ -206,10 +206,10 @@ class ExcelStorage:
         """ 
         数据储存 
         """
-        if not self.is_file_exists():
-            self.create_new_file()
+        if not self.__is_file_exists():
+            self.__create_new_file()
         else:
-            if not self.is_file_locked():
+            if not self.__is_file_locked():
                 # 读取Excel文件
                 df = pd.read_excel(self.__file_name, sheet_name=self.__sheet_name, engine='openpyxl')
                 # 获取表中 "订单编号" 字段下的所有值
@@ -221,16 +221,24 @@ class ExcelStorage:
 
         try:
             if self.__data:
-                if not self.is_file_locked():
+                if not self.__is_file_locked():
                     # 创建DataFrame
                     df = pd.DataFrame(self.__data, columns=self.__output_fields)
-                    self.append_to_excel(df)
+                    self.__append_to_excel(df)
                     # 设置Excel文件列宽
-                    self.adjust_column_format()
+                    self.__adjust_column_format()
             else:
                 LOG.info(f'没有新数据, 储存结束。')
                 return
         except zipfile.BadZipFile:
             LOG.error(f"BadZipFile error: The file is not a valid zip file (Excel file): {self.__file_name}")
-        
     
+    def get_all_sheets_name(self):
+        """获取Excel文件中的所有数据表名称"""
+        if self.__is_file_exists():
+            if not self.__is_file_locked():
+                # 读取Excel文件
+                xls = pd.ExcelFile(self.__file_name, engine='openpyxl')
+                # 获取所有 Sheet 名称
+                sheet_names = xls.sheet_names
+                return sheet_names

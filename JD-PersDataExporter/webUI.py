@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-07 18:11:40
+LastEditTime: 2024-12-28 22:46:50
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\webUI.py
 Description: 
 
@@ -25,20 +25,22 @@ import argparse
 import gradio as gr
 import pandas as pd
 
-from theme import PremiumBox, GorgeousBlack
+
+from src.data import PerOrderInfoSlim
+from src.LoginManager import LoginManager
+from src.storage import dataStorageToExcel
 from src.Exporter import JDOrderDataExporter
 from src.dataPortector import OrderExportConfig
-from src.data import PerOrderInfoSlim
-from src.storage import dataStorageToExcel
+from static.theme import PremiumBox, GorgeousBlack
+from src import OUTPUT_DIR
 
-EXCEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 # 确保目录存在
-if not os.path.exists(EXCEL_DIR):
-    os.makedirs(EXCEL_DIR)
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
     
 class WebUI():
     def __init__(self) -> None:
-        self.config = OrderExportConfig().from_json_file()
+        self.config: OrderExportConfig = OrderExportConfig().load_from_json() # 读取储存的配置
 
     def construct(self):
         with gr.Blocks(title="JD-OrderDataExporter", theme=PremiumBox(), fill_height=True) as demo:
@@ -57,30 +59,50 @@ class WebUI():
                     """
                 )
             with gr.Tabs():
-                with gr.Tab(label="基础配置(Basic config)"):
+                with gr.Tab(label="账号管理(Account Management)"):
                     with gr.Column():
-                        self.data_retrieval_mode_input = gr.Dropdown(
+                        nick_name_list = ["登录新的账号"] + [account["nick_name"] for account in self.config.jd_accounts_info]
+                        self.select_account_dropdown = gr.Dropdown(value=nick_name_list[0], choices=nick_name_list, type="index", label="选择账号", info="Select your owned account")
+                    with gr.Column():
+                        self.user_pic_image = gr.Image(
+                            height=150, width=150, 
+                            label="当前账号",
+                            placeholder="Current Account Avatar",
+                            show_download_button=False,
+                            show_fullscreen_button=False,
+                            visible=False,
+                            interactive=False
+                        )
+                        with gr.Row():
+                            self.user_name_textbox = gr.Textbox(label="账号名(不可更改)", info="Account Name(inalterable)", visible=False)
+                            self.sheet_name_textbox = gr.Textbox(label="账号数据对应的Excel表名", info="Account Data Sheet Name", visible=False)
+                            self.cookies_path_textbox = gr.Textbox(label="账号Cookies存储位置", info="Cookies Path", visible=False)
+                    self.btn_new_account = gr.Button("登录新账号(New Account)", variant="primary")
+                    
+                with gr.Tab(label="数据获取设置(Data fetch Settings)"):
+                    with gr.Column():
+                        self.data_retrieval_mode_dropdown = gr.Dropdown(
                             label="数据获取模式",
                             info="Data Retrieval Mode (精简模式仅含：订单编号，父订单编号，订单店铺名称，商品编号，商品名称，商品数量，实付金额，订单返豆，下单时间，订单状态，收货人姓名，收货地址，联系方式)",
                             choices= ["精简", "详细"], 
                             value=self.config.data_retrieval_mode or "详细",
                             interactive=True,
                         )
-                        self.date_range_input = gr.Dropdown(
+                        self.date_range_dropdown = gr.Dropdown(
                             label="日期跨度",
                             info="Date Range",
                             choices= ["近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
                             value=self.config.date_search or "近三个月订单",
                             interactive=True,
                         )
-                        self.status_search_input = gr.Dropdown(
+                        self.status_search_dropdown = gr.Dropdown(
                             label="订单状态",
                             info="Order Status",
                             choices= ["全部状态", "等待付款", "等待收货", "已完成", "已取消"], 
                             value=self.config.status_search or "已完成",
                             interactive=True,
                         )
-                        self.high_search_input = gr.Dropdown(
+                        self.high_search_dropdown = gr.Dropdown(
                             label="高级筛选",
                             info="High Search",
                             choices= ["全部类型", "实物商品"],
@@ -88,10 +110,10 @@ class WebUI():
                             interactive=True,
                         )
                         self.btn_export = gr.Button("Start exporting(开始导出)", variant="primary")
-                with gr.Tab(label="数据导出配置(Storage config)"):
+                with gr.Tab(label="数据导出配置(Data Storage Settings)"):
                     with gr.Tab(label="数据(Data)"):
                         with gr.Column():
-                            self.headers_input = gr.Dropdown(
+                            self.headers_dropdown = gr.Dropdown(
                                     label="表头",
                                     info="Headers",
                                     choices= ["订单编号", "父订单编号", "店铺名称", "商品编号", "商品名称", "商品数量", "实付金额", "订单返豆", "下单时间", "订单状态", "收货人姓名", "收货地址", "收货人电话", "物流公司", "快递单号", "商品总价", "订单用豆"], 
@@ -111,10 +133,14 @@ class WebUI():
                     with gr.Tab(label="导出到Excel"):
                         with gr.Row():
                             with gr.Column():
-                                self.excel_file_path_input = gr.File(label="向已有Excel文件追加", file_types=[".xlsx"])
+                                self.excel_file_path_input = gr.File(label="向已有Excel文件追加", file_types=['.xlsx', '.xlsm', '.xltx', '.xltm'])
                                 self.excel_file_name_input = gr.Textbox(label="新建文件", info="New File Name", placeholder="please input output file path(name) or we will use defult one...", interactive=True)
                             with gr.Column():
                                 gr.Markdown("#### 使用追加模式时，请保持表头一致！")
+                                with gr.Row():
+                                    self.select_sheet_dropdown = gr.Dropdown(choices=["nihao", "ajcina"], label="当前Excel中存在的表", info="Sheet name owned")
+                                    self.sheet_name_textbox2 = gr.Textbox(value=self.config.jd_accounts_info[self.config.jd_account_last_used]["sheet_name"], label="导出时使用的表名", info="Sheet name", interactive=True)
+                                
                                 self.btn_storage_to_excel = gr.Button("储存数据(storage)", variant="primary")
                                 self.file_download_excel = gr.File(label="请下载文件", visible=False, interactive=False)
                         with gr.Accordion("列宽调节(Col width adjust)", open=False):
@@ -141,7 +167,7 @@ class WebUI():
                                 self.col_courier_number_width =  gr.Slider(label="快递单号", info="Courier Number", minimum=5, maximum=120, step=1, value=18, interactive=True)
             with gr.Column():
                 self.frame_data_preview = gr.DataFrame(visible=False)
-                                
+            
             self.connect()
         return demo
 
@@ -149,12 +175,24 @@ class WebUI():
         """
         绑定各个组件的事件处理
         """
-        self.data_retrieval_mode_input.change(self.handle_data_retrieval_mode_change, inputs=self.data_retrieval_mode_input)
-        self.date_range_input.change(self.handle_date_range_change, inputs=self.date_range_input)
-        self.status_search_input.change(self.handle_status_search_change, inputs=self.status_search_input)
-        self.high_search_input.change(self.handle_high_search_change, inputs=self.high_search_input)
-        self.headers_input.change(self.handle_header_change, inputs=self.headers_input)
-        # 数据脱敏滑块
+        self.select_account_dropdown.change(
+            self.handle_select_account_dropdown_change, 
+            inputs=self.select_account_dropdown, 
+            outputs=[
+                self.btn_new_account,
+                self.user_pic_image,
+                self.user_name_textbox, 
+                self.sheet_name_textbox, 
+                self.cookies_path_textbox, 
+                self.sheet_name_textbox2
+            ])
+        self.btn_new_account.click(self.new_account, inputs=[], outputs=[self.select_account_dropdown])
+        self.data_retrieval_mode_dropdown.change(self.handle_data_retrieval_mode_change, inputs=self.data_retrieval_mode_dropdown)
+        self.date_range_dropdown.change(self.handle_date_range_change, inputs=self.date_range_dropdown)
+        self.status_search_dropdown.change(self.handle_status_search_change, inputs=self.status_search_dropdown)
+        self.high_search_dropdown.change(self.handle_high_search_change, inputs=self.high_search_dropdown)
+        self.headers_dropdown.change(self.handle_header_change, inputs=self.headers_dropdown)
+        # 数据脱敏滑块组
         self.desensitization_sliders = {
             "order_id": self.order_id_slider,
             "consignee_name": self.consignee_name_slider,
@@ -167,7 +205,15 @@ class WebUI():
                 inputs=[slider],
                 outputs=[]
             )
-        # Excel列宽设置滑块
+        self.select_sheet_dropdown.change(self.handle_select_sheet_dropdown_change, inputs=[self.select_sheet_dropdown], outputs=[self.sheet_name_textbox2])
+        self.excel_file_path_input.change(
+            self.handle_excel_file_path_input_change, 
+            inputs=[self.excel_file_path_input],
+            outputs=[self.select_sheet_dropdown]
+        )
+        self.sheet_name_textbox.change(self.handle_sheet_name_textbox_change, inputs=[self.sheet_name_textbox])
+        self.sheet_name_textbox2.change(self.handle_sheet_name_textbox_change, inputs=[self.sheet_name_textbox2])
+        # Excel列宽设置滑块组
         self.excel_col_width_sliders = {
             "order_id": self.col_order_id_width,
             "parent_order_id": self.col_parent_order_id_width,
@@ -193,7 +239,6 @@ class WebUI():
                 inputs=[slider],
                 outputs=[]
             )
-
         self.btn_export.click(
             self.export, 
             inputs=[],
@@ -213,7 +258,44 @@ class WebUI():
             inputs=[self.excel_file_path_input, self.excel_file_name_input], 
             outputs=[self.file_download_excel, self.btn_storage_to_excel]
         )
-
+        
+    def handle_select_account_dropdown_change(self, index):
+        """
+        处理 jd 账号切换操作
+        Returns:
+            list:
+            - btn_new_account (visible)
+            - user_pic_image (value, visible)
+            - user_name (value, visible)
+            - sheet_name (value, visible)
+            - cookies_path (value, visible)
+            - sheet_name (value)
+        """
+        # index为0，视为使用未记录的新账号登录
+        if index == 0: 
+            return [
+                gr.update(visible=True), 
+                gr.update(visible=False), 
+                gr.update(visible=False), 
+                gr.update(visible=False), 
+                gr.update(visible=False), 
+                gr.update()
+            ]
+        else:
+            account_index = index - 1
+            user_name = self.config.jd_accounts_info[account_index]["user_name"]
+            sheet_name = self.config.jd_accounts_info[account_index]["sheet_name"]
+            cookies_path = self.config.jd_accounts_info[account_index]["cookies_path"]
+            self.config.jd_account_last_used = account_index
+            return [
+                gr.update(visible=False),
+                gr.update(value=self.config.jd_accounts_info[self.config.jd_account_last_used]["user_picture_url"], visible=True),
+                gr.update(value=user_name, visible=True), 
+                gr.update(value=sheet_name, visible=True), 
+                gr.update(value=cookies_path, visible=True), 
+                gr.update(value=sheet_name)
+            ]
+    
     def handle_data_retrieval_mode_change(self, new_value):
         self.config.data_retrieval_mode = new_value
 
@@ -232,18 +314,47 @@ class WebUI():
     def handle_desensitization_slider_change(self, new_value, slider_name):
         self.config.masking_intensity[slider_name] = new_value  # 动态保存值
     
+    def handle_excel_file_path_input_change(self, uploaded_file):
+        sheets_name = []
+        if uploaded_file:
+            sheets_name = dataStorageToExcel.ExcelStorage(file_name=uploaded_file.name).get_all_sheets_name()
+        return gr.update(choices=sheets_name)
+
+    def handle_select_sheet_dropdown_change(self, sheet_name):
+        return gr.update(value=f"{sheet_name}")
+
+    def handle_sheet_name_textbox_change(self, sheet_name):
+        self.config.jd_accounts_info[self.config.jd_account_last_used]["sheet_name"] = sheet_name
+    
     def handle_excel_col_width_slider_change(self, new_value, slider_name):
         self.config.excel_storage_settings["headers_settings"][slider_name]["width"] = new_value
     
+    def new_account(self):
+        """
+        登录新账号，按钮绑定操作
+
+        Returns:
+            - select_account_dropdown(value, choices)
+        """
+        loginManager = LoginManager(headless=False, cookie_file=None)
+        account_info = loginManager.login_new_account()
+        # 储存账号信息
+        self.config.add_account_info(account_info)
+        self.config.save_to_json()
+        nick_name_list = ["登录新的账号"] + [account["nick_name"] for account in self.config.jd_accounts_info]
+        return gr.update(value=nick_name_list[-1], choices=nick_name_list)
+            
+
     async def export(self):
         """
-        按钮绑定操作
+        导出数据，按钮绑定操作
         Returns:
             list:
             - frame_data_preview (DataFrame) 
-            - frame_data_preview (update)
-            - btn_change_preview_headers (update)
+            - frame_data_preview (visible)
+            - btn_change_preview_headers (visible, variant)
         """
+        self.config.save_to_json() # 保存本次配置
         self.orderInfo_list: list[dict] = await asyncio.to_thread(self.fetch_data)
         self.temp_orderInfo_list = copy.deepcopy(self.orderInfo_list) # 创建临时副本
         df = pd.DataFrame(self.temp_orderInfo_list)
@@ -254,15 +365,19 @@ class WebUI():
         """
         获取数据
         """
-        # exporter = JDOrderDataExporter(self.config)
-        # exporter.exec_()
-        # return exporter.get_order_info_list()
-        return [
-            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100001", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品1", "商品数量": 2, "实付金额": 50.0, "订单返豆": 10, "下单时间": "2024-11-23 15:30", "订单状态": "已完成"},
-            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100002", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品2", "商品数量": 1, "实付金额": 30.0, "订单返豆": 5, "下单时间": "2024-11-23 15:31", "订单状态": "已完成"},
-            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100003", "父订单编号": "900002", "店铺名称": "店铺B", "商品名称": "商品3", "商品数量": 3, "实付金额": 75.0, "订单返豆": 15, "下单时间": "2024-11-24 12:00", "订单状态": "待发货"},
-            {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100004", "父订单编号": "900003", "店铺名称": "店铺C", "商品名称": "商品4", "商品数量": 1, "实付金额": 20.0, "订单返豆": 2, "下单时间": "2024-11-24 13:45", "订单状态": "已取消"}
-        ]
+        loginManager = LoginManager(
+            headless=False, 
+            cookie_file=self.config.jd_accounts_info[self.config.jd_account_last_used]["cookies_path"]
+        ).login_with_cookies()
+        exporter = JDOrderDataExporter(self.config, loginManager.page)
+        exporter.exec_()
+        return exporter.get_order_info_list()
+        # return [
+        #     {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100001", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品1", "商品数量": 2, "实付金额": 50.0, "订单返豆": 10, "下单时间": "2024-11-23 15:30", "订单状态": "已完成"},
+        #     {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100002", "父订单编号": "900001", "店铺名称": "店铺A", "商品名称": "商品2", "商品数量": 1, "实付金额": 30.0, "订单返豆": 5, "下单时间": "2024-11-23 15:31", "订单状态": "已完成"},
+        #     {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100003", "父订单编号": "900002", "店铺名称": "店铺B", "商品名称": "商品3", "商品数量": 3, "实付金额": 75.0, "订单返豆": 15, "下单时间": "2024-11-24 12:00", "订单状态": "待发货"},
+        #     {"订单用豆": 10, "快递单号": "123456789", "订单编号": "100004", "父订单编号": "900003", "店铺名称": "店铺C", "商品名称": "商品4", "商品数量": 1, "实付金额": 20.0, "订单返豆": 2, "下单时间": "2024-11-24 13:45", "订单状态": "已取消"}
+        # ]
     
     async def change_preview_headers(self):
         """
@@ -296,34 +411,48 @@ class WebUI():
         存储数据到 Excel，按钮绑定操作
         Returns:
             list:
-            - file_download_excel (update)
-            - btn_storage_to_excel (update)
+            - file_download_excel (value, visible)
+            - btn_storage_to_excel (value, variant)
         """
+        self.config.save_to_json() # 保存本次配置
         if uploaded_file:
+            # 追加模式
             file_name = os.path.basename(uploaded_file.name)
-            save_path = os.path.join(EXCEL_DIR, file_name)
+            save_path = os.path.join(OUTPUT_DIR, file_name)
 
             # 从 gradio 缓存目录中移动到指定目录
             async with aiofiles.open(uploaded_file.name, 'rb') as src:
                 async with aiofiles.open(save_path, 'wb') as dest:
                     await dest.write(await src.read())
             try:
-                excelStorage = dataStorageToExcel.ExcelStorage(self.temp_orderInfo_list, self.config.headers, save_path)
+                excelStorage = dataStorageToExcel.ExcelStorage(
+                    data=self.temp_orderInfo_list, 
+                    header_needed=self.config.headers, 
+                    file_name=save_path, 
+                    sheet_name=self.config.jd_accounts_info[self.config.jd_account_last_used]["sheet_name"]
+                )
                 excelStorage.save()
                 return [
                     gr.update(value=save_path, visible=True),
                     gr.update(value="✔️", variant="secondary")
                 ]
             except Exception as err:
-                return gr.Warning("文件格式不符合追加要求，请新建文件储存！")
-        else:
+                gr.Warning("文件格式不符合追加要求，请新建文件储存！")
+                return 
+        else: 
+            # 新建模式
             if not input_name:
                 input_name = "JD_order_info"
             if not input_name.endswith(('.xlsx', '.xlsm', '.xltx', '.xltm')):
                 input_name += '.xlsx'
 
-            save_path = os.path.join(EXCEL_DIR, input_name)
-            excelStorage = dataStorageToExcel.ExcelStorage(self.temp_orderInfo_list, self.config.headers, save_path)
+            save_path = os.path.join(OUTPUT_DIR, input_name)
+            excelStorage = dataStorageToExcel.ExcelStorage(
+                    data=self.temp_orderInfo_list, 
+                    header_needed=self.config.headers, 
+                    file_name=save_path, 
+                    sheet_name=self.config.jd_accounts_info[self.config.jd_account_last_used]["sheet_name"]
+            )
             excelStorage.save()
             return [
                 gr.update(value=save_path, visible=True),
@@ -345,6 +474,6 @@ if __name__ == "__main__":
         args = parser.parse_args()
 
         # 异步启动 Gradio 应用
-        await asyncio.to_thread(demo.launch, inbrowser=True, server_name=args.server_name, server_port=args.server_port, share=False)
+        await asyncio.to_thread(demo.launch, show_error=True, inbrowser=True, server_name=args.server_name, server_port=args.server_port, share=False)
 
     asyncio.run(main())

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-14 23:24:26
+LastEditTime: 2024-12-25 23:51:35
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\logger.py
 Description: 
 
@@ -18,10 +18,10 @@ Copyright (c) 2024 by HDJ, All Rights Reserved.
 import os
 import sys
 from loguru import logger
-
+from src import LOGS_DIR
 logger.remove()
 
-logger.add("logs/log_{time:YYYY-MM-DD}.log", level="INFO", rotation="00:00", retention="7 days")
+logger.add(os.path.join(LOGS_DIR, "log_{time:YYYY-MM-DD}.log"), level="INFO", rotation="00:00", retention="7 days")
 
 if getattr(sys, 'frozen', False):
 	logger.add(
@@ -30,7 +30,7 @@ if getattr(sys, 'frozen', False):
 		level="INFO"
 	)
 else:
-    logger.add(sys.stdout, level="INFO")
+    logger.add(sys.stdout, level="DEBUG")
 
 def get_logger():
     return logger
