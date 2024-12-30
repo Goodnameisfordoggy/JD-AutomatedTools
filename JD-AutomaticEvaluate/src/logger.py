@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-12 00:26:16
+LastEditTime: 2024-12-30 15:52:32
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logger.py
 Description: 
 
@@ -21,8 +21,14 @@ from loguru import logger
 
 logger.remove()
 
-logger.add("logs/log_{time:YYYY-MM-DD}.log", level="INFO", rotation="00:00", retention="7 days")
+logger.add(
+    "./logs/log_{time:YYYY-MM-DD}.log", 
+    level="INFO", 
+    rotation="00:00", 
+    retention="7 days"
+    )
 
+# 程序运行在冻结的环境时
 if getattr(sys, 'frozen', False):
 	logger.add(
 		sink=sys.stdout,
@@ -30,6 +36,11 @@ if getattr(sys, 'frozen', False):
 		level="INFO"
 	)
 else:
+    # logger.add(
+    # sink=sys.stdout,
+    # format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
+    # level="DEBUG"
+	# )
     logger.add(sys.stdout, level="INFO")
 
 def get_logger():

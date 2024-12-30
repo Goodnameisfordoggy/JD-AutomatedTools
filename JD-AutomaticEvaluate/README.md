@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.3.8
+version: JD-AutomaticEvaluate-2.3.9
 
 # 简介
 自动化评价脚本，给予五星好评加图文。
@@ -105,6 +105,7 @@ python JD-AutomaticEvaluate.py -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.3.9: 简单维护，作为稳定版打包；
 - JD-AutomaticEvaluate-2.3.8: 更新了 requirements.txt
 - JD-AutomaticEvaluate-2.3.7: 模型补充，细微调整
 - JD-AutomaticEvaluate-2.3.6: 支持使用 WebSocket 调用讯飞星火大模型（SparkAI）的api；

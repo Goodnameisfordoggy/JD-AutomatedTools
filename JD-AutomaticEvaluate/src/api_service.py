@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-17 23:50:40
+LastEditTime: 2024-12-30 23:56:09
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\api_service.py
 Description: 
 
@@ -35,17 +35,25 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlparse, urlencode
 from wsgiref.handlers import format_date_time
 
-load_dotenv() # 加载换境变量，如果配置了 .env 文件
 # 日志配置
 LOG = logger
 LOG.remove()
 LOG.add(
-		sink=sys.stdout,
-		format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <cyan>{module}</cyan>:<cyan>{line}</cyan> | <level>{level: <8}</level> | <level>{message}</level>",
-		level="INFO"
-	)
+    sink=sys.stdout,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
+    level="INFO"
+)
 
 __all__ = ["Http_XAI", "Ws_SparkAI"]
+
+env_path = os.path.join(os.getcwd(), ".env")
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path)
+    LOG.success(f"从 {env_path} 文件加载了环境变量")
+else:
+    LOG.critical(f"{env_path} 文件缺失")
+    
+load_dotenv() # 加载换境变量，如果配置了 .env 文件
 
 
 class Http_XAI(object):
@@ -341,7 +349,7 @@ class Ws_SparkAI(_WebSocketClient):
         """
         收到 websocket 消息后的回调
         """
-        LOG.debug(f"{message}")
+        # LOG.debug(f"{message}")
         data = json.loads(message)
         code = data['header']['code']
         if code != 0:
@@ -397,7 +405,7 @@ class Ws_SparkAI(_WebSocketClient):
         """
         response = ""
         while True:
-            message = self.get_message(timeout=0.2)
+            message = self.get_message(timeout=0.2) # 消费消息
             if message:
                 LOG.debug(f"{message}")
                 sid = message["header"]["sid"]
@@ -411,4 +419,8 @@ class Ws_SparkAI(_WebSocketClient):
                 LOG.debug("没有新的消息")
 
 if __name__ == "__main__":
-    print(Http_XAI("你好", "grok-2-1212").get_response())
+    # print(Http_XAI("你好", "grok-2-1212").get_response())
+    ws_client = Ws_SparkAI(model="Lite")
+    ws_client.send_request("你好，请给我讲个故事。")
+    text = ws_client.get_response()
+    print(text)

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-17 11:12:00
+LastEditTime: 2024-12-30 11:34:58
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -28,7 +28,7 @@ class ShowSupportedTableAction(argparse.Action):
         import sys
         # 表格整体缩进两个Tab
         table = """
-									Currently supported
+		                            Currently supported
 		+========================+======================+=======================+
 		| Group                  | Model                | Required env variables|
 		+========================+======================+=======================+
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.8')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.3.9')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
     
 	group1 = parser.add_argument_group(title="限制条件(默认值)")
