@@ -1,34 +1,70 @@
 # JD-PersDataExporter
-version: JD-PersDataExporter-2.3.9
+version: JD-PersDataExporter-2.3.10
 
 ## 简介
 - 该项目是一个本地自动化工具，用于导出京东个人账户的订单信息。
 
 ## 注意事项
+- 自动化运行期间不要手动点击，或关闭运行窗口。
 - 保持网络通畅，如遇到页面卡死，丢失，访问失败导致程序异常退出，请重启程序。
 
 ## 快速开始
 
 #### webUI模式
 
+<style>
+  figure { 
+    text-align: center; 
+    margin: 20px auto; 
+    }
+
+  figcaption {
+    font-size: 16px; /* 调整字体大小 */
+    font-weight: bold; /* 加粗文本 */
+    color: #333; /* 设置字体颜色 */
+    background-color: #f0f0f0; /* 设置背景色 */
+    padding: 10px; /* 增加内边距 */
+    margin-top: 10px; /* 增加与上方图片的间距 */
+    border-radius: 5px; /* 圆角边框 */
+    border: 1px solid #ddd; /* 添加边框 */
+  }
+</style>
+
+##### 账号管理
+
+<center>
+<figure>
+    <figcaption>
+    点击“登录新账号”来添加账号记录</figcaption>
+    <img src="./static/image/webUI-add-account.png" alt="webUI-add-account" width="600">
+    <figcaption>
+    拥有多账号记录可以在此页面切换</figcaption>
+    <img src="./static/image/webUI-account-info.png" alt="webUI-account-info" width="600">
+</figure>
+</center>
+<hr>
+
+##### 数据获取
+
 <center>
 <figure>
     <figcaption>
     使用下拉列表选择数据获取模式与订单筛选要求，点击按钮“开始导出”，首次运行会跳转浏览器到登录界面，正常登录即可。</figcaption>
-    <img src="image/webUI_1.png" alt="webUI_1" width="600">
-    <figcaption>webUI首页</figcaption>
+    <img src="./static/image/webUI-fetch.png" alt="webUI_1" width="600">
 </figure>
 </center>
 <hr>
+
+##### 数据导出
+
 <center>
 <figure>
     <figcaption>1. 表头请务必保留 `订单编号` 字段，选中的表头字段的顺序即为最终Excel表头顺序。</figcaption>
     <figcaption>2. 如有数据脱敏需求，自行调节等级；</figcaption>
-    <img src="image/webUI_2.png" alt="webUI_2" width="600">
+    <img src="./static/image/webUI-storage-data.png" alt="webUI-storage-data" width="600">
     <figcaption>3.每次变更设置后点击 “更新预览视图” 来调整数据表</figcaption>
     <figcaption>4.数据预览视图包含的数据即为数据导出时的数据</figcaption>
-    <img src="image/webUI_3.png" alt="webUI_3" width="600">
-    <figcaption>数据筛选界面</figcaption>
+    <img src="./static/image/webUI-form-preview.png" alt="webUI-form-preview" width="600">
 </figure>
 </center>
 <hr>
@@ -36,12 +72,11 @@ version: JD-PersDataExporter-2.3.9
 <figure>
     <figcaption>导出到Excel有两种方式：</figcaption>
     <figcaption>1.新建Excel文件</figcaption>
-    <img src="image/webUI_4.png" alt="webUI_4" width="600">
+    <img src="./static/image/webUI-storage-excel.png" alt="webUI-storage-excel" width="600">
     <figcaption>2.向已有的Excel文件追加</figcaption>
-    <img src="image/webUI_5.png" alt="webUI_5" width="600">
+    <img src="./static/image/webUI-storage-excel-add.png" alt="webUI-storage-excel-add" width="600">
     <figcaption>3.两种方式对应的组件只能选择其一，然后点击“储存数据”，若符合要求便会储存成功，然后就可以下载文件了QwQ</figcaption>
-    <img src="image/webUI_6.png" alt="webUI_6" width="600">
-    <figcaption>Excel储存界面</figcaption>
+    <img src="./static/image/webUI-storage-excel-success.png" alt="webUI-storage-excel-success" width="600">
 </figure>
 </center>
 
@@ -89,18 +124,19 @@ version: JD-PersDataExporter-2.3.9
 - 部分包为较新版本，并不代表低版本不可用，详见 requirements.txt.
   
 # Update log
+- JD-PersDataExporter-2.3.10: webUI细微调整；2025适配更新；
 - JD-PersDataExporter-2.3.9: 新增了多账号管理功能；优化了账号登录逻辑；优化了Excel储存设置；更新了webUI；
 - JD-PersDataExporter-2.2.9: 更新了 requirements.txt
 - JD-PersDataExporter-2.2.8: 更新README；修复版本名称错误；
 - JD-PersDataExporter-2.2.7: 业务逻辑重构完成；webUI重构完成；
 - JD-PersDataExporter-2.1.6: webUI重构，配置微调
-- JD-PersDataExporter-2.1.5: 使用 playwrite 框架进行重构，并调整脚本逻辑；
+- JD-PersDataExporter-2.1.5: 使用 playwrite 框架进行重构，并调整工具逻辑；
 - JD-PersDataExporter-2.1.4: 优化了Excel储存方式中对列数据类型与单元格格式的设置
 - JD-PersDataExporter-2.1.3: 优化了DatabaseManager，使数据库的连接与使用更优雅。
 - JD-PersDataExporter-2.1.2: 优化了物流公司和物流单号的获取方法。
 - JD-PersDataExporter-2.1.1: 为webUI添加了跟随系统明暗模式的主题。
-- JD-PersDataExporter-2.0.1：优化了部分脚本逻辑，使浏览器的生存周期更合理。
-- JD-PersDataExporter-2.0.0: 为脚本添加了webUI入口，具有简单的样式设计，使其更美观，易使用。
+- JD-PersDataExporter-2.0.1：优化了部分工具逻辑，使浏览器的生存周期更合理。
+- JD-PersDataExporter-2.0.0: 为工具添加了webUI入口，具有简单的样式设计，使其更美观，易使用。
 - JD-PersDataExporter-1.8.7: 优化了从订单详情获取数据的部分方法(添加脱敏(覆盖)，正则优化)。
 - JD-PersDataExporter-1.8.6：新增了部分数据信息的获取，导出。
 - JD-PersDataExporter-1.7.6：为所有模块添加了简单的日志记录，使用全局配置管理。

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-28 22:46:50
+LastEditTime: 2025-01-02 16:34:50
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\webUI.py
 Description: 
 
@@ -13,7 +13,7 @@ Description:
 				*		奔驰宝马贵者趣，公交自行程序员。
 				*		别人笑我忒疯癫，我笑自己命太贱；
 				*		不见满街漂亮妹，哪个归得程序员？    
-Copyright (c) 2024 by HDJ, All Rights Reserved. 
+Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 
 import os
@@ -63,20 +63,21 @@ class WebUI():
                     with gr.Column():
                         nick_name_list = ["登录新的账号"] + [account["nick_name"] for account in self.config.jd_accounts_info]
                         self.select_account_dropdown = gr.Dropdown(value=nick_name_list[0], choices=nick_name_list, type="index", label="选择账号", info="Select your owned account")
-                    with gr.Column():
-                        self.user_pic_image = gr.Image(
-                            height=150, width=150, 
-                            label="当前账号",
-                            placeholder="Current Account Avatar",
-                            show_download_button=False,
-                            show_fullscreen_button=False,
-                            visible=False,
-                            interactive=False
-                        )
-                        with gr.Row():
-                            self.user_name_textbox = gr.Textbox(label="账号名(不可更改)", info="Account Name(inalterable)", visible=False)
-                            self.sheet_name_textbox = gr.Textbox(label="账号数据对应的Excel表名", info="Account Data Sheet Name", visible=False)
-                            self.cookies_path_textbox = gr.Textbox(label="账号Cookies存储位置", info="Cookies Path", visible=False)
+                    with gr.Tabs():
+                        with gr.Tab(label="当前账号信息", visible=False) as self.account_info_tab:
+                            with gr.Column():
+                                self.user_pic_image = gr.Image(
+                                    height=150, width=150, 
+                                    label="头像",
+                                    placeholder="Current Account Avatar",
+                                    show_download_button=False,
+                                    show_fullscreen_button=False,
+                                    interactive=False
+                                )
+                                with gr.Row():
+                                    self.user_name_textbox = gr.Textbox(label="账号名(不可更改)", info="Account Name(inalterable)")
+                                    self.sheet_name_textbox = gr.Textbox(label="账号数据对应的Excel表名", info="Account Data Sheet Name")
+                                    self.cookies_path_textbox = gr.Textbox(label="账号Cookies存储位置", info="Cookies Path")
                     self.btn_new_account = gr.Button("登录新账号(New Account)", variant="primary")
                     
                 with gr.Tab(label="数据获取设置(Data fetch Settings)"):
@@ -91,7 +92,7 @@ class WebUI():
                         self.date_range_dropdown = gr.Dropdown(
                             label="日期跨度",
                             info="Date Range",
-                            choices= ["近三个月订单", "今年内订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
+                            choices= ["近三个月订单", "今年内订单", "2024年订单", "2023年订单", "2022年订单", "2021年订单", "2020年订单", "2019年订单", "2018年订单", "2017年订单", "2016年订单", "2015年订单", "2014年订单", "2014年以前订单"], 
                             value=self.config.date_search or "近三个月订单",
                             interactive=True,
                         )
@@ -138,8 +139,8 @@ class WebUI():
                             with gr.Column():
                                 gr.Markdown("#### 使用追加模式时，请保持表头一致！")
                                 with gr.Row():
-                                    self.select_sheet_dropdown = gr.Dropdown(choices=["nihao", "ajcina"], label="当前Excel中存在的表", info="Sheet name owned")
-                                    self.sheet_name_textbox2 = gr.Textbox(value=self.config.jd_accounts_info[self.config.jd_account_last_used]["sheet_name"], label="导出时使用的表名", info="Sheet name", interactive=True)
+                                    self.select_sheet_dropdown = gr.Dropdown(choices=["等待上传Excel文件"], label="当前Excel中存在的表", info="Sheet name owned")
+                                    self.sheet_name_textbox2 = gr.Textbox(label="导出时使用的表名", info="Sheet name", interactive=True)
                                 
                                 self.btn_storage_to_excel = gr.Button("储存数据(storage)", variant="primary")
                                 self.file_download_excel = gr.File(label="请下载文件", visible=False, interactive=False)
@@ -184,7 +185,8 @@ class WebUI():
                 self.user_name_textbox, 
                 self.sheet_name_textbox, 
                 self.cookies_path_textbox, 
-                self.sheet_name_textbox2
+                self.sheet_name_textbox2,
+                self.account_info_tab
             ])
         self.btn_new_account.click(self.new_account, inputs=[], outputs=[self.select_account_dropdown])
         self.data_retrieval_mode_dropdown.change(self.handle_data_retrieval_mode_change, inputs=self.data_retrieval_mode_dropdown)
@@ -265,21 +267,23 @@ class WebUI():
         Returns:
             list:
             - btn_new_account (visible)
-            - user_pic_image (value, visible)
-            - user_name (value, visible)
-            - sheet_name (value, visible)
-            - cookies_path (value, visible)
+            - user_pic_image (value)
+            - user_name (value)
             - sheet_name (value)
+            - cookies_path (value)
+            - sheet_name (value)
+            - account_info_tab (visible)
         """
         # index为0，视为使用未记录的新账号登录
         if index == 0: 
             return [
                 gr.update(visible=True), 
-                gr.update(visible=False), 
-                gr.update(visible=False), 
-                gr.update(visible=False), 
-                gr.update(visible=False), 
-                gr.update()
+                gr.update(), 
+                gr.update(), 
+                gr.update(), 
+                gr.update(), 
+                gr.update(),
+                gr.update(visible=False)
             ]
         else:
             account_index = index - 1
@@ -289,11 +293,12 @@ class WebUI():
             self.config.jd_account_last_used = account_index
             return [
                 gr.update(visible=False),
-                gr.update(value=self.config.jd_accounts_info[self.config.jd_account_last_used]["user_picture_url"], visible=True),
-                gr.update(value=user_name, visible=True), 
-                gr.update(value=sheet_name, visible=True), 
-                gr.update(value=cookies_path, visible=True), 
-                gr.update(value=sheet_name)
+                gr.update(value=self.config.jd_accounts_info[self.config.jd_account_last_used]["user_picture_url"]),
+                gr.update(value=user_name), 
+                gr.update(value=sheet_name), 
+                gr.update(value=cookies_path), 
+                gr.update(value=sheet_name),
+                gr.update(visible=True)
             ]
     
     def handle_data_retrieval_mode_change(self, new_value):
@@ -339,10 +344,13 @@ class WebUI():
         loginManager = LoginManager(headless=False, cookie_file=None)
         account_info = loginManager.login_new_account()
         # 储存账号信息
-        self.config.add_account_info(account_info)
-        self.config.save_to_json()
-        nick_name_list = ["登录新的账号"] + [account["nick_name"] for account in self.config.jd_accounts_info]
-        return gr.update(value=nick_name_list[-1], choices=nick_name_list)
+        if self.config.add_account_info(account_info):
+            self.config.save_to_json()
+            nick_name_list = ["登录新的账号"] + [account["nick_name"] for account in self.config.jd_accounts_info]
+            return gr.update(value=nick_name_list[-1], choices=nick_name_list)
+        else:
+            gr.Warning("当前账号已存在，已更新对应 cookies 文件！")
+            return gr.update(value=self.select_account_dropdown.choices[0][0])
             
 
     async def export(self):

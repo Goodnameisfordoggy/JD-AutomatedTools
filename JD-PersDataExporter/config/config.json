@@ -1,7 +1,7 @@
 {
     "data_retrieval_mode": "详细",
     "high_search": "全部类型",
-    "date_search": "近三个月订单",
+    "date_search": "2024年订单",
     "status_search": "已完成",
     "headers": [
         "订单编号",
@@ -22,7 +22,7 @@
         "consignee_address": 2,
         "consignee_phone_number": 2
     },
-    "jd_account_last_used": 1,
+    "jd_account_last_used": 0,
     "jd_accounts_info": [
 
     ],

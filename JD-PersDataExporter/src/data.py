@@ -13,7 +13,7 @@ Description: 以每个不可拆的订单为最小单元
 				*		奔驰宝马贵者趣，公交自行程序员。
 				*		别人笑我忒疯癫，我笑自己命太贱；
 				*		不见满街漂亮妹，哪个归得程序员？    
-Copyright (c) 2024 by HDJ, All Rights Reserved. 
+Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import re
 from typing import overload
@@ -155,6 +155,7 @@ class PerOrderInfoFull(PerOrderInfoSlim):
 DATE = {
     "近三个月订单": 1,
     "今年内订单": 2,
+    "2024年订单": 2024,
     "2023年订单": 2023,
     "2022年订单": 2022,
     "2021年订单": 2021,

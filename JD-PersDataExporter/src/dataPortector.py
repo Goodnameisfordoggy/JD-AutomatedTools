@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: 2024-05-15 00:00:00
-LastEditTime: 2024-12-26 11:26:23
+LastEditTime: 2024-12-29 23:29:43
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-PersDataExporter\src\dataPortector.py
 Description: 
 
@@ -13,7 +13,7 @@ Description:
                 *       奔驰宝马贵者趣，公交自行程序员。
                 *       别人笑我忒疯癫，我笑自己命太贱；
                 *       不见满街漂亮妹，哪个归得程序员？    
-Copyright (c) 2024 by HDJ, All Rights Reserved. 
+Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import os
 import json
@@ -101,9 +101,12 @@ class OrderExportConfig:
         """获取指定字段的屏蔽级别"""
         return self.masking_intensity.get(field, 0)
 
-    def add_account_info(self, account_info: dict):
+    def add_account_info(self, account_info: dict) -> True:
         """追加账号信息"""
-        self.jd_accounts_info.append(account_info)
+        existing_accounts_user_name = [info["user_name"] for info in self.jd_accounts_info]
+        if account_info["user_name"] not in existing_accounts_user_name:
+            self.jd_accounts_info.append(account_info)
+            return True
     
     def __repr__(self):
         return (
