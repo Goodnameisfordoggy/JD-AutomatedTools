@@ -1,4 +1,5 @@
 # project
 .vscode/
+temp-img/
 *[0-9].*
 cookies.json

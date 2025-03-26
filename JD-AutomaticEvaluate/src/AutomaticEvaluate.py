@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-03-16 18:45:02
+LastEditTime: 2025-03-25 18:12:10
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -30,7 +30,7 @@ from .data import EvaluationTask, DEFAULT_COMMENT_TEXT_LIST
 
 LOG = get_logger()
 WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'image')
+IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'temp-img')
 
 
 class AutomaticEvaluate():
@@ -52,7 +52,7 @@ class AutomaticEvaluate():
         self.__init_image_directory(IMAGE_DIRECTORY_PATH)
         
         for task in self.__generate_task():
-            LOG.trace(f"任务已生成：{task}")
+            LOG.debug(f"任务已生成：{task}")
             self.__automatic_evaluate(task)
 
         LOG.success(f"脚本运行结束--耗时:{int(time.time()-self.__start_time)}秒")
@@ -101,7 +101,8 @@ class AutomaticEvaluate():
                     product_link: Locator = goods_element.locator('div.p-name a[href*="item.jd.com"]').first  # 使用第一个符合条件的 <a> 标签
                     product_link.wait_for(timeout=5000)
                 except PlaywrightTimeoutError:
-                    LOG.error(f"商品详情页面链接获取超时")
+                    # LOG.debug()
+                    LOG.error("商品详情页面链接获取超时")
                     continue
                 
                 productHtml_url = "https:" + product_link.get_attribute("href")  # 获取 href 属性
@@ -153,10 +154,10 @@ class AutomaticEvaluate():
         def get_random_text(text_list):
             """取随机评价"""
             if not text_list:
-                LOG.info('未找到当前商品相关的评论文本！')
+                LOG.info('未找到相关的评论文本！')
                 return
             if len(text_list) * 2 < self.MIN_EXISTING_PRODUCT_DESCRIPTIONS:
-                LOG.info("当前商品已有评论文案过少，暂不获取！")
+                LOG.info("已有评论文案过少，暂不获取！")
                 return
             selected_value = random.choice(text_list)
             if len(selected_value) > self.MIN_DESCRIPTION_CHAR_COUNT and is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价文案。
@@ -165,7 +166,7 @@ class AutomaticEvaluate():
                 return get_random_text(text_list)
         
         if self.__page.goto(product_url):
-            LOG.trace(f'getText({product_url})')
+            LOG.debug(f'getText({product_url})')
             
         # 点击 “全部评价”
         try:
@@ -174,7 +175,6 @@ class AutomaticEvaluate():
             self.__page.wait_for_timeout(1000)
         except PlaywrightTimeoutError:
             LOG.critical("'全部评价'点击失败!")
-            pass
         
         # 点击 “只看当前商品”
         if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
@@ -223,7 +223,7 @@ class AutomaticEvaluate():
                                 if len(text_group) >= 60: # 样本数量
                                     break_sign = True
                         except Exception as err:
-                            LOG.debug("文本获取失败！")
+                            LOG.debug(".jdc-pc-rate-card-main-desc 获取文本失败")
 
         # 随机筛选出一条评价 
         try:
@@ -265,7 +265,7 @@ class AutomaticEvaluate():
         return: image_files_path(list) 储存到本地的(image目录下)隶属一个订单编号下的所有图片文件路径。
         """
         if self.__page.goto(product_url):
-            LOG.trace(f'getImage({order_id}, {product_url})')
+            LOG.debug(f'getImage({order_id}, {product_url})')
             
         # 点击 “全部评价”
         try:
@@ -274,7 +274,6 @@ class AutomaticEvaluate():
             self.__page.wait_for_timeout(1000)
         except PlaywrightTimeoutError:
             LOG.critical("'全部评价'点击失败!")
-            pass
         
         # 点击 “只看当前商品”
         if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
@@ -338,7 +337,7 @@ class AutomaticEvaluate():
                                         preview_close_element = self.__page.wait_for_selector('.jdc-pc-media-preview-close', timeout=2000)
                                         preview_close_element.click()
                                     except PlaywrightTimeoutError as err:
-                                        pass
+                                        LOG.error("预览图关闭失败！")
                             if image_url_list:
                                 image_url_group.append(image_url_list)
                             if len(image_url_group) >= 15: # 样本数量
@@ -349,10 +348,10 @@ class AutomaticEvaluate():
         def get_random_image_group(image_url_lists: list):
             """取随机评价的图片组"""
             if not image_url_lists:
-                LOG.info('未找到当前商品相关的评论图片！')
+                LOG.info('未找到相关的评论图片！')
                 return
             if sum(len(image_url_list) for image_url_list in image_url_lists) < self.MIN_EXISTING_PRODUCT_IMAGES:
-                LOG.info("当前商品已有评论图片过少，暂不获取！")
+                LOG.info("已有评论图片过少，暂不获取！")
                 return
             selected_value = random.choice(image_url_lists)
             if len(selected_value) >= 2: # 组内图片数量 
@@ -380,7 +379,7 @@ class AutomaticEvaluate():
                 else:
                     LOG.error(f'{image_file_name} 文件下载失败！Status code: {response.status_code}')
         except RecursionError:
-            LOG.info('未筛出当前商品下符合要求的图片组！')
+            LOG.info('未筛出符合要求的图片组！')
         except TypeError: # get_random_image_group返回结果为None时忽略
             pass
 

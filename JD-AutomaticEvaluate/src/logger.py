@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-30 15:52:32
+LastEditTime: 2025-03-26 23:19:51
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logger.py
 Description: 
 
@@ -21,27 +21,29 @@ from loguru import logger
 
 logger.remove()
 
-logger.add(
-    "./logs/log_{time:YYYY-MM-DD}.log", 
-    level="INFO", 
-    rotation="00:00", 
-    retention="7 days"
-    )
+def init(level):
+	# 日志记录到文件	
+	logger.add(
+		"./logs/log_{time:YYYY-MM-DD}.log", 
+		level=level, 
+		rotation="00:00", 
+		retention="7 days"
+		)
 
-# 程序运行在冻结的环境时
-if getattr(sys, 'frozen', False):
+	# 日志输出到标准输出，根据不同的日志等级切换日志输出格式
+	if level == "DEBUG": 
+		# DEBUG时，为了在高级的编辑器中可以直接跳转到源代码行，添加了详细的文件路径。
+		log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>"
+	else:
+		# 正常使用时，简化日志输出
+		log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+
+	# 程序运行在冻结的环境时，及 exe 等可执行文件
 	logger.add(
 		sink=sys.stdout,
-		format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-		level="INFO"
+		format=log_format,
+		level=level
 	)
-else:
-    # logger.add(
-    # sink=sys.stdout,
-    # format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
-    # level="DEBUG"
-	# )
-    logger.add(sys.stdout, level="INFO")
 
 def get_logger():
-    return logger
+	return logger

@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.4.9
+version: JD-AutomaticEvaluate-2.4.10
 
 # 简介
 自动化评价工具，给予五星好评加图文。
@@ -16,7 +16,7 @@ version: JD-AutomaticEvaluate-2.4.9
 
 # 工具特点
 - 本工具以订单对应的评价页面地址(orderVoucher_url)作为标识来组织评价任务，消除了部分商品没有商品编号(product_id)的影响。
-- 本工具支持单任务线性运行(符合一般真实用户操作逻辑): `订单列表`->`评价页面`->`商品详情页面copy文案，图片`->`评价页面填写`
+- 本工具支持单任务线性运行(符合一般真实用户操作逻辑): `订单列表`->`评价页面`->`商品详情页面copy文案，图片/ai生成文案`->`评价页面填写`
 
 # 快速开始
 - python版本使用3.12, 建议版本3.8+
@@ -109,6 +109,7 @@ python JD-AutomaticEvaluate.py -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.4.10: 日志优化；
 - JD-AutomaticEvaluate-2.4.9: 新版本适配更新；
 - JD-AutomaticEvaluate-2.3.9: 简单维护，作为稳定版打包；
 - JD-AutomaticEvaluate-2.3.8: 更新了 requirements.txt

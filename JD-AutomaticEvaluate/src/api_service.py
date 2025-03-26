@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-30 23:56:09
+LastEditTime: 2025-03-26 22:58:40
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\api_service.py
 Description: 
 
@@ -35,14 +35,16 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlparse, urlencode
 from wsgiref.handlers import format_date_time
 
+from .logger import get_logger
 # 日志配置
-LOG = logger
-LOG.remove()
-LOG.add(
-    sink=sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
-    level="INFO"
-)
+LOG = get_logger()
+# LOG = logger.bind(file="api_service")
+# LOG.remove()
+# LOG.add(
+#     sink=sys.stdout,
+#     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
+#     level="INFO"
+# )
 
 __all__ = ["Http_XAI", "Ws_SparkAI"]
 

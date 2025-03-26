@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-12-30 11:34:58
+LastEditTime: 2025-03-26 22:14:29
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -16,7 +16,6 @@ Description:
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import argparse
-from src.AutomaticEvaluate import AutomaticEvaluate
 
 class ShowSupportedTableAction(argparse.Action):
     """自定义命令行参数动作，用于显示支持的AI组和模型"""
@@ -55,9 +54,10 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.4.9')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.4.10')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
-    
+	parser.add_argument('-L', '--log-level', type=str, default="INFO", dest="log_level", help="DEBUG < INFO < WARNING < ERROR < CRITICAL")
+
 	group1 = parser.add_argument_group(title="限制条件(默认值)")
 	group1.add_argument('-md', '--min-descriptions', type=int, default=15, dest="min_descriptions", help="商品已有文案的最少数量(15) | 真实评论文案多余这个数工具才会正常获取已有文案。")
 	group1.add_argument('-mi', '--min-images', type=int, default=15, dest="min_images", help="商品已有图片的最少数量(15) | 真实评论图片多余这个数工具才会正常获取已有图片。")
@@ -73,6 +73,10 @@ if __name__ == '__main__':
 	group3.add_argument('-m', '--ai-model', type=str, default=None, dest="ai_model", help="AI模型的名称 | 使用AI模型生成评论文案")
 	args = parser.parse_args() # 解析命令行参数
 
+	from src import logger
+	logger.init(args.log_level)
+    
+	from src.AutomaticEvaluate import AutomaticEvaluate
 	QwQ = AutomaticEvaluate()
 	QwQ.MIN_EXISTING_PRODUCT_DESCRIPTIONS = args.min_descriptions
 	QwQ.MIN_EXISTING_PRODUCT_IMAGES = args.min_images
