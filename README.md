@@ -1,5 +1,7 @@
 # JD-Automated-Tools
 
+[![Star History Chart](https://api.star-history.com/svg?repos=Goodnameisfordoggy/JD-AutomatedTools&type=Date)](https://www.star-history.com/#Goodnameisfordoggy/JD-AutomatedTools&Date)
+
 [**中文简体**](./README.md) | [**English**](./README.en.md)
 
 ## 宇宙安全声名
