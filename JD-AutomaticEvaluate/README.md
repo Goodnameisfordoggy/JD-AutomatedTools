@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.4.10
+version: JD-AutomaticEvaluate-2.5.10
 
 # 简介
 自动化评价工具，给予五星好评加图文。
@@ -109,6 +109,7 @@ python JD-AutomaticEvaluate.py -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.5.10: 不同版本页面适配性更新；
 - JD-AutomaticEvaluate-2.4.10: 日志优化；
 - JD-AutomaticEvaluate-2.4.9: 新版本适配更新；
 - JD-AutomaticEvaluate-2.3.9: 简单维护，作为稳定版打包；

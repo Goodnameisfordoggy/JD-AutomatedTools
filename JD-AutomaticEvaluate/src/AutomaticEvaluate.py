@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-03-25 18:12:10
+LastEditTime: 2025-04-20 16:08:10
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -19,6 +19,8 @@ import os
 import re
 import time
 import random
+import hashlib
+import secrets
 import requests
 from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle 
@@ -119,11 +121,41 @@ class AutomaticEvaluate():
         """
         获取评论文本与图片
         """
+        input_text = ""
+        input_image = []
+        # 使用 AI 模型生成评价文案
         if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
             input_text: str = self.__get_text_from_ai(task.product_name)
+
+        # 使用已有的文案
         else:
-            input_text: str = self.__getText(task.productHtml_url)
-        input_image: list = self.__getImage(task.order_id, task.productHtml_url)
+            if self.__page.goto(task.productHtml_url):
+                LOG.debug(f'goto {task.productHtml_url}')
+                version = None
+                try:
+                    if self.__page.wait_for_selector('.all-btn', timeout=2000):
+                        version = 2024
+                except PlaywrightTimeoutError:
+                    # 目前来看JD国际等商品使用的是2014的界面，直接简单粗暴匹配两个关键元素
+                    try:
+                        if self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000):
+                            version = 2014
+                    except PlaywrightTimeoutError:
+                        pass
+                match version:
+                    case 2014:
+                        input_text: str = self.__get_text_paginated_version()
+                        self.__page.goto(task.productHtml_url)
+                        input_image: list = self.__get_image_paginated_version()
+                    case 2024:
+                        input_text: str = self.__get_text_infinite_scroll_version()
+                        self.__page.goto(task.productHtml_url)
+                        input_image: list = self.__get_image_infinite_scroll_version()
+                    case _:
+                        LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
+            else:
+                LOG.warning(f"商品 {task.productHtml_url} 页面加载失败！")
+            
         task.input_text = input_text
         task.input_image = input_image
         # LOG.debug(f"{task}")
@@ -136,38 +168,87 @@ class AutomaticEvaluate():
             for child_task in child_task_list:
                 LOG.info("正在生成任务.....")
                 self.__page.wait_for_timeout(2000)
-                if child_task.order_id in []: # 黑名单
+                blacklist = []
+                whitelist = []
+                if whitelist and child_task.order_id not in whitelist: # 白名单
+                    continue
+                if blacklist and child_task.order_id in blacklist: # 黑名单
                     continue
                 task = self.__step_3(child_task)
                 yield task
-        
-    def __getText(self, product_url: str) -> (str | None):
-        """ 从网页上获取已有的评价文本 """
 
-        def is_bmp_compliant(text: str):
-            """ 检测所有字符是否符合基本多文种平面 BMP(Basic Multilingual Plane)"""
-            for char in text:
-                if ord(char) > 0xFFFF:
-                    return False
-            return True
+    @staticmethod
+    def is_bmp_compliant(text: str):
+        """ 
+        检测所有字符是否符合基本多文种平面 BMP(Basic Multilingual Plane)
+        """
+        for char in text:
+            if ord(char) > 0xFFFF:
+                return False
+        return True
+    
+    def get_random_text(self, text_list):
+        """
+        取随机评价
+        """
+        if not text_list:
+            LOG.info('未找到相关的评论文本！')
+            return
+        if len(text_list) * 2 < self.MIN_EXISTING_PRODUCT_DESCRIPTIONS:
+            LOG.info("已有评论文案过少，暂不获取！")
+            return
+        selected_value = random.choice(text_list)
+        if len(selected_value) > self.MIN_DESCRIPTION_CHAR_COUNT and self.is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价文案。
+            return selected_value
+        else:
+            return self.get_random_text(text_list)
+    
+    def __get_text_paginated_version(self) -> (str | None):
+        """ 
+        从网页上获取已有的评价文本，随机翻页版 
+        """
+        # 点击“商品评价”
+        element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
+        element_to_click_1.click()
+        self.__page.wait_for_timeout(1000)
         
-        def get_random_text(text_list):
-            """取随机评价"""
-            if not text_list:
-                LOG.info('未找到相关的评论文本！')
-                return
-            if len(text_list) * 2 < self.MIN_EXISTING_PRODUCT_DESCRIPTIONS:
-                LOG.info("已有评论文案过少，暂不获取！")
-                return
-            selected_value = random.choice(text_list)
-            if len(selected_value) > self.MIN_DESCRIPTION_CHAR_COUNT and is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价文案。
-                return selected_value
-            else:
-                return get_random_text(text_list)
+        if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
+            # 点击“只看当前商品”
+            element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
+            element_to_click_2.click()
+
+        text_list = []
+        for page in range(1, 4):
+            LOG.debug(f'Turn to page {page}')
+            self.__page.wait_for_timeout(1000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            try:
+                comment_con_elements = self.__page.locator('.comment-con').element_handles()
+                for comment_con_element in comment_con_elements:
+                    text_list.append(comment_con_element.inner_text())
+            except Exception as err:
+                if page == 1:
+                    LOG.info('当前暂无评价')
+                    break
+            # 翻页
+            try:
+                pager_next_element = self.__page.wait_for_selector('.ui-pager-next', timeout=2000)
+                pager_next_element.click()
+            except PlaywrightTimeoutError:
+                LOG.info('已到最后一页，抓取页数小于设定数！')
+                break
         
-        if self.__page.goto(product_url):
-            LOG.debug(f'getText({product_url})')
-            
+        try:
+            text = self.get_random_text(text_list[int(len(text_list) / 2):]) # 取后半部分评价进行筛选            
+        except RecursionError:
+            LOG.info('未筛出符合要求的评论文案！')
+            return
+        
+        return text 
+        
+    def __get_text_infinite_scroll_version(self) -> (str | None):
+        """ 
+        从网页上获取已有的评价文本，无限滚动版 
+        """        
         # 点击 “全部评价”
         try:
             all_btn_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
@@ -180,9 +261,6 @@ class AutomaticEvaluate():
         if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
             current_radio_element = self.__page.wait_for_selector('.jdc-radio', timeout=2000)
             current_radio_element.click()
-
-        # scroll_container = self.__page.wait_for_selector('.ReactVirtualized__Grid__innerScrollContainer')
-        # scroll_container.hover() # 设置鼠标焦点 ？
         
         # 包含评价内容的 div 在滚动时动态刷新，数量范围5~15；向下滚动时个数减少，到5个时新增10个 
         text_group = []
@@ -224,12 +302,11 @@ class AutomaticEvaluate():
                                     break_sign = True
                         except Exception as err:
                             LOG.debug(".jdc-pc-rate-card-main-desc 获取文本失败")
-
         # 随机筛选出一条评价 
         try:
-            text = get_random_text(text_group)            
+            text = self.get_random_text(text_group)            
         except RecursionError:
-            LOG.info('未筛出当前商品下符合要求的评论文案！')
+            LOG.info('未筛出符合要求的评论文案！')
             return
         return text 
     
@@ -258,15 +335,123 @@ class AutomaticEvaluate():
                 LOG.info(f"{self.CURRENT_AI_GROUP}({self.CURRENT_AI_MODEL}): {text}")
                 return text
     
-    def __getImage(self, order_id: str, product_url: str) -> list:
+    def get_random_image_group(self, image_url_lists: list) -> list:
+        """
+        取随机评价的图片组
+
+        Args:
+            image_url_lists (list): [[url(str), ...], ...]
+
+        Returns:
+            一个图片组(list): [url(str), ...]
+        """
+        if not image_url_lists:
+            LOG.info('未找到相关的评论图片！')
+            return []
+        if sum(len(image_url_list) for image_url_list in image_url_lists) < self.MIN_EXISTING_PRODUCT_IMAGES:
+            LOG.info("已有评论图片过少，暂不获取！")
+            return []
+        selected_value = random.choice(image_url_lists)
+        if len(selected_value) >= 2: # 组内图片数量 
+            return selected_value
+        else:
+            return self.get_random_image_group(image_url_lists)
+    
+    def download_image_group(self, image_url_group: list):
+        """
+        下载图片组到image目录
+
+        Args:
+            image_url_group (list): [url(str), ...]
+
+        Returns:
+            一个图片组 (list): [absPath(str), ...]
+        """
+        image_files_path = []
+        # 使用随机哈希标识图片组
+        random_bytes = secrets.token_bytes(32)  # 生成随机字节
+        hash_object = hashlib.sha256()  # 创建一个 SHA-256 哈希对象
+        hash_object.update(random_bytes)    # 更新哈希对象的内容
+        order_hash_hex = hash_object.hexdigest()  # 获取十六进制格式的哈希值
+        try:
+            for index, image_url in enumerate(image_url_group, start=1):
+                image_file_path = os.path.join(IMAGE_DIRECTORY_PATH, f'{order_hash_hex[-12:]}_{index}.jpg')
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    # 保存图片到本地文件
+                    with open(image_file_path, 'wb') as f:
+                        f.write(response.content)
+                    image_files_path.append(image_file_path)
+                    # 处理图片
+                    img = Image.open(image_file_path)
+                    img = img.resize((img.width * 5, img.height * 5), Image.LANCZOS) # 提高分辨率
+                    img = img.filter(ImageFilter.SHARPEN) # 增加清晰度
+                    img.save(image_file_path)
+                else:
+                    LOG.error(f'{image_url} 文件下载失败！Status code: {response.status_code}')
+        except RecursionError:
+            LOG.info('未筛出符合要求的图片组！')
+        except TypeError: # get_random_image_group返回结果为None时忽略
+            pass
+        return image_files_path
+    
+    def __get_image_paginated_version(self) -> list:
         """ 
-        根据商品从网页上获取已有的评价图片(部分)，筛选(随机取一组)后以订单编号为命名依据，并储存到本地。
-        
+        获取已有的评价图片(部分)，筛选(随机取一组)后以订单编号为命名依据，并储存到本地。随机翻页版
+
         return: image_files_path(list) 储存到本地的(image目录下)隶属一个订单编号下的所有图片文件路径。
         """
-        if self.__page.goto(product_url):
-            LOG.debug(f'getImage({order_id}, {product_url})')
-            
+        # 点击“商品评价”
+        element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
+        element_to_click_1.click()
+        self.__page.wait_for_timeout(1000)
+
+        if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
+            # 点击“只看当前商品”
+            element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
+            element_to_click_2.click()
+
+        image_url_lists: list[list] = []
+        previous_image_url = ''
+
+        for page in range(1, 4):
+            LOG.trace(f'Turn to page {page}')
+            self.__page.wait_for_timeout(4000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            # 评价主体组件
+            comment_item_elements = self.__page.locator('.comment-item').element_handles()
+            for comment_item_element in comment_item_elements:
+                image_url_list = []
+                # 图片预览组件(小图)
+                thumb_img_elements = comment_item_element.query_selector_all('.J-thumb-img')
+                for thumb_img_element in thumb_img_elements:
+                    # LOG.debug(f'Visible: {thumb_img_element.is_visible()}')
+                    thumb_img_element.click() # 模拟点击后会出现更大的图片预览组件
+                    self.__page.wait_for_timeout(200)
+                    # 图片预览组件(大图)
+                    pic_view_elements = comment_item_element.query_selector_all('xpath=//div[@class="pic-view J-pic-view"]/img')
+                    if pic_view_elements: # 起始预览组件为非image组件会导致pic_view_elements为空
+                        pic_view_element = pic_view_elements[-1] # 该组件出现后不会消失，故每次点击后均选取最新的组件
+                        image_url = 'https:' + pic_view_element.get_attribute('src')
+                        if image_url and image_url != previous_image_url: #评论的视频文件也会出现在预览位置，但是预览组件类型不是img；在该策略中(每次点击后均选取最新的组件)出现非img组件会导致前一个img组件的src重复获取，故进行url的重复检测。
+                            image_url_list.append(image_url)
+                            previous_image_url = image_url
+                image_url_lists.append(image_url_list)
+
+            # 翻页
+            try:
+                pager_next_element = self.__page.wait_for_selector('.ui-pager-next', timeout=2000)
+                pager_next_element.click()
+            except PlaywrightTimeoutError:
+                LOG.info('已到最后一页，抓取页数小于设定数！')
+                break
+        return self.download_image_group(self.get_random_image_group(image_url_lists))
+
+    def __get_image_infinite_scroll_version(self) -> list:
+        """ 
+        获取已有的评价图片(部分)，筛选(随机取一组)后以订单编号为命名依据，并储存到本地。无限滚动版
+
+        return: image_files_path(list) 储存到本地的(image目录下)隶属一个订单编号下的所有图片文件路径。
+        """
         # 点击 “全部评价”
         try:
             all_btn_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
@@ -343,47 +528,7 @@ class AutomaticEvaluate():
                             if len(image_url_group) >= 15: # 样本数量
                                 break_sign = True
                                 break
-                        
-        
-        def get_random_image_group(image_url_lists: list):
-            """取随机评价的图片组"""
-            if not image_url_lists:
-                LOG.info('未找到相关的评论图片！')
-                return
-            if sum(len(image_url_list) for image_url_list in image_url_lists) < self.MIN_EXISTING_PRODUCT_IMAGES:
-                LOG.info("已有评论图片过少，暂不获取！")
-                return
-            selected_value = random.choice(image_url_lists)
-            if len(selected_value) >= 2: # 组内图片数量 
-                return selected_value
-            else:
-                return get_random_image_group(image_url_lists)
-            
-        # 下载图片到image目录
-        image_files_path = []
-        try:
-            for index, image_url in enumerate(get_random_image_group(image_url_group), start=1):
-                image_file_name = f'{order_id}_{index}.jpg'
-                image_file_path = os.path.join(IMAGE_DIRECTORY_PATH, image_file_name)
-                response = requests.get(image_url)
-                if response.status_code == 200:
-                    # 保存图片到本地文件
-                    with open(image_file_path, 'wb') as f:
-                        f.write(response.content)
-                    image_files_path.append(image_file_path)
-                    # 处理图片
-                    img = Image.open(image_file_path)
-                    img = img.resize((img.width * 5, img.height * 5), Image.LANCZOS) # 提高分辨率
-                    img = img.filter(ImageFilter.SHARPEN) # 增加清晰度
-                    img.save(image_file_path)
-                else:
-                    LOG.error(f'{image_file_name} 文件下载失败！Status code: {response.status_code}')
-        except RecursionError:
-            LOG.info('未筛出符合要求的图片组！')
-        except TypeError: # get_random_image_group返回结果为None时忽略
-            pass
-
-        return image_files_path
+        return self.download_image_group(self.get_random_image_group(image_url_group))
     
     def __automatic_evaluate(self, task: EvaluationTask):
         """ 自动评价操作，限单个评价页面"""
@@ -439,13 +584,13 @@ class AutomaticEvaluate():
 
         LOG.success(f'单号{task.order_id}的订单评价页面填充完成。')
         # 提交评价
-        self.__page.wait_for_timeout(max(5, len(task.input_image) * 2.5) * 1000)
+        self.__page.wait_for_timeout(max(5, len(task.input_image) * 2.5) * 1000) # 等待图片上传完成
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
             if self.AUTO_COMMIT_CLOSE is False:
                 btn_submit.click()
-            self.__page.wait_for_timeout(5000)
+            self.__page.wait_for_timeout(5000) # 切换下一个评价任务的间隔
             return True
         except Exception as err:
             LOG.error("未识别到提交按钮！")
