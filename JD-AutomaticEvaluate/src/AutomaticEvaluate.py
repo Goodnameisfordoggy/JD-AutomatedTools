@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-04-20 16:08:10
+LastEditTime: 2025-04-23 18:37:44
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -17,6 +17,7 @@ Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 '''
 import os
 import re
+import sys
 import time
 import random
 import hashlib
@@ -152,7 +153,11 @@ class AutomaticEvaluate():
                         self.__page.goto(task.productHtml_url)
                         input_image: list = self.__get_image_infinite_scroll_version()
                     case _:
-                        LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
+                        if self.__page.wait_for_selector('.verifyBtn', timeout=2000):
+                            LOG.warning("触发图灵测试, 停止运行！")
+                            sys.exit()
+                        else:
+                            LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
             else:
                 LOG.warning(f"商品 {task.productHtml_url} 页面加载失败！")
             

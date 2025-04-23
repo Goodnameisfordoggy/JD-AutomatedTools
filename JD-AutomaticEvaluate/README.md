@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.5.10
+version: JD-AutomaticEvaluate-2.5.11
 
 # 简介
 自动化评价工具，给予五星好评加图文。
@@ -38,7 +38,7 @@ python JD-AutomaticEvaluate.py
 
 ```
 # 获取参数表
-python JD-AutomaticEvaluate.py - h
+python JD-AutomaticEvaluate.py -h
 
 # 修改限制条件 MIN_DESCRIPTIONS
 python JD-AutomaticEvaluate.py -md 20
@@ -79,6 +79,13 @@ AI设置:
   -m AI_MODEL, --ai-model AI_MODEL
                         AI模型的名称 | 使用AI模型生成评论文案
 ```
+
+#### 日志信息
+```
+# 日志等级默认为INFO，如需更详尽的日志信息：
+python JD-AutomaticEvaluate.py - L DEBUG
+```
+
 ## exe模式
 - 打包命令(chromium-xxxx为浏览器版本号)，浏览器路径暂定使用playwright依赖自带的chrome浏览器。
 ```
@@ -109,6 +116,7 @@ python JD-AutomaticEvaluate.py -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.5.11: 日志新增图灵测试提醒
 - JD-AutomaticEvaluate-2.5.10: 不同版本页面适配性更新；
 - JD-AutomaticEvaluate-2.4.10: 日志优化；
 - JD-AutomaticEvaluate-2.4.9: 新版本适配更新；
