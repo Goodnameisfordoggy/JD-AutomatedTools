@@ -3,3 +3,4 @@
 temp-img/
 *[0-9].*
 cookies.json
+build.py
