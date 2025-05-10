@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-03-26 22:14:29
+LastEditTime: 2025-05-10 22:24:51
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.6.12')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.7.12')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
 	parser.add_argument('-L', '--log-level', type=str, default="INFO", dest="log_level", help="DEBUG < INFO < WARNING < ERROR < CRITICAL")
 
