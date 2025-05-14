@@ -2,5 +2,7 @@
 .vscode/
 temp-img/
 *[0-9].*
+commit.bat
 cookies.json
 build.py
+authenticate.py

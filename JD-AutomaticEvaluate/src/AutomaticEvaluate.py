@@ -223,7 +223,7 @@ class AutomaticEvaluate():
         element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
         element_to_click_1.click()
         self.__page.wait_for_timeout(1000)
-	    
+
         try:
             if self.__page.wait_for_selector('img[alt="展示图片"]', timeout=2000):
                 LOG.info("检测到展示图片，开始滚动加载")
@@ -427,6 +427,30 @@ class AutomaticEvaluate():
         element_to_click_1.click()
         self.__page.wait_for_timeout(1000)
 
+        try:
+            if self.__page.wait_for_selector('img[alt="展示图片"]', timeout=2000):
+                LOG.info("检测到展示图片，开始滚动加载")
+                # 滚动到底部触发加载
+                self.__page.evaluate("""
+                    window.scrollTo({
+                        top: document.documentElement.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                """)
+                self.__page.wait_for_timeout(2000)  # 等待内容加载
+                # 获取新的页面高度后滚动到30%位置
+                new_height = self.__page.evaluate('document.documentElement.scrollHeight')
+                self.__page.evaluate(f"""
+                    window.scrollTo({{
+                        top: {new_height * 0.3},
+                        behavior: 'smooth'
+                    }});
+                """)
+                self.__page.wait_for_timeout(1000)
+        except PlaywrightTimeoutError:
+            LOG.debug("未检测到展示图片，继续执行")
+        
+        
         if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
             # 点击“只看当前商品”
             element_to_click_2 = self.__page.wait_for_selector('#comm-curr-sku', timeout=2000)
@@ -480,30 +504,7 @@ class AutomaticEvaluate():
             self.__page.wait_for_timeout(1000)
         except PlaywrightTimeoutError:
             LOG.critical("'全部评价'点击失败!")
-
-        try:
-            if self.__page.wait_for_selector('img[alt="展示图片"]', timeout=2000):
-                LOG.info("检测到展示图片，开始滚动加载")
-                # 滚动到底部触发加载
-                self.__page.evaluate("""
-                    window.scrollTo({
-                        top: document.documentElement.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                """)
-                self.__page.wait_for_timeout(2000)  # 等待内容加载
-                # 获取新的页面高度后滚动到30%位置
-                new_height = self.__page.evaluate('document.documentElement.scrollHeight')
-                self.__page.evaluate(f"""
-                    window.scrollTo({{
-                        top: {new_height * 0.3},
-                        behavior: 'smooth'
-                    }});
-                """)
-                self.__page.wait_for_timeout(1000)
-        except PlaywrightTimeoutError:
-            LOG.debug("未检测到展示图片，继续执行")
-     	
+        
         # 点击 “只看当前商品”
         if self.SELECT_CURRENT_PRODUCT_CLOSE is False:
             current_radio_element = self.__page.wait_for_selector('.all-btn', timeout=2000)

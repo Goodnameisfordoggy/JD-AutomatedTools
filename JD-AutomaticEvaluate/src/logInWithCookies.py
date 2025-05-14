@@ -58,12 +58,15 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, br
     if not os.path.exists(COOKIES_SAVE_PATH):
         LOG.info("未找到 Cookies 文件，将跳转手动登录！")
         page = browser.new_page()
-        response = page.goto('https://passport.jd.com/new/login.aspx', timeout=10000)  # 打开登录界面
-        if response.status != 200:
-            LOG.error(f"请求错误，状态码：{response.status}")
-        else:
-            LOG.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 Cookies")
-
+        try:
+            response = page.goto('https://passport.jd.com/new/login.aspx', timeout=10000)  # 打开登录界面
+            if response.status != 200:
+                LOG.error(f"请求错误，状态码：{response.status}")
+            else:
+                LOG.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 Cookies")
+        except PlaywrightTimeoutError:
+            LOG.warning("登录页面跳转失败，请检查网络/代理是否正常！")
+            sys.exit()
         # 等待用户手动登录京东
         while True:
             try:

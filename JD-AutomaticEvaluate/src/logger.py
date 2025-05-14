@@ -21,7 +21,7 @@ from loguru import logger
 
 logger.remove()
 
-def init(level):
+def init(level="INFO"):
 	# 日志记录到文件	
 	logger.add(
 		"./logs/log_{time:YYYY-MM-DD}.log", 
