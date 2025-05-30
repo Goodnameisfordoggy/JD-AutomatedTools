@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-05-07 21:21:08
+LastEditTime: 2025-05-30 17:57:10
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -47,19 +47,32 @@ class AutomaticEvaluate():
     CURRENT_AI_MODEL: str = None                   # AI模型的名称 | 使用AI模型生成评论文案
     
     def __init__(self) -> None:
-        self.__page, browser = logInWithCookies()
+        self.__page, browser = None, None
         self.__task_list: list[EvaluationTask] = []
-        self.__start_time = time.time()
-        
-    def exec_(self):
-        self.__init_image_directory(IMAGE_DIRECTORY_PATH)
-        
-        for task in self.__generate_task():
-            LOG.debug(f"任务已生成：{task}")
-            self.__automatic_evaluate(task)
+        self.__start_time = time.time() # 标记初始化时间戳
+        self.err_occurred = False
 
-        LOG.success(f"脚本运行结束--耗时:{int(time.time()-self.__start_time)}秒")
-    
+    def exec_(self) -> None:
+        """主循环"""
+        try:
+            self.__page, _ = logInWithCookies()
+            self.__init_image_directory(IMAGE_DIRECTORY_PATH)
+            
+            for task in self.__generate_task():
+                LOG.debug(f"任务已生成：{task}")
+                self.__automatic_evaluate(task)
+            
+        except Exception as e:
+            LOG.error(f"执行过程中发生错误: {str(e)}")
+        finally:
+            hours, remainder = divmod(int(time.time()-self.__start_time), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            # 根据是否有异常发生，显示不同的结束信息
+            if self.err_occurred:
+                LOG.warning(f"JD-AutomaticEvaluate: 意外退出--耗时:{hours:02d}小时-{minutes:02d}分钟-{seconds:02d}秒")
+            else:
+                LOG.success(f"JD-AutomaticEvaluate: 运行结束--耗时:{hours:02d}小时-{minutes:02d}分钟-{seconds:02d}秒")
+
     def __step_1(self):
         """
         创建任务，获取 `orderVoucher_url`
@@ -114,7 +127,7 @@ class AutomaticEvaluate():
                     product_link.wait_for(timeout=5000)
                 except PlaywrightTimeoutError:
                     # LOG.debug()
-                    LOG.error("商品详情页面链接获取超时")
+                    LOG.error(f"单号 {task.order_id} 商品详情页面链接获取超时")
                     continue
                 
                 productHtml_url = "https:" + product_link.get_attribute("href")  # 获取 href 属性

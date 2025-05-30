@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-03-26 22:58:40
+LastEditTime: 2025-05-15 22:06:11
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\api_service.py
 Description: 
 
@@ -38,22 +38,31 @@ from wsgiref.handlers import format_date_time
 from .logger import get_logger
 # 日志配置
 LOG = get_logger()
-# LOG = logger.bind(file="api_service")
-# LOG.remove()
-# LOG.add(
-#     sink=sys.stdout,
-#     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>",
-#     level="INFO"
-# )
 
 __all__ = ["Http_XAI", "Ws_SparkAI"]
+
+ENV_KEYS = r"""
+XAI_API_KEY = ""
+
+SparkAI_WS_APP_ID=""
+SparkAI_WS_API_Secret=""
+SparkAI_WS_API_KEY=""
+"""
 
 env_path = os.path.join(os.getcwd(), ".env")
 if os.path.exists(env_path):
     load_dotenv(dotenv_path=env_path)
     LOG.success(f"从 {env_path} 文件加载了环境变量")
 else:
-    LOG.critical(f"{env_path} 文件缺失")
+    LOG.warning(f"{env_path} 文件缺失，将为您新建！")
+    try:
+        with open(env_path, 'w', encoding='utf-8') as file:
+            file.write(ENV_KEYS)
+            LOG.success(f"文件 {env_path} 创建成功，请重新运行此工具。")
+    except Exception as e:
+        LOG.error(f"创建文件失败: {e}")
+    input("按回车退出...")
+    sys.exit()
     
 load_dotenv() # 加载换境变量，如果配置了 .env 文件
 

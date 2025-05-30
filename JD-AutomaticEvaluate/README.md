@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.7.13
+version: JD-AutomaticEvaluate-2.7.14
 
 # 简介
 自动化评价工具，给予五星好评加图文。
@@ -117,6 +117,7 @@ python JD-AutomaticEvaluate.py -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.7.14: 优化了主循环与env文件的初始化
 - JD-AutomaticEvaluate-2.7.13: 修复与微调
 - JD-AutomaticEvaluate-2.7.12: 新增 Cookies 判定失效后的处理
 - JD-AutomaticEvaluate-2.6.12: 恢复功能
