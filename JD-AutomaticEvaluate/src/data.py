@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2024-11-09 21:54:43
+LastEditTime: 2025-06-03 01:57:36
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\data.py
 Description: 
 
@@ -41,6 +41,26 @@ class EvaluationTask:
         return copy.copy(self)
     
 
+class TuringVerificationRequiredError(Exception):
+    """当自动化流程需要图灵验证时抛出的异常"""
+    
+    def __init__(self, message="触发人机验证", verification_type="", details=None):
+        """
+        初始化手动验证错误
+        
+        Args:
+            message: 错误信息
+            verification_type: 验证类型
+            details: 额外的详细信息
+        """
+        self.message = message
+        self.verification_type = verification_type
+        self.details = details
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message}，类型：{self.verification_type}"
+    
 DEFAULT_COMMENT_TEXT_LIST = [
     "非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！",
     "不得不夸赞这家店，商品价格美丽，质量绝佳。物流迅速，商家服务周到，售后放心。买之前还担心价格低质量不行，结果收到货后惊讶得不行，质量好得没话说，太满意了！不得不说，这商品太值了，物美价廉，质量出色。物流快，商家服务周到，售后有保障",
