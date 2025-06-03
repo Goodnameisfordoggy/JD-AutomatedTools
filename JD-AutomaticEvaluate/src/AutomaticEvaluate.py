@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-03 01:39:56
+LastEditTime: 2025-06-04 02:42:28
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -44,7 +44,8 @@ class AutomaticEvaluate():
     MIN_DESCRIPTION_CHAR_COUNT: int = None         # 评论文案的最少字数 | 在已有评论中随机筛选文案的限制条件，JD:优质评价要求60字以上。
     CLOSE_SELECT_CURRENT_PRODUCT: bool = None      # 关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低
     CLOSE_AUTO_COMMIT: bool = None                 # 关闭自动提交 | 启用此设置，在自动填充完评价页面后将不会自动点击提交按钮
-    DEAL_TURING_VERIFCATION = None                 # 图灵测试的处理 | 0触发测试直接退出，1阻塞等待手动处理
+    DEAL_TURING_VERIFCATION: int = None            # 图灵测试的处理 | 0触发测试直接退出，1阻塞等待手动处理
+    GUARANTEE_COMMIT: bool = None                  # 保底评价 | 在获取不到已有信息时使用文本默认评价并提交
     CURRENT_AI_GROUP: str = None                   # AI模型的组别名称 | 使用AI模型生成评论文案
     CURRENT_AI_MODEL: str = None                   # AI模型的名称 | 使用AI模型生成评论文案
     
@@ -64,9 +65,10 @@ class AutomaticEvaluate():
                 LOG.debug(f"任务已生成：{task}")
                 self.__automatic_evaluate(task)
             
-        except Exception as e:
+        except Exception as err:
             self.err_occurred = True
-            LOG.error(f"执行过程中发生异常: {str(e)}")
+            LOG.error(f"执行过程中发生异常: {str(err)}")
+            # raise err # 调试用
         finally:
             hours, remainder = divmod(int(time.time()-self.__start_time), 3600)
             minutes, seconds = divmod(remainder, 60)
@@ -117,28 +119,33 @@ class AutomaticEvaluate():
         for task in self.__task_list:
             self.__page.goto(task.orderVoucher_url)
             self.__page.wait_for_timeout(2000)  # 等待加载资源
-            order_id_element = self.__page.wait_for_selector('//*[@id="o-info-orderinfo"]/div/div/span[1]/a', timeout=5000)
+            order_id_element = self.__page.wait_for_selector('//*[@id="o-info-orderinfo"]/div/div/span[1]/a', timeout=3000)
             order_id = order_id_element.inner_text()  # 评价页面的订单编号
             task.order_id = order_id
 
             goods_elements: Locator = self.__page.locator('.comment-goods')
             child_task_list: list[EvaluationTask] = [] # 一个评论页面下的所有子商品
             for i in range(goods_elements.count()):
-                goods_element: Locator = goods_elements.nth(i)
-                try:
-                    product_link: Locator = goods_element.locator('div.p-name a[href*="item.jd.com"]').first  # 使用第一个符合条件的 <a> 标签
-                    product_link.wait_for(timeout=5000)
-                except PlaywrightTimeoutError:
-                    # LOG.debug()
-                    LOG.error(f"单号 {task.order_id} 商品详情页面链接获取超时")
-                    continue
-                
-                productHtml_url = "https:" + product_link.get_attribute("href")  # 获取 href 属性
-                product_name = product_link.inner_text()  # 获取文本内容
-
-                child_task = task.copy() # 同步任务信息 order_id, orderVoucher_url
-                child_task.productHtml_url = productHtml_url 
+                child_task = task.copy() # 为多个子任务同步任务信息 order_id, orderVoucher_url
+                goods_element: Locator = goods_elements.nth(i) # 每个商品的区域
+                # 商品名称
+                product_link_ele = goods_element.locator('div.p-name > a')
+                product_name = product_link_ele.inner_text()
                 child_task.product_name = product_name
+                
+                try:
+                    # 商品详情页面 url
+                    productHtml_url_text = product_link_ele.get_attribute("href", timeout=3000)
+                    if not productHtml_url_text or "javascript:void(0)" in productHtml_url_text :
+                        # 部分有 href 但值为空，也走超时处理
+                        raise PlaywrightTimeoutError(message="href为空值")
+                    productHtml_url = "https:" + productHtml_url_text
+                    child_task.productHtml_url = productHtml_url 
+                except PlaywrightTimeoutError:
+                    LOG.error(f"单号 {task.order_id} 商品详情页面链接获取超时")
+                    if not self.GUARANTEE_COMMIT:
+                        continue
+                
                 # LOG.debug(f"{task}")
                 child_task_list.append(child_task)
             yield child_task_list
@@ -155,37 +162,40 @@ class AutomaticEvaluate():
 
         # 使用已有的文案
         else:
-            if self.__page.goto(task.productHtml_url):
-                LOG.debug(f'goto {task.productHtml_url}')
-                version = None
-                try:
-                    if self.__page.wait_for_selector('.all-btn', timeout=2000):
-                        version = 2024
-                except PlaywrightTimeoutError:
-                    # 目前来看JD国际等商品使用的是2014的界面，直接简单粗暴匹配两个关键元素
-                    try:
-                        if self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000):
-                            version = 2014
-                    except PlaywrightTimeoutError:
-                        self.__requires_TuringVerification()
-                match version:
-                    case 2014:
-                        input_text: str = self.__get_text_paginated_version()
-                        self.__page.goto(task.productHtml_url)
-                        input_image: list = self.__get_image_paginated_version()
-                    case 2024:
-                        input_text: str = self.__get_text_infinite_scroll_version()
-                        self.__page.goto(task.productHtml_url)
-                        input_image: list = self.__get_image_infinite_scroll_version()
-                    case _:
-                        if self.__requires_TuringVerification():
-                            pass
-                        else:
-                            # 如果没有跳验证，那么大概率是页面变动了
-                            LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
-            else:
-                LOG.warning(f"商品 {task.productHtml_url} 页面加载失败！")
+            if not task.productHtml_url:
+                # 没有商详页 url 直接返回
+                LOG.warning(f"商品详情 {task.productHtml_url} 页面加载失败！")
+                return task
             
+            self.__page.goto(task.productHtml_url, timeout=3000)
+            LOG.debug(f'goto {task.productHtml_url}')
+            version = None
+            try:
+                if self.__page.wait_for_selector('.all-btn', timeout=2000):
+                    version = 2024
+            except PlaywrightTimeoutError:
+                # 目前来看JD国际等商品使用的是2014的界面，直接简单粗暴匹配两个关键元素
+                try:
+                    if self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000):
+                        version = 2014
+                except PlaywrightTimeoutError:
+                    self.__requires_TuringVerification()
+            match version:
+                case 2014:
+                    input_text: str = self.__get_text_paginated_version()
+                    self.__page.goto(task.productHtml_url)
+                    input_image: list = self.__get_image_paginated_version()
+                case 2024:
+                    input_text: str = self.__get_text_infinite_scroll_version()
+                    self.__page.goto(task.productHtml_url)
+                    input_image: list = self.__get_image_infinite_scroll_version()
+                case _:
+                    if self.__requires_TuringVerification():
+                        pass
+                    else:
+                        # 如果没有跳验证，那么大概率是页面变动了
+                        LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
+
         task.input_text = input_text
         task.input_image = input_image
         # LOG.debug(f"{task}")
@@ -605,9 +615,9 @@ class AutomaticEvaluate():
         """自动评价操作，限单个评价页面"""
         self.__page.goto(task.orderVoucher_url)
         # 商品评价文本
-        if not task.input_text:
+        if self.GUARANTEE_COMMIT and not task.input_text:
             task.input_text = random.choice(DEFAULT_COMMENT_TEXT_LIST)
-            LOG.warning(f'单号{task.order_id}的订单使用默认评价方式。')
+            LOG.warning(f'单号{task.order_id}的订单使用了默认文案池。')
         try:
             text_input_element = self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea', timeout=3000)
             text_input_element.fill(task.input_text)
@@ -643,7 +653,7 @@ class AutomaticEvaluate():
         try:
             file_input_element = self.__page.wait_for_selector('xpath=//input[@type="file"]', timeout=2000) # 查找隐藏的文件上传输入框
             # 商品评价图片
-            if file_input_element and not task.input_image:
+            if file_input_element and not task.input_image and not self.GUARANTEE_COMMIT:
                 LOG.warning(f'单号{task.order_id}的订单未上传评价图片，跳过该任务。')
                 return False
             # 发送文件路径到文件上传输入框

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-05-10 22:24:51
+LastEditTime: 2025-06-04 02:30:35
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
 Description: 
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.8.14')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.9.14')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
 	parser.add_argument('-L', '--log-level', type=str, default="INFO", dest="log_level", help="DEBUG < INFO < WARNING < ERROR < CRITICAL")
 	
@@ -63,10 +63,11 @@ if __name__ == '__main__':
 	auto_settings.add_argument('-mi', '--min-images', type=int, default=15, dest="min_images", help="商品已有图片的最少数量(15) | 真实评论图片多余这个数工具才会正常获取已有图片。")
 	auto_settings.add_argument('-mc', '--min-charcount', type=int, default=60, dest="min_charcount", help="评论文案的最少字数(60) | 在已有评论中随机筛选文案的限制条件，JD:优质评价要求60字以上。")
 	# 使用 store_true 动作：如果命令行传入 --auto-commit 参数，则 auto_commit 为 True，否则为 False
-	auto_settings.add_argument('-scpc', '--close-select-current-product', action='store_true', default=False, dest="close_select_current_product", help="关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低")
-	auto_settings.add_argument('-acc', '--close-auto-commit', action='store_true', default=False, dest="close_auto_commit", help="关闭自动提交 | 启用此设置，在自动填充完评价页面后将不会自动点击提交按钮")
+	auto_settings.add_argument('-cscp', '--close-select-current-product', action='store_true', default=False, dest="close_select_current_product", help="关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低")
+	auto_settings.add_argument('-cac', '--close-auto-commit', action='store_true', default=False, dest="close_auto_commit", help="关闭自动提交 | 启用此设置，在自动填充完评价页面后将不会自动点击提交按钮")
 	auto_settings.add_argument('-dtv', '--deal-turing-verification', type=int, choices=[0, 1], default=0, dest="deal_turing_verification", help="图灵测试的处理：0触发测试直接退出，1阻塞等待手动处理")
-
+	auto_settings.add_argument('-gc', '--guarantee-commit', action='store_true', default=False, dest="guarantee_commit", help="保底评价 | 在获取不到已有信息时使用文本默认评价并提交")
+    
 	ai_settings = parser.add_argument_group(title="AI设置", description="-g 与 -m 需同时设置;")
 	ai_settings.add_argument('-g', '--ai-group', type=str, default=None, dest="ai_group", help="AI模型的组别名称 | 使用AI模型生成评论文案")
 	ai_settings.add_argument('-m', '--ai-model', type=str, default=None, dest="ai_model", help="AI模型的名称 | 使用AI模型生成评论文案")
@@ -83,6 +84,7 @@ if __name__ == '__main__':
 	QwQ.CLOSE_SELECT_CURRENT_PRODUCT = args.close_select_current_product
 	QwQ.CLOSE_AUTO_COMMIT = args.close_auto_commit
 	QwQ.DEAL_TURING_VERIFCATION = args.deal_turing_verification
+	QwQ.GUARANTEE_COMMIT = args.guarantee_commit
 	QwQ.CURRENT_AI_GROUP = args.ai_group
 	QwQ.CURRENT_AI_MODEL = args.ai_model
 	QwQ.exec_()
