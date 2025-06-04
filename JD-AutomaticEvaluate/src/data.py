@@ -29,12 +29,12 @@ class EvaluationTask:
     
     def __str__(self):
         return ("\n"
-                f"order_id: '{self.order_id}'\n"
-                f"orderVoucher_url: '{self.orderVoucher_url}'\n"
-                f"productHtml_url: '{self.productHtml_url}'\n"
-                f"product_name: '{self.product_name}'\n"
-                f"input_text: '{self.input_text}'\n"
-                f"input_image: {self.input_image}")
+                f"【order_id】 {self.order_id}\n"
+                f"【orderVoucher_url】 {self.orderVoucher_url}\n"
+                f"【productHtml_url】 {self.productHtml_url}\n"
+                f"【product_name】 {self.product_name}\n"
+                f"【input_text】 {self.input_text}\n"
+                f"【input_image】 {self.input_image}")
     
     def copy(self):
         # 创建一个浅拷贝

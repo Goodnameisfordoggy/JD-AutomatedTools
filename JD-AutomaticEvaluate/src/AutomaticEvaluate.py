@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-04 02:42:28
+LastEditTime: 2025-06-04 22:11:22
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -143,7 +143,7 @@ class AutomaticEvaluate():
                     child_task.productHtml_url = productHtml_url 
                 except PlaywrightTimeoutError:
                     LOG.error(f"单号 {task.order_id} 商品详情页面链接获取超时")
-                    if not self.GUARANTEE_COMMIT:
+                    if self.GUARANTEE_COMMIT is False:
                         continue
                 
                 # LOG.debug(f"{task}")
@@ -160,14 +160,9 @@ class AutomaticEvaluate():
         if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
             input_text: str = self.__get_text_from_ai(task.product_name)
 
-        # 使用已有的文案
-        else:
-            if not task.productHtml_url:
-                # 没有商详页 url 直接返回
-                LOG.warning(f"商品详情 {task.productHtml_url} 页面加载失败！")
-                return task
-            
-            self.__page.goto(task.productHtml_url, timeout=3000)
+        # 使用已有的文案，图片
+        elif task.productHtml_url:
+            self.__page.goto(task.productHtml_url) # 部分页面加载缓慢，如京东国际
             LOG.debug(f'goto {task.productHtml_url}')
             version = None
             try:
@@ -195,10 +190,18 @@ class AutomaticEvaluate():
                     else:
                         # 如果没有跳验证，那么大概率是页面变动了
                         LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
+        
+        else:
+            # 没有商详页 url
+            if not task.productHtml_url:
+                LOG.warning(f"商品详情 {task.productHtml_url} 页面加载失败！")
+            # 保底生成评价文案
+            if self.GUARANTEE_COMMIT is True and not task.input_text:
+                input_text = random.choice(DEFAULT_COMMENT_TEXT_LIST)
+                LOG.warning(f'单号 {task.order_id} 的订单使用了默认文案池。')
 
         task.input_text = input_text
         task.input_image = input_image
-        # LOG.debug(f"{task}")
         return task
     
     def __generate_task(self):
@@ -233,7 +236,7 @@ class AutomaticEvaluate():
         """
         if not text_list or len(text_list) * 2 < self.MIN_EXISTING_PRODUCT_DESCRIPTIONS:
             LOG.info("已有评论文案过少，无法进行随机筛选！")
-            return
+            return ""
         selected_value = random.choice(text_list)
         if len(selected_value) > self.MIN_DESCRIPTION_CHAR_COUNT and self.is_bmp_compliant(selected_value): # 取长度大于规定个字符的评价文案。
             return selected_value
@@ -366,7 +369,7 @@ class AutomaticEvaluate():
             text = self.get_random_text(text_group)            
         except RecursionError:
             LOG.info('未筛出符合要求的评论文案！')
-            return
+            return ""
         return text 
     
     def __get_text_from_ai(self, product_name):
@@ -615,9 +618,6 @@ class AutomaticEvaluate():
         """自动评价操作，限单个评价页面"""
         self.__page.goto(task.orderVoucher_url)
         # 商品评价文本
-        if self.GUARANTEE_COMMIT and not task.input_text:
-            task.input_text = random.choice(DEFAULT_COMMENT_TEXT_LIST)
-            LOG.warning(f'单号{task.order_id}的订单使用了默认文案池。')
         try:
             text_input_element = self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea', timeout=3000)
             text_input_element.fill(task.input_text)
@@ -653,7 +653,7 @@ class AutomaticEvaluate():
         try:
             file_input_element = self.__page.wait_for_selector('xpath=//input[@type="file"]', timeout=2000) # 查找隐藏的文件上传输入框
             # 商品评价图片
-            if file_input_element and not task.input_image and not self.GUARANTEE_COMMIT:
+            if file_input_element and not task.input_image and self.GUARANTEE_COMMIT is False:
                 LOG.warning(f'单号{task.order_id}的订单未上传评价图片，跳过该任务。')
                 return False
             # 发送文件路径到文件上传输入框
