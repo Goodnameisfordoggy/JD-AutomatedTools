@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-05-10 23:14:37
+LastEditTime: 2025-06-10 21:18:51
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logInWithCookies.py
 Description: 
 
@@ -19,23 +19,24 @@ import os
 import sys
 import time
 import json
-from playwright.sync_api import sync_playwright, Browser, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright, BrowserContext, TimeoutError as PlaywrightTimeoutError
 
+from .data import NetworkError
 from .logger import get_logger
 LOG = get_logger()
 
 LOGIN_URL = 'https://passport.jd.com/new/login.aspx'  # 京东登录页面
 COOKIES_SAVE_PATH = "cookies.json"  # 保存 cookies 的路径
 
-def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, browser: Browser | None = None):
+def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, context: BrowserContext | None = None):
     """ 
     使用 cookies 模拟登录
 
     Params:
         retry: 重新尝试登录的次数
-        browser: 每次重新尝试登录通用一个 Browser 对象，减少了其初始化的开支
+        context: 每次重新尝试登录通用一个 BrowserContext 对象，减少了其初始化的开支
     Returns:
-        登录成功时返回 tuple[Page, Browser], 失败则程序退出。
+        登录成功时返回 tuple[Page, BrowserContext], 失败则程序退出。
     """
     # 初始化 playwright
     if retry == 0:
@@ -45,28 +46,33 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, br
             temp_dir = os.path.join(sys._MEIPASS, "chromium")
             browser = playwright.chromium.launch(
                 headless=False, 
-                args=["--disable-blink-features","--disable-blink-features=AutomationControlled"],
+                args=["--start-maximized", "--disable-blink-features","--disable-blink-features=AutomationControlled"],
                 executable_path=os.path.join(temp_dir, "chrome.exe")
             )
         else:
             browser = playwright.chromium.launch(
                 headless=False,
-                args=["--disable-blink-features","--disable-blink-features=AutomationControlled"]
+                args=["--start-maximized", "--disable-blink-features","--disable-blink-features=AutomationControlled"]
             )
-    
+
+        context = browser.new_context(
+            no_viewport=True    # 不限制视口大小
+        )
+        
+
     # 没有 Cookies 先登录获取
     if not os.path.exists(COOKIES_SAVE_PATH):
         LOG.info("未找到 Cookies 文件，将跳转手动登录！")
-        page = browser.new_page()
+        page = context.new_page() # 这里的 context 在 retry=0时用的local变量，其余情况均使用递归传递的参数
         try:
-            response = page.goto('https://passport.jd.com/new/login.aspx', timeout=10000)  # 打开登录界面
+            response = page.goto(LOGIN_URL, timeout=10000)  # 打开登录界面
             if response.status != 200:
                 LOG.error(f"请求错误，状态码：{response.status}")
             else:
                 LOG.info("登录页面已跳转，建议使用手机验证码登录以获得较长有效期的 Cookies")
         except PlaywrightTimeoutError:
-            LOG.warning("登录页面跳转失败，请检查网络/代理是否正常！")
-            sys.exit()
+            raise NetworkError(message=f"页面加载超时：{LOGIN_URL}")
+            
         # 等待用户手动登录京东
         while True:
             try:
@@ -86,8 +92,12 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, br
         time.sleep(2) 
 
     # 用 Cookies 登录
-    page = browser.new_page()
-    page.goto(target_url)  # 打开目标页面
+    page = context.new_page()
+    try:
+        page.goto(target_url, timeout=10000)  # 打开登录页面
+    except PlaywrightTimeoutError:
+        raise NetworkError(message=f"页面加载超时: {target_url}")
+    
     with open(COOKIES_SAVE_PATH, 'r', encoding='utf-8') as f:
         cookies = json.load(f) # 读取文件中的 cookies
         page.context.add_cookies(cookies) # 加载 cookies 到页面上下文
@@ -96,7 +106,7 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, br
     try:
         page.wait_for_selector('.nickname', timeout=10000) # 查找一个登录后特有的元素
         LOG.success('使用已保存的 Cookies 登录')
-        return page, browser
+        return page, context
     except PlaywrightTimeoutError:
         if os.path.isfile(COOKIES_SAVE_PATH): # 每个账号的 cookies 对应一个文件，需要确保删除的是文件
             os.remove(COOKIES_SAVE_PATH)
@@ -106,6 +116,6 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, br
             time.sleep(2)
         if retry >= 3: # 防止无限递归，但暂未想到发生异常的情况
             LOG.critical("登录异常")
-            sys.exit()
+            sys.exit(1)
         else:
-            return logInWithCookies(retry=retry + 1, browser=browser) # 尾递归，语义明了
+            return logInWithCookies(retry=retry + 1, context=context) # 尾递归，语义明了

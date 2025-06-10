@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-04 22:11:22
+LastEditTime: 2025-06-10 21:47:29
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -48,6 +48,7 @@ class AutomaticEvaluate():
     GUARANTEE_COMMIT: bool = None                  # 保底评价 | 在获取不到已有信息时使用文本默认评价并提交
     CURRENT_AI_GROUP: str = None                   # AI模型的组别名称 | 使用AI模型生成评论文案
     CURRENT_AI_MODEL: str = None                   # AI模型的名称 | 使用AI模型生成评论文案
+    LOG_LEVEL: str = None                          # 日志记录等级
     
     def __init__(self) -> None:
         self.__page, browser = None, None
@@ -64,11 +65,11 @@ class AutomaticEvaluate():
             for task in self.__generate_task():
                 LOG.debug(f"任务已生成：{task}")
                 self.__automatic_evaluate(task)
-            
         except Exception as err:
             self.err_occurred = True
             LOG.error(f"执行过程中发生异常: {str(err)}")
-            # raise err # 调试用
+            if self.LOG_LEVEL == "DEBUG":
+                raise err # 调试专用
         finally:
             hours, remainder = divmod(int(time.time()-self.__start_time), 3600)
             minutes, seconds = divmod(remainder, 60)
@@ -77,7 +78,10 @@ class AutomaticEvaluate():
                 LOG.warning(f"JD-AutomaticEvaluate: 意外退出--耗时:{hours:02d}小时-{minutes:02d}分钟-{seconds:02d}秒")
             else:
                 LOG.success(f"JD-AutomaticEvaluate: 运行结束--耗时:{hours:02d}小时-{minutes:02d}分钟-{seconds:02d}秒")
-
+            # 打包模式保留终端窗口
+            if getattr(sys, 'frozen', False): 
+                input("按任意位置继续...")
+        
     def __step_1(self):
         """
         创建任务，获取 `orderVoucher_url`
@@ -156,12 +160,8 @@ class AutomaticEvaluate():
         """
         input_text = ""
         input_image = []
-        # 使用 AI 模型生成评价文案
-        if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
-            input_text: str = self.__get_text_from_ai(task.product_name)
-
         # 使用已有的文案，图片
-        elif task.productHtml_url:
+        if task.productHtml_url:
             self.__page.goto(task.productHtml_url) # 部分页面加载缓慢，如京东国际
             LOG.debug(f'goto {task.productHtml_url}')
             version = None
@@ -177,12 +177,20 @@ class AutomaticEvaluate():
                     self.__requires_TuringVerification()
             match version:
                 case 2014:
-                    input_text: str = self.__get_text_paginated_version()
-                    self.__page.goto(task.productHtml_url)
+                    # 使用 AI 模型生成评价文案; 确认页面版本后再获取避免浪费 tokens
+                    if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
+                        input_text: str = self.__get_text_from_ai(task.product_name)
+                    # 获取已有评价内容
+                    else:
+                        input_text: str = self.__get_text_paginated_version()
+                        self.__page.goto(task.productHtml_url) # 重定向到商详页
                     input_image: list = self.__get_image_paginated_version()
                 case 2024:
-                    input_text: str = self.__get_text_infinite_scroll_version()
-                    self.__page.goto(task.productHtml_url)
+                    if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
+                        input_text: str = self.__get_text_from_ai(task.product_name)
+                    else:
+                        input_text: str = self.__get_text_infinite_scroll_version()
+                        self.__page.goto(task.productHtml_url)
                     input_image: list = self.__get_image_infinite_scroll_version()
                 case _:
                     if self.__requires_TuringVerification():
@@ -190,7 +198,7 @@ class AutomaticEvaluate():
                     else:
                         # 如果没有跳验证，那么大概率是页面变动了
                         LOG.critical(f"商品 {task.productHtml_url} 页面发生变动，请issue联系作者！")
-        
+
         else:
             # 没有商详页 url
             if not task.productHtml_url:
@@ -314,7 +322,7 @@ class AutomaticEvaluate():
             text = self.get_random_text(text_list[int(len(text_list) / 2):]) # 取后半部分评价进行筛选            
         except RecursionError:
             LOG.info('未筛出符合要求的评论文案！')
-            return
+            return ""
         
         return text 
         

@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-03 01:57:36
+LastEditTime: 2025-06-10 20:16:59
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\data.py
 Description: 
 
@@ -44,7 +44,7 @@ class EvaluationTask:
 class TuringVerificationRequiredError(Exception):
     """当自动化流程需要图灵验证时抛出的异常"""
     
-    def __init__(self, message="触发人机验证", verification_type="", details=None):
+    def __init__(self, message="触发人机验证！", verification_type="", details=None):
         """
         初始化手动验证错误
         
@@ -59,7 +59,28 @@ class TuringVerificationRequiredError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return f"{self.message}，类型：{self.verification_type}"
+        return (
+            f"触发人机验证！"
+            f"\nmessage: {self.message}" if self.message else ""
+            f"\nverification_type: {self.verification_type}" if self.verification_type else ""
+            f"\ndetails: {self.details}" if self.details else ""
+        )
+    
+
+class NetworkError(Exception):
+    """当网络出现异常波动引发异常时抛出的异常"""
+
+    def __init__(self, message="网络异常波动", details=None):
+        self.message = message
+        self.details = details
+
+    def __str__(self):
+        return (
+            f"网络异常波动，请检查网络/代理设置!"
+            f"\nmessage: {self.message}" if self.message else ""
+            f"\ndetails: {self.details}" if self.details else ""
+        )
+    
     
 DEFAULT_COMMENT_TEXT_LIST = [
     "非常满意这次购物体验，商品质量非常好，物超所值。朋友们看到后也纷纷称赞。客服服务热情周到，物流也非常给力，发货迅速，收到货物时包装完好。商品设计也符合我的预期，非常愉快的购物经历，强烈推荐！",
