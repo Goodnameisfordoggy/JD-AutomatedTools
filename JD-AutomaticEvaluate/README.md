@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.9.16
+version: JD-AutomaticEvaluate-2.9.17
 
 ## 简介
 自动化评价工具，给予五星好评加图文。
@@ -126,6 +126,7 @@ JD-AutomaticEvaluate -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.9.17: 修复异常；
 - JD-AutomaticEvaluate-2.9.16: 修复异常；
 - JD-AutomaticEvaluate-2.9.15: 修复异常；
 - JD-AutomaticEvaluate-2.9.14: 新增了保底提交

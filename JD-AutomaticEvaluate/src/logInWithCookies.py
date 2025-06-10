@@ -46,17 +46,17 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, co
             temp_dir = os.path.join(sys._MEIPASS, "chromium")
             browser = playwright.chromium.launch(
                 headless=False, 
-                args=["--start-maximized", "--disable-blink-features","--disable-blink-features=AutomationControlled"],
+                args=["--disable-blink-features","--disable-blink-features=AutomationControlled"],
                 executable_path=os.path.join(temp_dir, "chrome.exe")
             )
         else:
             browser = playwright.chromium.launch(
                 headless=False,
-                args=["--start-maximized", "--disable-blink-features","--disable-blink-features=AutomationControlled"]
+                args=["--disable-blink-features","--disable-blink-features=AutomationControlled"]
             )
 
         context = browser.new_context(
-            no_viewport=True    # 不限制视口大小
+            no_viewport=None    # 不限制视口大小
         )
         
 
