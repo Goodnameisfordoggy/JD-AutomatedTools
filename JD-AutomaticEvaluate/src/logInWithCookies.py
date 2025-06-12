@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-10 21:18:51
+LastEditTime: 2025-06-12 22:38:33
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\logInWithCookies.py
 Description: 
 
@@ -19,15 +19,20 @@ import os
 import sys
 import time
 import json
-from playwright.sync_api import sync_playwright, BrowserContext, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright, BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
 
 from .data import NetworkError
+from .utils import sync_retry
 from .logger import get_logger
 LOG = get_logger()
 
 LOGIN_URL = 'https://passport.jd.com/new/login.aspx'  # 京东登录页面
 COOKIES_SAVE_PATH = "cookies.json"  # 保存 cookies 的路径
 
+@sync_retry(max_retries=3, retry_delay=2, exceptions=(PlaywrightTimeoutError,))
+def __load_page(page: Page, url: str, timeout: float):
+    return page.goto(url, timeout=timeout)
+    
 def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, context: BrowserContext | None = None):
     """ 
     使用 cookies 模拟登录
@@ -65,7 +70,7 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, co
         LOG.info("未找到 Cookies 文件，将跳转手动登录！")
         page = context.new_page() # 这里的 context 在 retry=0时用的local变量，其余情况均使用递归传递的参数
         try:
-            response = page.goto(LOGIN_URL, timeout=10000)  # 打开登录界面
+            response = __load_page(page, LOGIN_URL, timeout=10000)  # 打开登录界面
             if response.status != 200:
                 LOG.error(f"请求错误，状态码：{response.status}")
             else:
@@ -94,7 +99,7 @@ def logInWithCookies(target_url: str = "https://www.jd.com/", retry: int = 0, co
     # 用 Cookies 登录
     page = context.new_page()
     try:
-        page.goto(target_url, timeout=10000)  # 打开登录页面
+        __load_page(page, target_url, timeout=10000)  # 打开登录页面
     except PlaywrightTimeoutError:
         raise NetworkError(message=f"页面加载超时: {target_url}")
     

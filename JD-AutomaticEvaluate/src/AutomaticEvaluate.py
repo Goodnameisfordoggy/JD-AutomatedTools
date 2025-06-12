@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-06-10 21:47:29
+LastEditTime: 2025-06-13 00:18:31
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
 Description: 
 
@@ -26,7 +26,7 @@ import requests
 from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle, Page 
 
-from .data import EvaluationTask, TuringVerificationRequiredError, DEFAULT_COMMENT_TEXT_LIST
+from .data import EvaluationTask, TuringVerificationRequiredError, NetworkError, DEFAULT_COMMENT_TEXT_LIST
 from .utils import *
 from .logger import get_logger
 from .api_service import *
@@ -69,7 +69,7 @@ class AutomaticEvaluate():
             self.err_occurred = True
             LOG.error(f"执行过程中发生异常: {str(err)}")
             if self.LOG_LEVEL == "DEBUG":
-                raise err # 调试专用
+                raise # 调试专用
         finally:
             hours, remainder = divmod(int(time.time()-self.__start_time), 3600)
             minutes, seconds = divmod(remainder, 60)
@@ -97,7 +97,11 @@ class AutomaticEvaluate():
             except PlaywrightTimeoutError:
                 LOG.info('结束标志未出现！')
 
-            self.__page.goto(url_1)
+            try:
+                self.__load_page(url_1, timeout=20000)
+            except PlaywrightTimeoutError:
+                raise NetworkError(message=f"页面加载超时：{url_1}")
+            
             btn_elements: list = self.__page.locator('.btn-def').element_handles()
             for btn_element in btn_elements:
                 parent_element = btn_element.evaluate_handle("el => el.closest('.operate')")
@@ -121,8 +125,13 @@ class AutomaticEvaluate():
         进入评价页面，获取 `order_id` `productHtml_url` `product_name`；
         """
         for task in self.__task_list:
-            self.__page.goto(task.orderVoucher_url)
-            self.__page.wait_for_timeout(2000)  # 等待加载资源
+            
+            try:
+                self.__load_page(task.orderVoucher_url, timeout=30000)
+            except PlaywrightTimeoutError:
+                raise NetworkError(message=f"页面加载超时：{task.orderVoucher_url}")
+            
+            self.__page.wait_for_timeout(timeout=2000)  # 等待元素加载
             order_id_element = self.__page.wait_for_selector('//*[@id="o-info-orderinfo"]/div/div/span[1]/a', timeout=3000)
             order_id = order_id_element.inner_text()  # 评价页面的订单编号
             task.order_id = order_id
@@ -162,8 +171,12 @@ class AutomaticEvaluate():
         input_image = []
         # 使用已有的文案，图片
         if task.productHtml_url:
-            self.__page.goto(task.productHtml_url) # 部分页面加载缓慢，如京东国际
-            LOG.debug(f'goto {task.productHtml_url}')
+            try:
+                self.__load_page(task.productHtml_url, timeout=30000) # 部分页面加载缓慢，如京东国际
+                LOG.debug(f'goto {task.productHtml_url}')
+            except PlaywrightTimeoutError:
+                raise NetworkError(message=f"页面加载超时：{task.productHtml_url}")
+            
             version = None
             try:
                 if self.__page.wait_for_selector('.all-btn', timeout=2000):
@@ -183,14 +196,24 @@ class AutomaticEvaluate():
                     # 获取已有评价内容
                     else:
                         input_text: str = self.__get_text_paginated_version()
-                        self.__page.goto(task.productHtml_url) # 重定向到商详页
+
+                        try:
+                            self.__load_page(task.productHtml_url, timeout=30000) # 重定向到商详页；部分页面加载缓慢，如京东国际；
+                        except PlaywrightTimeoutError:
+                            raise NetworkError(message=f"页面加载超时：{task.productHtml_url}")
+                        
                     input_image: list = self.__get_image_paginated_version()
                 case 2024:
                     if self.CURRENT_AI_GROUP and self.CURRENT_AI_MODEL:
                         input_text: str = self.__get_text_from_ai(task.product_name)
                     else:
                         input_text: str = self.__get_text_infinite_scroll_version()
-                        self.__page.goto(task.productHtml_url)
+
+                        try:
+                            self.__load_page(task.productHtml_url, timeout=30000) # 重定向到商详页；部分页面加载缓慢，如京东国际；
+                        except PlaywrightTimeoutError:
+                            raise NetworkError(message=f"页面加载超时：{task.productHtml_url}")
+                        
                     input_image: list = self.__get_image_infinite_scroll_version()
                 case _:
                     if self.__requires_TuringVerification():
@@ -218,7 +241,6 @@ class AutomaticEvaluate():
         for child_task_list in self.__step_2():
             for child_task in child_task_list:
                 LOG.info("正在生成任务......")
-                self.__page.wait_for_timeout(2000)
                 blacklist = []
                 whitelist = []
                 if whitelist and child_task.order_id not in whitelist: # 白名单
@@ -259,7 +281,6 @@ class AutomaticEvaluate():
         try:
             element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
             element_to_click_1.click()
-            self.__page.wait_for_timeout(1000)
         except PlaywrightTimeoutError:
             LOG.warning("“商品评价” 点击失败")
             self.__requires_TuringVerification()
@@ -274,7 +295,7 @@ class AutomaticEvaluate():
                         behavior: 'smooth'
                     });
                 """)
-                self.__page.wait_for_timeout(2000)  # 等待内容加载
+                self.__page.wait_for_timeout(timeout=2000)  # 等待内容加载
                 # 获取新的页面高度后滚动到30%位置
                 new_height = self.__page.evaluate('document.documentElement.scrollHeight')
                 self.__page.evaluate(f"""
@@ -283,7 +304,7 @@ class AutomaticEvaluate():
                         behavior: 'smooth'
                     }});
                 """)
-                self.__page.wait_for_timeout(1000)
+                self.__page.wait_for_timeout(timeout=1000) # 等待元素稳定
         except PlaywrightTimeoutError:
             LOG.debug("未检测到展示图片，继续执行")
             #部分采用2014网页的商品，点击全部评论，会先出现“京东工业”图片，影响元素加载
@@ -301,7 +322,7 @@ class AutomaticEvaluate():
         text_list = []
         for page in range(1, 4):
             LOG.debug(f'Turn to page {page}')
-            self.__page.wait_for_timeout(1000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            self.__page.wait_for_timeout(timeout=1000) # QwQ适当停顿避免触发反爬验证, 同时等待元素内容加载完毕
             try:
                 comment_con_elements = self.__page.locator('.comment-con').element_handles()
                 for comment_con_element in comment_con_elements:
@@ -334,7 +355,7 @@ class AutomaticEvaluate():
         try:
             all_btn_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
             all_btn_element.click()
-            self.__page.wait_for_timeout(1000)
+            self.__page.wait_for_timeout(timeout=1000) # 等待元素加载
         except PlaywrightTimeoutError:
             LOG.critical("'全部评价'点击失败!")
         
@@ -343,7 +364,7 @@ class AutomaticEvaluate():
             if self.CLOSE_SELECT_CURRENT_PRODUCT is False:
                 current_radio_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
                 current_radio_element.click()
-            time.sleep(1) # 等待动态加载
+            self.__page.wait_for_timeout(timeout=1000) # 等待动态加载
         except PlaywrightTimeoutError:
             self.__requires_TuringVerification()
 
@@ -473,7 +494,6 @@ class AutomaticEvaluate():
         try:
             element_to_click_1 = self.__page.wait_for_selector('li[data-tab="trigger"][data-anchor="#comment"]', timeout=2000)
             element_to_click_1.click()
-            self.__page.wait_for_timeout(1000)
         except PlaywrightTimeoutError:
             self.__requires_TuringVerification()
 
@@ -487,7 +507,7 @@ class AutomaticEvaluate():
                         behavior: 'smooth'
                     });
                 """)
-                self.__page.wait_for_timeout(2000)  # 等待内容加载
+                self.__page.wait_for_timeout(timeout=2000)  # 等待内容加载
                 # 获取新的页面高度后滚动到30%位置
                 new_height = self.__page.evaluate('document.documentElement.scrollHeight')
                 self.__page.evaluate(f"""
@@ -496,7 +516,7 @@ class AutomaticEvaluate():
                         behavior: 'smooth'
                     }});
                 """)
-                self.__page.wait_for_timeout(1000)
+                self.__page.wait_for_timeout(timeout=1000)
         except PlaywrightTimeoutError:
             LOG.debug("未检测到展示图片，继续执行")
             self.__requires_TuringVerification()
@@ -514,7 +534,7 @@ class AutomaticEvaluate():
 
         for page in range(1, 4):
             LOG.trace(f'Turn to page {page}')
-            self.__page.wait_for_timeout(4000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
+            self.__page.wait_for_timeout(timeout=4000) # QwQ适当停顿避免触发反爬验证, 同时等待资源加载完毕
             # 评价主体组件
             comment_item_elements = self.__page.locator('.comment-item').element_handles()
             for comment_item_element in comment_item_elements:
@@ -524,7 +544,7 @@ class AutomaticEvaluate():
                 for thumb_img_element in thumb_img_elements:
                     # LOG.debug(f'Visible: {thumb_img_element.is_visible()}')
                     thumb_img_element.click() # 模拟点击后会出现更大的图片预览组件
-                    self.__page.wait_for_timeout(200)
+                    self.__page.wait_for_timeout(timeout=200)
                     # 图片预览组件(大图)
                     pic_view_elements = comment_item_element.query_selector_all('xpath=//div[@class="pic-view J-pic-view"]/img')
                     if pic_view_elements: # 起始预览组件为非image组件会导致pic_view_elements为空
@@ -555,7 +575,7 @@ class AutomaticEvaluate():
         try:
             all_btn_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
             all_btn_element.click()
-            self.__page.wait_for_timeout(1000)
+            self.__page.wait_for_timeout(timeout=1000)
         except PlaywrightTimeoutError:
             LOG.critical("'全部评价'点击失败!")
             self.__requires_TuringVerification()
@@ -565,7 +585,7 @@ class AutomaticEvaluate():
             if self.CLOSE_SELECT_CURRENT_PRODUCT is False:
                 current_radio_element = self.__page.wait_for_selector('.all-btn', timeout=2000)
                 current_radio_element.click()
-            time.sleep(1) # 等待动态加载
+            self.__page.wait_for_timeout(timeout=1000) # 等待动态加载
         except PlaywrightTimeoutError:
             self.__requires_TuringVerification()
         
@@ -589,7 +609,7 @@ class AutomaticEvaluate():
             image_url_list = []
             image_items = item.query_selector_all('.jd-content-pc-media-list-item') # 一个评论内的全部图片元素，视频与图片都需要点击此元素打开预览元素。其子元素当出现视频时不可点击
             if image_items:
-                time.sleep(0.2) # 等待滚动完成；由于使用的 JS 滚动操作时异步的，不能单使用 playwright 判断元素是否稳定来确定滚动是否完成；仅为了视觉效果，不影响下面的内容获取
+                self.__page.wait_for_timeout(timeout=200) # 等待滚动完成；由于使用的 JS 滚动操作时异步的，不能单使用 playwright 判断元素是否稳定来确定滚动是否完成；仅为了视觉效果，不影响下面的内容获取
                 item.wait_for_element_state(state="stable", timeout=2000) # 有图片元素，需等待页面元素稳定 
                 for image_item in image_items:
                     image_item.click() # 点击后会出现更大的图片预览元素
@@ -624,7 +644,11 @@ class AutomaticEvaluate():
     
     def __automatic_evaluate(self, task: EvaluationTask):
         """自动评价操作，限单个评价页面"""
-        self.__page.goto(task.orderVoucher_url)
+        try:
+            self.__load_page(task.orderVoucher_url, timeout=30000) # 进入评价页面
+        except PlaywrightTimeoutError:
+            raise NetworkError(message=f"页面加载超时：{task.orderVoucher_url}")
+        
         # 商品评价文本
         try:
             text_input_element = self.__page.wait_for_selector('xpath=/html/body/div[4]/div/div/div[2]/div[1]/div[7]/div[2]/div[2]/div[2]/div[1]/textarea', timeout=3000)
@@ -673,13 +697,13 @@ class AutomaticEvaluate():
 
         LOG.success(f'单号{task.order_id}的订单评价页面填充完成。')
         # 提交评价
-        self.__page.wait_for_timeout(max(5, len(task.input_image) * 2.5) * 1000) # 等待图片上传完成
+        self.__page.wait_for_timeout(timeout=max(5, len(task.input_image) * 2.5) * 1000) # 等待图片上传完成
         try:
             btn_submit = self.__page.wait_for_selector('.btn-submit', timeout=2000)
             btn_submit.hover()
             if self.CLOSE_AUTO_COMMIT is False:
                 btn_submit.click()
-            self.__page.wait_for_timeout(5000) # 切换下一个评价任务的间隔
+            self.__page.wait_for_timeout(timeout=5000) # 切换下一个评价任务的间隔
             return True
         except Exception as err:
             LOG.error("未识别到提交按钮！")
@@ -710,11 +734,11 @@ class AutomaticEvaluate():
             if self.__page.wait_for_selector('.verifyBtn', timeout=1500):
                 match self.DEAL_TURING_VERIFCATION:
                     case 0:
-                        raise TuringVerificationRequiredError
+                        raise TuringVerificationRequiredError(message="当前设置--自动退出")
                     case 1:
                         self.__handle_TuringVerification()
                     case _ as e:
-                        LOG.error(f"DEAL_TURING_VERIFCATION 所选值 {e} 非法！")
+                        LOG.error(f"DEAL_TURING_VERIFCATION 参数所选值 {e} 非法！")
         except PlaywrightTimeoutError:
             pass
         return False
@@ -728,15 +752,19 @@ class AutomaticEvaluate():
         """
         turing_url = self.__page.url
         LOG.debug(f"{turing_url}")
-        LOG.info("等待人机验证......")
+        LOG.info("等待手动人机验证......")
         while True:
             # 检测是否通过验证：1.是否还在验证页面 2.根据验证页面的 url 参数 returnurl 可以获取测试成功后的跳转页面
             # 但是不同类型的的商品最终重定向的页面 url 与 returnurl 不完全匹配，如京东国际等
             try:
                 # 持续检测页面 url，一经变动立刻抛出异常
                 self.__page.wait_for_url(turing_url, timeout=0.1) # 为了 url 检测的灵敏度更高，超时时长应设置的尽可能小
-                time.sleep(0.2) # url 保持在测试时页面会快速的循环，考虑到性能方面建议阻塞
+                self.__page.wait_for_timeout(timeout=200) # url 保持在测试时页面会快速的循环，考虑到性能方面建议阻塞
             except PlaywrightTimeoutError:
                 # 暂认为，离开验证页面即为验证通过
                 LOG.success("人机验证已通过")
                 return True
+    
+    @sync_retry(max_retries=3, retry_delay=2, exceptions=(PlaywrightTimeoutError,))
+    def __load_page(self, url: str, timeout: float):
+        return self.__page.goto(url, timeout=timeout)

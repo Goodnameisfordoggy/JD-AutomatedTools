@@ -54,7 +54,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.9.17')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.9.18')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
 	parser.add_argument('-L', '--log-level', type=str, default="INFO", dest="log_level", help="DEBUG < INFO < WARNING < ERROR < CRITICAL")
 	
@@ -78,6 +78,7 @@ if __name__ == '__main__':
     
 	from src.AutomaticEvaluate import AutomaticEvaluate
 	QwQ = AutomaticEvaluate()
+	QwQ.LOG_LEVEL = args.log_level
 	QwQ.MIN_EXISTING_PRODUCT_DESCRIPTIONS = args.min_descriptions
 	QwQ.MIN_EXISTING_PRODUCT_IMAGES = args.min_images
 	QwQ.MIN_DESCRIPTION_CHAR_COUNT = args.min_charcount

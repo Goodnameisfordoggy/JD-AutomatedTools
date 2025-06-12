@@ -1,7 +1,7 @@
 '''
 Author: HDJ
 StartDate: please fill in
-LastEditTime: 2025-05-31 22:49:51
+LastEditTime: 2025-06-12 22:31:34
 Description: 项目通用方法
 
 				*		写字楼里写字间，写字间里程序员；
@@ -14,8 +14,15 @@ Description: 项目通用方法
 				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
+import time
+import random
+from functools import wraps
 from typing import Optional, Union, List, Dict
 from urllib.parse import urlparse, parse_qs, unquote
+
+
+from .logger import get_logger
+LOG = get_logger()
 
 def extract_url_parameter(
     url: str,
@@ -57,3 +64,33 @@ def extract_url_parameter(
     except Exception as e:
         # 发生异常时返回默认值
         return default
+
+def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Exception,)):
+    """
+    重试装饰器
+    - max_retries: 最大重试次数
+    - retry_delay: 初始延迟时间（秒）
+    - backoff_factor: 退避系数（指数退避）
+    - exceptions: 需要重试的异常类型元组
+    """
+    def decorator(func):    # 装饰器工厂函数，接收外部参数（如重试次数）
+        @wraps(func)    # 保留原函数元信息（__name__、__doc__）
+        def wrapper(*args, **kwargs): # 包装函数，实际执行时替换原函数
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    retries += 1
+                    if retries >= max_retries:
+                        raise   # 保留完整的异常跟踪栈
+                    
+                    # 计算等待时间（指数退避 + 随机抖动）
+                    wait_time = retry_delay * (backoff_factor ** (retries - 1))
+                    jitter = random.uniform(0, wait_time * 0.5)  # 随机抖动
+                    wait_time += jitter
+                    
+                    LOG.warning(f"Func {func.__name__} failed ({e})，{wait_time:.1f}秒后重试 ({retries}/{max_retries})......")
+                    time.sleep(wait_time)
+        return wrapper
+    return decorator
