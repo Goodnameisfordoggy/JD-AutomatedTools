@@ -1,18 +1,15 @@
 '''
-Author: HDJ
-StartDate: please fill in
-LastEditTime: 2025-06-13 00:18:31
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\AutomaticEvaluate.py
-Description: 
+Author: HDJ @https://github.com/Goodnameisfordoggy
+LastEditTime: 2025-07-10 22:40:06
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\pc\src\AutomaticEvaluate.py
+Description: @VSCode
 
-				*		写字楼里写字间，写字间里程序员；
-				*		程序人员写程序，又拿程序换酒钱。
-				*		酒醒只在网上坐，酒醉还来网下眠；
-				*		酒醉酒醒日复日，网上网下年复年。
-				*		但愿老死电脑间，不愿鞠躬老板前；
-				*		奔驰宝马贵者趣，公交自行程序员。
-				*		别人笑我忒疯癫，我笑自己命太贱；
-				*		不见满街漂亮妹，哪个归得程序员？    
+				|	早岁已知世事艰，仍许飞鸿荡云间；
+				|	曾恋嘉肴香绕案，敲键弛张荡波澜。
+				|					 
+				|	功败未成身无畏，坚持未果心不悔；
+				|	皮囊终作一抔土，独留屎山贯寰宇。
+
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import os
@@ -26,15 +23,14 @@ import requests
 from PIL import Image, ImageFilter
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, Locator, ElementHandle, Page 
 
-from .data import EvaluationTask, TuringVerificationRequiredError, NetworkError, DEFAULT_COMMENT_TEXT_LIST
-from .utils import *
-from .logger import get_logger
-from .api_service import *
-from .logInWithCookies import logInWithCookies
+from pc.src import TEMP_IMAGE_DIR
+from pc.src.data import EvaluationTask, TuringVerificationRequiredError, NetworkError, DEFAULT_COMMENT_TEXT_LIST
+from pc.src.logger import get_logger
+from pc.src.api_service import *
+from pc.src.logInWithCookies import logInWithCookies
+from common.utils import *
 
 LOG = get_logger()
-WORKING_DIRECTORY_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMAGE_DIRECTORY_PATH = os.path.join(WORKING_DIRECTORY_PATH, 'temp-img')
 
 
 class AutomaticEvaluate():
@@ -60,7 +56,7 @@ class AutomaticEvaluate():
         """主循环"""
         try:
             self.__page, _ = logInWithCookies()
-            self.__init_image_directory(IMAGE_DIRECTORY_PATH)
+            self.__init_image_directory(TEMP_IMAGE_DIR)
             
             for task in self.__generate_task():
                 LOG.debug(f"任务已生成：{task}")
@@ -463,7 +459,7 @@ class AutomaticEvaluate():
         order_hash_hex = hash_object.hexdigest()  # 获取十六进制格式的哈希值
         try:
             for index, image_url in enumerate(image_url_group, start=1):
-                image_file_path = os.path.join(IMAGE_DIRECTORY_PATH, f'{order_hash_hex[-12:]}_{index}.jpg')
+                image_file_path = os.path.join(TEMP_IMAGE_DIR, f'{order_hash_hex[-12:]}_{index}.jpg')
                 response = requests.get(image_url)
                 if response.status_code == 200:
                     # 保存图片到本地文件

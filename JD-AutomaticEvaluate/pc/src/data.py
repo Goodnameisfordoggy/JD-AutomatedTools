@@ -1,18 +1,15 @@
 '''
-Author: HDJ
-StartDate: please fill in
-LastEditTime: 2025-06-10 20:16:59
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\data.py
-Description: 
+Author: HDJ @https://github.com/Goodnameisfordoggy
+LastEditTime: 2025-07-10 22:42:04
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\pc\src\data.py
+Description: @VSCode
 
-				*		写字楼里写字间，写字间里程序员；
-				*		程序人员写程序，又拿程序换酒钱。
-				*		酒醒只在网上坐，酒醉还来网下眠；
-				*		酒醉酒醒日复日，网上网下年复年。
-				*		但愿老死电脑间，不愿鞠躬老板前；
-				*		奔驰宝马贵者趣，公交自行程序员。
-				*		别人笑我忒疯癫，我笑自己命太贱；
-				*		不见满街漂亮妹，哪个归得程序员？    
+				|	早岁已知世事艰，仍许飞鸿荡云间；
+				|	曾恋嘉肴香绕案，敲键弛张荡波澜。
+				|					 
+				|	功败未成身无畏，坚持未果心不悔；
+				|	皮囊终作一抔土，独留屎山贯寰宇。
+
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import copy

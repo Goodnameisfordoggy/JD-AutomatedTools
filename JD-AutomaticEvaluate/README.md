@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-2.9.18
+version: JD-AutomaticEvaluate-2.9.19
 
 ## 简介
 自动化评价工具，给予五星好评加图文。
@@ -33,7 +33,7 @@ version: JD-AutomaticEvaluate-2.9.18
 # 所有参数已设置好默认值，如需改动请往下阅读
 # 使用默认参数运行
 # 运行 py 文件
-python JD-AutomaticEvaluate.py
+python JDpc-AutomaticEvaluate.py
 # 运行 exe 文件
 JD-AutomaticEvaluate.exe
 ```
@@ -100,7 +100,7 @@ JD-AutomaticEvaluate -g X -m grok-beta
 - 打包命令(chromium-xxxx为浏览器版本号)，浏览器路径暂定使用playwright依赖自带的chrome浏览器。
 ```
 # 基础打包命令
-pyinstaller --onefile --add-data="C:\Users\your_username\AppData\Local\ms-playwright\chromium-1134\chrome-win;chromium" JD-AutomaticEvaluate.py
+pyinstaller --onefile --add-data="C:\Users\your_username\AppData\Local\ms-playwright\chromium-1169\chrome-win;chromium" JDpc-AutomaticEvaluate.py
 ```
 打包完成就可以运行了Qwq
 
@@ -126,6 +126,7 @@ JD-AutomaticEvaluate -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-2.9.19: 调整了项目结构
 - JD-AutomaticEvaluate-2.9.18: 优化了页面加载
 - JD-AutomaticEvaluate-2.9.17: 修复异常；
 - JD-AutomaticEvaluate-2.9.16: 修复异常；

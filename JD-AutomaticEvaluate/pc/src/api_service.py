@@ -1,18 +1,15 @@
 '''
-Author: HDJ
-StartDate: please fill in
-LastEditTime: 2025-05-15 22:06:11
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\src\api_service.py
-Description: 
+Author: HDJ @https://github.com/Goodnameisfordoggy
+LastEditTime: 2025-07-10 22:39:28
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\pc\src\api_service.py
+Description: @VSCode
 
-				*		写字楼里写字间，写字间里程序员；
-				*		程序人员写程序，又拿程序换酒钱。
-				*		酒醒只在网上坐，酒醉还来网下眠；
-				*		酒醉酒醒日复日，网上网下年复年。
-				*		但愿老死电脑间，不愿鞠躬老板前；
-				*		奔驰宝马贵者趣，公交自行程序员。
-				*		别人笑我忒疯癫，我笑自己命太贱；
-				*		不见满街漂亮妹，哪个归得程序员？    
+				|	早岁已知世事艰，仍许飞鸿荡云间；
+				|	曾恋嘉肴香绕案，敲键弛张荡波澜。
+				|					 
+				|	功败未成身无畏，坚持未果心不悔；
+				|	皮囊终作一抔土，独留屎山贯寰宇。
+
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import os
@@ -35,7 +32,8 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlparse, urlencode
 from wsgiref.handlers import format_date_time
 
-from .logger import get_logger
+from pc.src import ENV_PATH
+from pc.src.logger import get_logger
 # 日志配置
 LOG = get_logger()
 
@@ -49,16 +47,15 @@ SparkAI_WS_API_Secret=""
 SparkAI_WS_API_KEY=""
 """
 
-env_path = os.path.join(os.getcwd(), ".env")
-if os.path.exists(env_path):
-    load_dotenv(dotenv_path=env_path)
-    LOG.success(f"从 {env_path} 文件加载了环境变量")
+if os.path.exists(ENV_PATH):
+    load_dotenv(dotenv_path=ENV_PATH)
+    LOG.success(f"从 {ENV_PATH} 文件加载了环境变量")
 else:
-    LOG.warning(f"{env_path} 文件缺失，将为您新建！")
+    LOG.warning(f"{ENV_PATH} 文件缺失，将为您新建！")
     try:
-        with open(env_path, 'w', encoding='utf-8') as file:
+        with open(ENV_PATH, 'w', encoding='utf-8') as file:
             file.write(ENV_KEYS)
-            LOG.success(f"文件 {env_path} 创建成功，请重新运行此工具。")
+            LOG.success(f"文件 {ENV_PATH} 创建成功，请重新运行此工具。")
     except Exception as e:
         LOG.error(f"创建文件失败: {e}")
     input("按回车退出...")

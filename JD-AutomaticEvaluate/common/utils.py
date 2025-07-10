@@ -1,17 +1,15 @@
 '''
-Author: HDJ
-StartDate: please fill in
-LastEditTime: 2025-06-12 22:31:34
-Description: 项目通用方法
+Author: HDJ @https://github.com/Goodnameisfordoggy
+LastEditTime: 2025-07-10 22:36:32
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\common\utils.py
+Description: @VSCode 
+项目通用方法
+				|	早岁已知世事艰，仍许飞鸿荡云间；
+				|	曾恋嘉肴香绕案，敲键弛张荡波澜。
+				|					 
+				|	功败未成身无畏，坚持未果心不悔；
+				|	皮囊终作一抔土，独留屎山贯寰宇。
 
-				*		写字楼里写字间，写字间里程序员；
-				*		程序人员写程序，又拿程序换酒钱。
-				*		酒醒只在网上坐，酒醉还来网下眠；
-				*		酒醉酒醒日复日，网上网下年复年。
-				*		但愿老死电脑间，不愿鞠躬老板前；
-				*		奔驰宝马贵者趣，公交自行程序员。
-				*		别人笑我忒疯癫，我笑自己命太贱；
-				*		不见满街漂亮妹，哪个归得程序员？    
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import time
@@ -20,9 +18,6 @@ from functools import wraps
 from typing import Optional, Union, List, Dict
 from urllib.parse import urlparse, parse_qs, unquote
 
-
-from .logger import get_logger
-LOG = get_logger()
 
 def extract_url_parameter(
     url: str,
@@ -90,7 +85,7 @@ def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Excep
                     jitter = random.uniform(0, wait_time * 0.5)  # 随机抖动
                     wait_time += jitter
                     
-                    LOG.warning(f"Func {func.__name__} failed ({e})，{wait_time:.1f}秒后重试 ({retries}/{max_retries})......")
+                    print(f"Func {func.__name__} failed ({e})，{wait_time:.1f}秒后重试 ({retries}/{max_retries})......")
                     time.sleep(wait_time)
         return wrapper
     return decorator

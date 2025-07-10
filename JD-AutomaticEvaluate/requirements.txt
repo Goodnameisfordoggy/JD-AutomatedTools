@@ -1,6 +1,6 @@
 loguru==0.7.2
 pillow==10.4.0
-playwright==1.47.0
+playwright==1.52.0
 python-dotenv==1.0.1
 requests == 2.32.3
 websocket-client==1.8.0

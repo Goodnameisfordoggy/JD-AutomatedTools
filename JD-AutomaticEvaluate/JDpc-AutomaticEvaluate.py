@@ -1,18 +1,15 @@
 '''
-Author: HDJ
-StartDate: please fill in
-LastEditTime: 2025-06-04 02:30:35
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD-AutomaticEvaluate.py
-Description: 
+Author: HDJ @https://github.com/Goodnameisfordoggy
+LastEditTime: 2025-07-10 22:43:13
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\JD_pc-AutomaticEvaluate.py
+Description: @VSCode
 
-				*		写字楼里写字间，写字间里程序员；
-				*		程序人员写程序，又拿程序换酒钱。
-				*		酒醒只在网上坐，酒醉还来网下眠；
-				*		酒醉酒醒日复日，网上网下年复年。
-				*		但愿老死电脑间，不愿鞠躬老板前；
-				*		奔驰宝马贵者趣，公交自行程序员。
-				*		别人笑我忒疯癫，我笑自己命太贱；
-				*		不见满街漂亮妹，哪个归得程序员？    
+				|	早岁已知世事艰，仍许飞鸿荡云间；
+				|	曾恋嘉肴香绕案，敲键弛张荡波澜。
+				|					 
+				|	功败未成身无畏，坚持未果心不悔；
+				|	皮囊终作一抔土，独留屎山贯寰宇。
+
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved. 
 '''
 import argparse
@@ -54,7 +51,7 @@ if __name__ == '__main__':
         description="https://github.com/Goodnameisfordoggy/JD-AutomatedTools/tree/main/JD-AutomaticEvaluate", 
         prog="JD-AutomaticEvaluate")
     
-	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.9.18')
+	parser.add_argument('-v', '--version', action='version', version='%(prog)s version: 2.9.19')
 	parser.add_argument('-T', '--supported-table', action=ShowSupportedTableAction, help="show supported AI groups and models")
 	parser.add_argument('-L', '--log-level', type=str, default="INFO", dest="log_level", help="DEBUG < INFO < WARNING < ERROR < CRITICAL")
 	
@@ -73,10 +70,10 @@ if __name__ == '__main__':
 	ai_settings.add_argument('-m', '--ai-model', type=str, default=None, dest="ai_model", help="AI模型的名称 | 使用AI模型生成评论文案")
 	args = parser.parse_args() # 解析命令行参数
 
-	from src import logger
+	from pc.src import logger
 	logger.init(args.log_level)
     
-	from src.AutomaticEvaluate import AutomaticEvaluate
+	from pc.src.AutomaticEvaluate import AutomaticEvaluate
 	QwQ = AutomaticEvaluate()
 	QwQ.LOG_LEVEL = args.log_level
 	QwQ.MIN_EXISTING_PRODUCT_DESCRIPTIONS = args.min_descriptions
