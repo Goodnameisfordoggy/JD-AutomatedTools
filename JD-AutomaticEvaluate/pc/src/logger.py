@@ -1,6 +1,6 @@
 '''
 Author: HDJ @https://github.com/Goodnameisfordoggy
-LastEditTime: 2025-07-10 22:42:20
+LastEditTime: 2025-07-12 23:47:22
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\pc\src\logger.py
 Description: @VSCode
 
@@ -20,7 +20,7 @@ from pc.src import LOGS_DIR
 
 logger.remove()
 
-def init(level="INFO"):
+def init_logger(level="INFO"):
 	# 日志记录到文件	
 	logger.add(
 		os.path.join(LOGS_DIR, "log_{time:YYYY-MM-DD}.log"), 

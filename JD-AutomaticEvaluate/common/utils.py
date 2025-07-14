@@ -1,7 +1,7 @@
 '''
 Author: HDJ @https://github.com/Goodnameisfordoggy
 LastEditTime: 2025-07-10 22:36:32
-FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\common\utils.py
+FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\common\\utils.py
 Description: @VSCode 
 项目通用方法
 				|	早岁已知世事艰，仍许飞鸿荡云间；
@@ -60,6 +60,7 @@ def extract_url_parameter(
         # 发生异常时返回默认值
         return default
 
+
 def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Exception,)):
     """
     重试装饰器
@@ -89,3 +90,24 @@ def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Excep
                     time.sleep(wait_time)
         return wrapper
     return decorator
+
+
+def progress_bar(progress, total, bar_length=30):
+    """
+    显示进度条
+
+    效果：[█████████████████████████████████-----------------] 66.00% (66/100)
+    Args:
+        progress: 当前进度值
+        total: 总进度值
+        bar_length: 进度条长度
+    """
+    # 计算完成百分比
+    percent = progress / total
+    # 计算进度条中填充的方块数量
+    filled_length = int(bar_length * percent)
+    # 构建进度条字符串
+    bar = '█' * filled_length + '-' * (bar_length - filled_length)
+    # 显示进度条、百分比和当前进度
+    print(f'\r[{bar}] {percent:.2%} ({progress}/{total})', end='')
+    print() # \r 不生效，强制换行来显示进度条

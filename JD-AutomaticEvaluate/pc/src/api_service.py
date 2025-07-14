@@ -1,6 +1,6 @@
 '''
 Author: HDJ @https://github.com/Goodnameisfordoggy
-LastEditTime: 2025-07-10 22:39:28
+LastEditTime: 2025-07-12 23:39:23
 FilePath: \pythond:\LocalUsers\Goodnameisfordoggy-Gitee\JD-Automated-Tools\JD-AutomaticEvaluate\pc\src\api_service.py
 Description: @VSCode
 
@@ -47,21 +47,23 @@ SparkAI_WS_API_Secret=""
 SparkAI_WS_API_KEY=""
 """
 
-if os.path.exists(ENV_PATH):
-    load_dotenv(dotenv_path=ENV_PATH)
-    LOG.success(f"从 {ENV_PATH} 文件加载了环境变量")
-else:
-    LOG.warning(f"{ENV_PATH} 文件缺失，将为您新建！")
-    try:
-        with open(ENV_PATH, 'w', encoding='utf-8') as file:
-            file.write(ENV_KEYS)
-            LOG.success(f"文件 {ENV_PATH} 创建成功，请重新运行此工具。")
-    except Exception as e:
-        LOG.error(f"创建文件失败: {e}")
-    input("按回车退出...")
-    sys.exit()
-    
-load_dotenv() # 加载换境变量，如果配置了 .env 文件
+def init_env():
+    """加载/初始化 .env 文件"""
+    if os.path.exists(ENV_PATH):
+        load_dotenv(dotenv_path=ENV_PATH)
+        LOG.success(f"从 {ENV_PATH} 文件加载了环境变量")
+    else:
+        LOG.warning(f"{ENV_PATH} 文件缺失，将为您新建！")
+        try:
+            with open(ENV_PATH, 'w', encoding='utf-8') as file:
+                file.write(ENV_KEYS)
+                LOG.success(f"文件 {ENV_PATH} 创建成功，请重新运行此工具。")
+        except Exception as e:
+            LOG.error(f"创建文件失败: {e}")
+        input("按回车退出...")
+        sys.exit()
+        
+    load_dotenv() # 加载换境变量，如果配置了 .env 文件
 
 
 class Http_XAI(object):
