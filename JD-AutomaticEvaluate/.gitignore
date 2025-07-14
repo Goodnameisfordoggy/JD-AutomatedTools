@@ -1,7 +1,8 @@
 # project
 .vscode/
 ignore/
-temp-img/
+temp/
+resources/
 *[0-9].*
 commit.bat
 cookies.json
