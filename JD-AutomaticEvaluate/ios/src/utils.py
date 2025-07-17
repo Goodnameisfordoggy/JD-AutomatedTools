@@ -13,6 +13,7 @@ Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 """
 import time
 import random
+import asyncio
 from functools import wraps
 from typing import Optional, Union, List, Dict
 from urllib.parse import urlparse, parse_qs, unquote
@@ -92,6 +93,16 @@ def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Excep
         return wrapper
 
     return decorator
+
+
+def sync_retry_class(**retry_kwargs):
+    """同步类装饰器 - 将重试逻辑应用到类中的所有同步方法"""
+    def wrapper(cls):
+        for attr_name, attr_value in cls.__dict__.items():
+            if callable(attr_value) and not asyncio.iscoroutinefunction(attr_value):
+                setattr(cls, attr_name, sync_retry(**retry_kwargs)(attr_value))
+        return cls
+    return wrapper
 
 
 def progress_bar(progress, total, bar_length=30):

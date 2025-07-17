@@ -12,7 +12,15 @@ Description:
 Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 """
 from .src.automaticEvaluate import JDAppAutomaticEvaluate
+from .src.logger import get_logger, init_logger
+from .test import test_auto_func
+LOG = init_logger("DEBUG")
 
 JDAppAutomaticEvaluate().run()
+
+
+
+# LOG.debug(f"{test_auto_func.test_scroll_to_visible()}")
+
 
 print("运行结束！！！")
