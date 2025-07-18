@@ -13,14 +13,14 @@ Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 """
 from .src.automaticEvaluate import JDAppAutomaticEvaluate
 from .src.logger import get_logger, init_logger
-from .test import test_auto_func
+from .src.test import test_auto_func
 LOG = init_logger("DEBUG")
 
-JDAppAutomaticEvaluate().run()
+# JDAppAutomaticEvaluate().run()
+JDAppAutomaticEvaluate().get_text()
 
-
-
-# LOG.debug(f"{test_auto_func.test_scroll_to_visible()}")
+# test_auto_func.test_auto_fill()
+# test_auto_func.test_scroll_to_visible()
 
 
 print("运行结束！！！")
