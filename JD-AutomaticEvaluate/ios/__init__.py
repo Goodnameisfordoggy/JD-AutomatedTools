@@ -16,8 +16,8 @@ from .src.logger import get_logger, init_logger
 from .src.test import test_auto_func
 LOG = init_logger("DEBUG")
 
-# JDAppAutomaticEvaluate().run()
-JDAppAutomaticEvaluate().get_text()
+JDAppAutomaticEvaluate().run()
+# JDAppAutomaticEvaluate().get_text()
 
 # test_auto_func.test_auto_fill()
 # test_auto_func.test_scroll_to_visible()

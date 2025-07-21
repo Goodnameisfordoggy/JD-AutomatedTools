@@ -48,6 +48,7 @@ class WaitForSelector(object):
         # APP>>我的>>评价中心>>待评价>>订单评价
         "text_input": lambda: Selector().name("呼起键盘", 1).parent(1).parent(1).child(2).find(),
         "image_input": lambda: Selector().name("添加视频/图").find(),
+        "evaluation_commit_btn": lambda : Selector().name("发布").type("XCUIElementTypeButton").find(),
         # APP>>我的>>评价中心>>待评价>>订单评价>>系统相册预览
         "select_picture": lambda: Selector().name("选照片").find(),
         "picture_view_first_img": lambda: Selector().xpath("//XCUIElementTypeScrollView//XCUIElementTypeCollectionView//XCUIElementTypeCell[1]").find(),
