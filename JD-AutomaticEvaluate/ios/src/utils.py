@@ -87,7 +87,7 @@ def sync_retry(max_retries=3, retry_delay=2, backoff_factor=2, exceptions=(Excep
                     jitter = random.uniform(0, wait_time * 0.5)  # 随机抖动
                     wait_time += jitter
 
-                    print(f"Func {func.__name__} failed ({e})，{wait_time:.1f}秒后重试 ({retries}/{max_retries})......")
+                    print(f"Func '{func.__name__}' failed ({e})，{wait_time:.1f}秒后重试 ({retries}/{max_retries})......")
                     time.sleep(wait_time)
 
         return wrapper

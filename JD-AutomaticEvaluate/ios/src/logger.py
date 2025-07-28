@@ -27,10 +27,10 @@ def init_logger(level="INFO"):
 	# 	)
 
 	# 日志输出到标准输出，根据不同的日志等级切换日志输出格式
-	if level == "DEBUG":
-		log_format = "<level>{level: <8}</level> | <cyan>{file.path}:{line}</cyan> | <level>{message}</level>"
+	if level == "DEBUG" or "TRACE":
+		log_format = "<level>{level.icon}</level> | <cyan>{file}:{function}:{line}</cyan> | <level>{message}</level>"
 	else:
-		log_format = "<level>{level: <8}</level> | <level>{message}</level>"
+		log_format = "<level>{level.icon}</level> | <level>{message}</level>"
 
 	logger.add(
 		sink=sys.stdout,

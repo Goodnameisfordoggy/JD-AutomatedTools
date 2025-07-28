@@ -14,7 +14,9 @@ Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 from .src.automaticEvaluate import JDAppAutomaticEvaluate
 from .src.logger import get_logger, init_logger
 from .src.test import test_auto_func
+from .src.selector import WaitForSelector
 LOG = init_logger("DEBUG")
+
 
 JDAppAutomaticEvaluate().run()
 # JDAppAutomaticEvaluate().get_text()
