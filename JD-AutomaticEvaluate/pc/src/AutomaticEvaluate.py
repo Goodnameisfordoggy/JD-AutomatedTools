@@ -36,16 +36,16 @@ LOG = get_logger()
 
 class AutomaticEvaluate(object):
 
-	MIN_EXISTING_PRODUCT_DESCRIPTIONS: int = 15  # 商品已有文案的最少数量 | 真实评论文案多余这个数脚本才会正常获取已有文案。
-	MIN_EXISTING_PRODUCT_IMAGES: int = 15        # 商品已有图片的最少数量 | 真实评论图片多余这个数脚本才会正常获取已有图片。
-	MIN_DESCRIPTION_CHAR_COUNT: int = 60         # 评论文案的最少字数 | 在已有评论中随机筛选文案的限制条件，JD:优质评价要求60字以上。
-	CLOSE_SELECT_CURRENT_PRODUCT: bool = False      # 关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低
+	MIN_EXISTING_PRODUCT_DESCRIPTIONS: int = 15  	# 商品已有文案的最少数量 | 真实评论文案多余这个数脚本才会正常获取已有文案。
+	MIN_EXISTING_PRODUCT_IMAGES: int = 15        	# 商品已有图片的最少数量 | 真实评论图片多余这个数脚本才会正常获取已有图片。
+	MIN_DESCRIPTION_CHAR_COUNT: int = 60         	# 评论文案的最少字数 | 在已有评论中随机筛选文案的限制条件，JD:优质评价要求60字以上。
+	CLOSE_SELECT_CURRENT_PRODUCT: bool = False   	# 关闭仅查看当前商品 | 启用此设置，在获取已有评论文案与图片时将查看商品所有商品评论信息，关闭可能会导致评论准确性降低
 	CLOSE_AUTO_COMMIT: bool = False                 # 关闭自动提交 | 启用此设置，在自动填充完评价页面后将不会自动点击提交按钮
-	DEAL_TURING_VERIFICATION: int = 0           # 图灵测试的处理 | 0触发测试直接退出，1阻塞等待手动处理
+	DEAL_TURING_VERIFICATION: int = 0           	# 图灵测试的处理 | 0触发测试直接退出，1阻塞等待手动处理
 	GUARANTEE_COMMIT: bool = False                  # 保底评价 | 在获取不到已有信息时使用文本默认评价并提交
-	CURRENT_AI_GROUP: str = ""                   # AI模型的组别名称 | 使用AI模型生成评论文案
-	CURRENT_AI_MODEL: str = ""                   # AI模型的名称 | 使用AI模型生成评论文案
-	LOG_LEVEL: str = "INFO"                          # 日志记录等级
+	CURRENT_AI_GROUP: str = ""                   	# AI模型的组别名称 | 使用AI模型生成评论文案
+	CURRENT_AI_MODEL: str = ""                   	# AI模型的名称 | 使用AI模型生成评论文案
+	LOG_LEVEL: str = "INFO"                         # 日志记录等级
 
 	def __init__(self) -> None:
 		self.__page, browser = None, None
@@ -79,10 +79,12 @@ class AutomaticEvaluate(object):
 		ai_settings.add_argument('-m', '--ai-model', type=str, default=None, dest="ai_model", help="AI模型的名称 | 使用AI模型生成评论文案")
 		args = parser.parse_args()  # 解析命令行参数
 
-		# 直接使用dest参数的全大写形式更新类属性
+		# 直接使用 dest 参数的全大写形式更新类属性
 		for key, value in vars(args).items():
 			if value is not None and hasattr(cls, key.upper()):
 				setattr(cls, key.upper(), value)
+			elif not hasattr(cls, key.upper()):
+				print(f"未知参数错误：{key}")
 		return cls
 
 	def exec_(self) -> bool | None:
@@ -767,13 +769,13 @@ class AutomaticEvaluate(object):
 		try:
 			# 一般来说，进入测试页面时 page 还在等待其他元素，故 timeout 不宜过大，进而确保整体性能。
 			if self.__page.wait_for_selector('.verifyBtn', timeout=1500):
-				match self.DEAL_TURING_VERIFCATION:
+				match self.DEAL_TURING_VERIFICATION:
 					case 0:
 						raise TuringVerificationRequiredError(message="当前设置--自动退出")
 					case 1:
 						self.__handle_TuringVerification()
 					case _ as e:
-						LOG.error(f"DEAL_TURING_VERIFCATION 参数所选值 {e} 非法！")
+						LOG.error(f"DEAL_TURING_VERIFICATION 参数所选值 {e} 非法！")
 		except PlaywrightTimeoutError:
 			pass
 		return False

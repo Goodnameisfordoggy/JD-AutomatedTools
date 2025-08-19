@@ -15,5 +15,5 @@ Copyright (c) 2024-2025 by HDJ, All Rights Reserved.
 if __name__ == '__main__':
 	from pc.src.AutomaticEvaluate import AutomaticEvaluate
 	AutomaticEvaluate.parse_args()
-	import pc.src.authenticate
+	# import pc.src.authenticate
 	QwQ = AutomaticEvaluate().exec_()
