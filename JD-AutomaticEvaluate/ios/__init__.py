@@ -17,12 +17,8 @@ from .src.test import test_auto_func
 from .src.selector import WaitForSelector
 LOG = init_logger("DEBUG")
 
-
 JDAppAutomaticEvaluate().run()
-# JDAppAutomaticEvaluate().get_text()
-
-# test_auto_func.test_auto_fill()
-# test_auto_func.test_scroll_to_visible()
+# JDAppAutomaticEvaluate().auto_test()
 
 
 print("运行结束！！！")

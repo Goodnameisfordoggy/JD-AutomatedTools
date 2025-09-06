@@ -33,7 +33,7 @@ class WaitForSelector(object):
     ```python
     """
 
-    # 以下标注均为页面
+    # 以下标注均为页面，以最终到达页面为准
     # JD APP
     jd_main_body = lambda *args: Selector().name("京东").find()
     self_page = lambda *args: Selector().name("我的").type("XCUIElementTypeButton").find()
@@ -55,6 +55,11 @@ class WaitForSelector(object):
     evaluation_inner_text = lambda *args, **kwargs: Selector().xpath(f"//XCUIElementTypeTable//XCUIElementTypeCell[{kwargs.get('cell_index')}]//XCUIElementTypeButton[1]").find()
     evaluation_inner_images = lambda *args, **kwargs: Selector().xpath(f"//XCUIElementTypeTable//XCUIElementTypeCell[{kwargs.get('cell_index')}]//XCUIElementTypeOther[1]//XCUIElementTypeImage").find_all()
     reply_to_evaluation = lambda *args, **kwargs: Selector().xpath(f"//XCUIElementTypeTable//XCUIElementTypeCell[{kwargs.get('cell_index')}]//XCUIElementTypeButton[contains(@name, '回复')]").find_all()
+    image_and_video_tab = lambda *args: Selector().name("图/视频", 1).find()
+    image_set_tab = lambda *args: Selector().name("图集").find()
+    # APP>>我的>>评价中心>>待评价>>商品详情>>买家评价>>晒图相册
+    shareorder_video_mute_btn = lambda *args: Selector().name("shareorder video mute",1).find()
+    image_progress_bar = lambda *args: Selector().name("/",1).find()
     # APP>>我的>>评价中心>>待评价>>商品详情>>买家评价>>款式选择
     product_name_label = lambda *args: Selector().name("查看当前商品").parent(1).child(2).find()
     selected_product_style_label = lambda *args:Selector().name("查看当前商品").parent(1).child(4).find()
@@ -66,8 +71,18 @@ class WaitForSelector(object):
     full_evaluation_inner_text = lambda *args, **kwargs: Selector().xpath(f"//XCUIElementTypeTable//XCUIElementTypeCell[1]//XCUIElementTypeStaticText[contains(@label, '{kwargs.get('fragment')}')]").find()
     # APP>>我的>>评价中心>>待评价>>订单评价
     evaluation_text_input = lambda *args: Selector().type("XCUIElementTypeTextView").find()
+    evaluation_text_inputs = lambda *args: Selector().type("XCUIElementTypeTextView").find_all()
     evaluation_image_input = lambda *args: Selector().name("添加视频/图").find()
-    evaluation_commit_btn = lambda *args: Selector().name("发布").type("XCUIElementTypeButton").find()
+    evaluation_image_inputs = lambda *args: Selector().name("添加视频/图").find_all()
+    express_evaluation_commit_btn = lambda *args: Selector().name("发布").type("XCUIElementTypeButton").find()
+    takeaway_evaluation_commit_btn = lambda *args: Selector().name("提交").type("XCUIElementTypeButton").find()
+    takeaway_order_sign = lambda *args: Selector().name("骑手",1).find()
+    exit_evaluation = lambda *args: Selector().name("返回").find()
+    confirm_exit_evaluation = lambda *args: Selector().name("退出评价").type("XCUIElementTypeButton").find()
+    product_evaluate_labels = lambda *args: Selector().name("商品评价").find_all()
+    first_star = lambda *args: Selector().name("已选中 1星").find()
+    first_stars = lambda *args: Selector().name("已选中 1星").find_all()
+    fifth_star = lambda *args: Selector().name("已选中 5星").find()
     # APP>>我的>>评价中心>>待评价>>订单评价>>系统相册预览
     select_picture = lambda *args: Selector().name("选照片").find()
     picture_view_first_img = lambda *args: Selector().xpath("//XCUIElementTypeScrollView//XCUIElementTypeCollectionView//XCUIElementTypeCell[1]").find()

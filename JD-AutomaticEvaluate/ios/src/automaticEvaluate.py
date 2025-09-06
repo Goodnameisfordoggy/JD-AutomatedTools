@@ -16,11 +16,13 @@ import sys
 import time
 import random
 import hashlib
+from unittest import case
+
 from PIL import Image
 from ascript.ios import action, system, screen, media
 from ascript.ios.system import R, device
 from ascript.ios.node import Selector, Element
-from .data import EvaluationTask, ElementNotFoundError
+from .data import *
 from .utils import sync_retry, progress_bar
 from .selector import WaitForSelector
 from .logger import get_logger
@@ -49,16 +51,29 @@ class JDAppAutomaticEvaluate(object):
             LOG.debug(f"{msg}")
         time.sleep(1)  # 等待页面加载
 
-    def scroll_to_visible(self, element: Element, direction: str = "visible", distance: int | float = 1.0) -> bool:
+    def scroll_to_visible(
+            self,
+            element: Element,
+            direction: str = "visible",
+            distance: int | float = 1.0,
+            from_x: int | None = None,
+            from_y: int | None = None) -> bool:
         """
         将元素滚动至可见
 
         Args:
+            element: 元素控件
             direction: 页面内容加载的方向
             distance: 滚动的距离（像素）
+            from_x: 起点的横坐标
+            from_y: 起点的纵坐标
         """
         if direction not in ("down", "up", "left", "right", "visible"):
             raise ValueError("direction must be 'down', 'up', 'left', 'right', 'visible'")
+        # if (from_x is None) != (from_y is None):
+        #     raise TypeError("from_x and from_y must be used together")
+
+
         rx, ry, rw, rh = element.rect
         # 根据坐标选择滑动方向
         if direction == "visible":
@@ -76,13 +91,17 @@ class JDAppAutomaticEvaluate(object):
             LOG.debug(f"{element.rect}")
             if direction == "down":
                 # 内容向下加载，即从下向上滑动
-                action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.75), int(self.screen_width * 0.5), int(self.screen_height * 0.75 - d), 300)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.5), from_y if from_y is not None else int(self.screen_height * 0.75)
+                action.slide(x1, y1, x1, y1 - d, 300)
             elif direction == "up":
-                action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.25), int(self.screen_width * 0.5), int(self.screen_height * 0.25 + d), 300)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.5), from_y if from_y is not None else int(self.screen_height * 0.25)
+                action.slide(x1, y1, x1, y1 + d, 300)
             elif direction == "left":
-                action.slide(int(self.screen_width * 0.25), int(self.screen_height * 0.5), int(self.screen_width * 0.25 + d), int(self.screen_height * 0.5), 300)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.25), from_y if from_y is not None else int(self.screen_height * 0.5)
+                action.slide(x1, y1, x1 + d, y1, 300)
             elif direction == "right":
-                action.slide(int(self.screen_width * 0.75), int(self.screen_height * 0.5), int(self.screen_width * 0.75 - d), int(self.screen_height * 0.5), 300)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.75), from_y if from_y is not None else int(self.screen_height * 0.5)
+                action.slide(x1, y1, x1 - d, y1, 300)
             time.sleep(0.3)
         # 元素居中
         if element.visible:
@@ -90,11 +109,14 @@ class JDAppAutomaticEvaluate(object):
             LOG.debug(f"Final {element.rect}")
             # 垂直方向
             dy = (ry + int(rh * 0.5)) - int(self.screen_height * 0.5)
+            print(f"dy: {dy}")
             if dy > 0:
-                action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.75), int(self.screen_width * 0.5), int(self.screen_height * 0.75 - dy), 500)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.5), from_y if from_y is not None else int(self.screen_height * 0.75)
+                action.slide(x1, y1, x1, y1 - dy, 1200)  # 坐标对齐时准确度要高，保持较长的 duration 有利于准确滑动固定的距离
             elif dy < 0:
-                action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.25), int(self.screen_width * 0.5), int(self.screen_height * 0.25 + dy), 500)
-            time.sleep(0.5)
+                x1, y1 = from_x if from_x is not None else int(self.screen_width * 0.5), from_y if from_y is not None else int(self.screen_height * 0.25)
+                action.slide(x1, y1, x1, y1 + dy, 1200)
+            time.sleep(1.2)  # 等待滑动完成
             LOG.debug(f"Vertical Centered {element.rect}")
             return True
         return False
@@ -138,6 +160,26 @@ class JDAppAutomaticEvaluate(object):
         except ElementNotFoundError:
             pass
         return False
+
+    def fill_image_or_video(self, amount: int = 1):
+        """
+        填充图像或视频
+        """
+        # 点击第一张预览图
+        WaitForSelector().get("picture_view_first_img").click()
+        # 进入-相册单图展示-页面
+        img_select_ele = WaitForSelector().get("img_checkbox")
+        if img_select_ele:
+            rx, ry, rw, rh = img_select_ele.rect
+            x = int(rx + rw / 2)
+            y = int(ry + rh / 2)
+            for i in range(min(9, amount)):  # 一次最多选 9 张图
+                action.click(x, y)
+                time.sleep(0.2)
+                # 从右向左滑动切图
+                action.slide(600, 500, 400, 500, duration=20)
+                time.sleep(1) # 等待图片稳定
+            WaitForSelector().get("img_select_complete").click()
 
     def analyze_cell(self) -> tuple[list[tuple[int, str]], list[list[tuple[int, str]]]]:
         """
@@ -195,7 +237,7 @@ class JDAppAutomaticEvaluate(object):
         legal_text_cell = self.select_one_legal_text(evaluation_texts)
         if not legal_text_cell:
             LOG.warning("没有符合要求的文案内容！")
-            return None
+            return ""
         cell_index = legal_text_cell[0]
         LOG.info(f"样本数【{len(evaluation_texts)}】获取索引为【{cell_index}】的文案")
         inner_text = legal_text_cell[1]
@@ -231,13 +273,13 @@ class JDAppAutomaticEvaluate(object):
         - 起始位置：买家评价-页面
 
         Returns:
-            list[str]: 图片路径的列表
+            list[str]: 包含图片路径的列表
         """
         inner_img = []
         legal_image_group = self.select_one_legal_image_group(image_groups)
         if not legal_image_group:
             LOG.warning("没有符合要求的图片组！")
-            return None
+            return []
         cell_index = legal_image_group[0][0]
         LOG.info(f"样本数【{len(image_groups)}】获取索引为【{cell_index}】的图片组")
         cell_ele = WaitForSelector().get("evaluation_cell", cell_index=cell_index)
@@ -269,6 +311,53 @@ class JDAppAutomaticEvaluate(object):
         self.back_to_previous_page(msg="返回-买家评价-页面")
         LOG.debug(f"【inner_img】{inner_img}")
         return inner_img
+
+    def get_image_from_set(self):
+        """
+        从图片集中获取图片组
+
+        - 起始位置：买家评价-页面
+        - 适用情况：评价图片过于稀疏；带有视频的cell过多图片元素无法捕获；
+        Returns:
+            list[str]: 包含图片路径的列表
+        """
+        img_group = []
+        # 选择 “图/视频”
+        WaitForSelector().get("image_and_video_tab").click()
+        # 选择 “图集”
+        image_set_tab = WaitForSelector().get("image_set_tab")
+        if image_set_tab.value != "1":
+            image_set_tab.click()
+        time.sleep(1)
+        for _ in range(random.randint(2, 5)):
+            action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.75), int(self.screen_width * 0.5), int(self.screen_height * 0.25), duration=300)
+            time.sleep(0.3)
+        time.sleep(2) # 等待页面稳定，时间较长
+        action.click(int(self.screen_width * 0.5), int(self.screen_height * 0.4), duration=300)
+        time.sleep(1)
+        # 进入-晒图相册-页面
+        image_progress_bar = WaitForSelector().get("image_progress_bar")
+        image_progress: str = image_progress_bar.text  # 格式 xx/xx
+        current, total = map(int, image_progress.split('/'))  # 入口图片的位置
+        # 截屏纵坐标范围
+        y1 = int((self.screen_height / 2) - (self.screen_width / 2))
+        y2 = int((self.screen_height / 2) + (self.screen_width / 2))
+        for index in range(1, 4):
+            if total - current > 3:
+                # 从右向左滑动切图；第一次滑动使评价文本收缩；
+                action.slide(600, int(self.screen_height / 2), 200, int(self.screen_height / 2), duration=200)
+            else:
+                action.slide(200, int(self.screen_height / 2), 600, int(self.screen_height / 2), duration=200)
+            time.sleep(0.2)  # 等待图片加载
+            # 区域截屏
+            image = screen.capture([0, y1, self.screen_width, y2])
+            # 保存图片
+            img_file_path = R.img(f"img_{index}.png")
+            screen.image_save(image, img_file_path)
+            img_group.append(img_file_path)
+        action.click(int(self.screen_width * 0.5), int(self.screen_height * 0.5)) # 退出-晒图相册-页面
+        LOG.debug(f"【img_group】{img_group}")
+        return img_group
 
     def select_one_legal_text(self, text_list: list[tuple[int, str],]) -> bool | str:
         """
@@ -304,9 +393,9 @@ class JDAppAutomaticEvaluate(object):
             return False
         return random.choice(legal_groups)
 
-    def auto_fill(self, task: EvaluationTask) -> None:
+    def auto_fill_express_order(self) -> None:
         """
-        自动填充评价
+        自动填充评价，仅适用快递订单
 
         - 起始位置：订单评价-页面
         """
@@ -314,7 +403,7 @@ class JDAppAutomaticEvaluate(object):
         text_input_ele = WaitForSelector().get("evaluation_text_input")
         ry = text_input_ele.rect[1]
         text_input_ele.click()
-        action.input(task.input_text)   # 输入评价内容
+        action.input(self.current_task.input_text)   # 输入评价内容
         action.slide(int(self.screen_width / 2), ry, int(self.screen_width / 2), ry - 100) # 收起键盘
         time.sleep(0.2)
         image_input_ele = WaitForSelector().get("evaluation_image_input")
@@ -322,36 +411,99 @@ class JDAppAutomaticEvaluate(object):
             LOG.warning("没有图片输入元素")
         else:
             # 将图片存入相册
-            for img in task.input_image:
+            for img in self.current_task.input_image:
                 if media.save_pic2photo(img):
                     LOG.debug(f"{img}成功存入相册")
                 else:
                     LOG.critical(f"{img}存入相册失败")
             # 模拟填充图片
             image_input_ele.click()  # 进入-相册总览-页面
-            select_picture_ele = WaitForSelector().get("select_picture")
-            select_picture_ele.click()
-            WaitForSelector().get("picture_view_first_img").click()
-            # 进入-相册单图展示-页面
-            img_select_ele = WaitForSelector().get("img_checkbox")
-            if img_select_ele:
-                rx, ry, rw, rh = img_select_ele.rect
-                x = int(rx + rw / 2)
-                y = int(ry + rh / 2)
-                for i in range(min(9, len(task.input_image))):  # 一次最多选 9 张图
-                    action.click(x, y)
-                    time.sleep(0.2)
-                    # 从右向左滑动切图
-                    action.slide(600, 500, 400, 500, duration=20)
-                    time.sleep(1) # 等待图片稳定
-                WaitForSelector().get("img_select_complete").click()
+            WaitForSelector().get("select_picture").click()
+            self.fill_image_or_video(amount=len(self.current_task.input_image))
             LOG.success("评价内容填充完成")
             if self.AUTO_COMMIT:
-                WaitForSelector().get("evaluation_commit_btn").click()
+                WaitForSelector().get("express_evaluation_commit_btn").click()
                 LOG.success("当前评价自动提交成功")
             else:
                 LOG.warning(f"【AUTO_COMMIT】:{self.AUTO_COMMIT}，等待手动提交评价......")
-                
+
+    def auto_fill_takeaway_order(self) -> None:
+        """
+        自动填充评价，仅适用外卖订单
+
+        - 起始位置：订单评价-页面
+        """
+        # 服务评价；门店，包装，配送
+        evaluation_text_inputs = WaitForSelector().get("evaluation_text_inputs")
+        if evaluation_text_inputs:
+            if len(evaluation_text_inputs) > 3:  # 用户可能查看过评价页面，导致商品评价的 textview 已缓存
+                evaluation_text_inputs = evaluation_text_inputs[:3]
+            elif len(evaluation_text_inputs) < 3:
+                LOG.critical(f"买卖订单评价页面发生变动！")
+            evaluation_text_list = [
+                random.choice(DEFAULT_STORE_OVERALL_EVALUATION),
+                random.choice(DEFAULT_PACKAGING_SERVICE_EVALUATION),
+                random.choice(DEFAULT_DELIVERY_SERVICE_EVALUATION),
+            ]
+            for index, text_input_ele in enumerate(evaluation_text_inputs):
+                if not text_input_ele.visible:
+                    text_input_ele.scroll("visible", 0.5)
+                text_input_ele.click()  # 获取文本框焦点
+                action.input(evaluation_text_list[index])
+                action.slide(int(self.screen_width * 0.5), int(self.screen_height * 0.5), int(self.screen_width * 0.5), int(self.screen_height * 0.5) - 100)  # 收起键盘
+                time.sleep(0.2)
+        # 商品评价
+        for index in range(len(WaitForSelector().get("product_evaluate_labels"))):
+            product_evaluate_labels = WaitForSelector().get("product_evaluate_labels")  # 更新元素状态
+            product_evaluate_label = product_evaluate_labels[index]
+            self.scroll_to_visible(product_evaluate_label, "visible", 500, from_x=int(self.screen_width * 0.9))
+            rx, ry, rw, rh = product_evaluate_label.rect
+            y = int(ry + rh * 0.5)
+            first_star_eles = WaitForSelector().get("first_stars")
+            rx1, _, rw1, _ = first_star_eles[index + 3].rect
+            x = int(rx1 + rw1 * 0.5)
+            slide_distance = rw1 * 8
+            action.slide(x, y, x + slide_distance, y)
+            time.sleep(0.2)
+            # 填充文案
+            # text_input_eles = WaitForSelector().get("evaluation_text_inputs")
+            # text_input_ele = text_input_eles[index + 3]
+            # if text_input_ele:
+                # self.scroll_to_visible(text_input_ele, "visible", 0.5, from_x=int(self.screen_width * 0.9))
+                # text_input_ele.click()
+            # 填充过的 textview 有时会丢失，暂用相对坐标当前未填充的 textview 获取焦点
+            action.click(rx + rw, ry + rh *3)
+            input_text = self.current_task.input_text if self.current_task.input_text else random.choice(DEFAULT_TAKEAWAY_PRODUCT_EVALUATION)
+            print(input_text)
+            action.input(input_text)
+            action.slide(rx, ry, rx, ry - 100)  # 收起键盘
+            # 将图片存入相册
+            for img in self.current_task.input_image:
+                if media.save_pic2photo(img):
+                    LOG.debug(f"{img}成功存入相册")
+                else:
+                    LOG.critical(f"{img}存入相册失败")
+            # 填充图片
+            image_input_eles = WaitForSelector().get("evaluation_image_inputs")
+            image_input_ele = image_input_eles[index]
+            if image_input_ele:
+                self.scroll_to_visible(image_input_ele, "visible", 0.5, from_x=int(self.screen_width * 0.9))
+                image_input_ele.click()
+                WaitForSelector().get("select_picture").click()  # 选照片
+                self.fill_image_or_video(amount=len(self.current_task.input_image))
+            # 提交评价
+            LOG.success("评价内容填充完成")
+            if self.AUTO_COMMIT:
+                WaitForSelector().get("express_evaluation_commit_btn").click()
+                LOG.success("当前评价自动提交成功")
+            else:
+                LOG.warning(f"【AUTO_COMMIT】:{self.AUTO_COMMIT}，等待手动提交评价......")
+
+    def auto_test(self):
+        """测试操作"""
+        text_input_eles = WaitForSelector().get("evaluation_text_inputs")
+        for ele in text_input_eles:
+            print(ele.info)
 
     def run(self):
         # 打开 JD App
@@ -364,13 +516,24 @@ class JDAppAutomaticEvaluate(object):
         # 任务循环--起点
         task_index = 1
         while True:
+            # 判断是否有待评价订单
             goto_evaluate_ele = WaitForSelector().get("goto_evaluate")
             if not goto_evaluate_ele:
                 LOG.success("没有待评价订单-程序退出！")
                 sys.exit(0)
-            self.current_task = EvaluationTask()  # 初始化任务
+            # 进入-评价页面-分析订单类型，初始化任务
+            goto_evaluate_ele.click()
+            self.current_task = EvaluationTask()
             self.current_task.id = f"{task_index}"
+            if WaitForSelector().get("takeaway_order_sign"):
+                self.current_task.order_type = "外卖"
+            else:
+                self.current_task.order_type = "快递"
+            # 返回-评价中心-页面
+            WaitForSelector().get("exit_evaluation").click()
+            WaitForSelector().get("confirm_exit_evaluation").click()
             # 通过 “去评价” 按钮元素计算大致的商品展示图片的 y 坐标
+            goto_evaluate_ele = WaitForSelector().get("goto_evaluate")
             rx, ry, rw, rh = goto_evaluate_ele.rect
             # 计算商品展示图片的大致坐标，并点击进入商详页
             x = int(self.screen_width * 0.15)  # 估算值，可点击的 x
@@ -378,10 +541,13 @@ class JDAppAutomaticEvaluate(object):
             action.click(x, y, duration=20)  # 进入-商品详情-页面
             LOG.debug("进入-商品详情-页面")
 
-            # 无货弹窗检测
-            if WaitForSelector().get("out_of_stock_sign"):
-                WaitForSelector().get("gift_close_btn").click()  # 关闭弹窗
-                LOG.debug("关闭无货弹窗")
+            try:
+                # 无货弹窗检测
+                if WaitForSelector().get("out_of_stock_sign"):
+                    WaitForSelector().get("gift_close_btn").click()  # 关闭弹窗
+                    LOG.debug("关闭无货弹窗")
+            except ElementNotFoundError:
+                pass
 
             # 将 “买家评价” 滑入视图
             time.sleep(1) # 页面加载较慢
@@ -395,23 +561,39 @@ class JDAppAutomaticEvaluate(object):
             if self.SELECT_CURRENT_PRODUCT:
                 if not self.select_current_product():
                     LOG.warning("选择当前商品失败！")
-            # 下滑加载更多评价内容
-            for _ in range(6):
-                action.slide(random.randint(int(self.screen_width * 0.4), int(self.screen_width * 0.6)),
-                             random.randint(int(self.screen_height * 0.6), int(self.screen_height * 0.8)),
-                             random.randint(int(self.screen_width * 0.4), int(self.screen_width * 0.6)),
-                             random.randint(int(self.screen_height * 0.2), int(self.screen_height * 0.4)),
-                             500)
-                time.sleep(0.2)
-            inner_texts, inner_image_groups = self.analyze_cell()
-            self.current_task.input_text = self.get_text_from_cell(inner_texts)
-            self.current_task.input_image = self.get_image_from_cell(inner_image_groups)
+            # 根据任务类型分别处理
+            match self.current_task.order_type:
+                case "快递":
+                    # 下滑加载更多评价内容 cell
+                    for _ in range(5):
+                        action.slide(random.randint(int(self.screen_width * 0.4), int(self.screen_width * 0.6)),
+                                     random.randint(int(self.screen_height * 0.6), int(self.screen_height * 0.8)),
+                                     random.randint(int(self.screen_width * 0.4), int(self.screen_width * 0.6)),
+                                     random.randint(int(self.screen_height * 0.2), int(self.screen_height * 0.4)),
+                                     500)
+                        time.sleep(0.2)
+                    inner_texts, inner_image_groups = self.analyze_cell()
+                    self.current_task.input_text = self.get_text_from_cell(inner_texts)
+                    self.current_task.input_image = self.get_image_from_cell(inner_image_groups)
 
-            self.back_to_previous_page("返回-商品详情-页面")
-            self.back_to_previous_page("返回-评价中心-页面")
-            goto_evaluate_ele = WaitForSelector().get("goto_evaluate").click()  # 进入-订单评价-页面
-            LOG.info(f"Task:{self.current_task}")
-            self.auto_fill(self.current_task)
+                    self.back_to_previous_page("返回-商品详情-页面")
+                    self.back_to_previous_page("返回-评价中心-页面")
+                    goto_evaluate_ele = WaitForSelector().get("goto_evaluate").click()
+                    # 进入-订单评价-页面
+                    LOG.info(f"Task:{self.current_task}")
+                    self.auto_fill_express_order()
+
+                case "外卖":
+                    inner_texts, inner_image_groups = self.analyze_cell()
+                    self.current_task.input_text = self.get_text_from_cell(inner_texts)
+                    self.current_task.input_image = self.get_image_from_set()
+                    self.back_to_previous_page("返回-商品详情-页面")
+                    self.back_to_previous_page("返回-评价中心-页面")
+                    goto_evaluate_ele = WaitForSelector().get("goto_evaluate").click()
+                    # 进入-订单评价-页面
+                    LOG.info(f"Task:{self.current_task}")
+                    self.auto_fill_takeaway_order()
+
 
             task_index += 1
             break

@@ -1,5 +1,5 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-3.1.4
+version: JD-AutomaticEvaluate-3.2.4
 
 ## 简介
 自动化评价工具，给予五星好评加图文。
@@ -126,6 +126,7 @@ JD-AutomaticEvaluate -g X -m grok-vision-beta
 
 
 # Update log
+- JD-AutomaticEvaluate-3.2.4: ios端新增外卖订单自动评价
 - JD-AutomaticEvaluate-3.1.4: pc异常修复
 - JD-AutomaticEvaluate-3.1.3: ios端优化
 - JD-AutomaticEvaluate-3.1.2: ios端逻辑优化
