@@ -4,7 +4,7 @@
 
 [**中文简体**](./README.md) | [**English**](./README.en.md)
 
-## 宇宙安全声名
+## 宇宙安全声明
 1. 本仓库发布的`JD-Automated-Tools`项目中涉及的任何脚本，仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断。
 
 2. 本项目内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
@@ -24,14 +24,15 @@
 9. 本项目遵循Apache-2.0 License协议，如果本特别声明与Apache-2.0 License协议有冲突之处，以本特别声明为准。
 
 ## 简介
-👏JD-PersDataExporter
-- 京东个人订单信息爬取。
-- [![快速前往](https://img.shields.io/badge/前往-JDPersDataExporter-gree)](JD-PersDataExporter)
+#### JD-PersDataExporter
+🚀[![快速前往](https://img.shields.io/badge/前往-JD--PersDataExporter-gree?style=plastic)](JD-PersDataExporter)
+京东个人订单信息提取与持久化。
 
-👏JD-GetCookie
-- 登录京东后获取cookie。
-- [![快速前往](https://img.shields.io/badge/前往-JDGetCookie-yellow)](JD-GetCookie)
+#### JD-LoginManager
+🚀[![快速前往](https://img.shields.io/badge/前往-JD--LoginManager-yellow?style=plastic)](JD-LoginManager)
+京东模拟登录与Cookies管理。
 
-👏JD-AutomaticEvaluate
-- 京东订单自动化评价，均给予五星好评以及图文。
-- [![快速前往](https://img.shields.io/badge/前往-JDAutomaticEvaluate-red)](JD-AutomaticEvaluate)
+#### JD-AutomaticEvaluate
+🚀[![快速前往](https://img.shields.io/badge/前往-JD--AutomaticEvaluate-red?style=plastic)](JD-AutomaticEvaluate)
+京东订单自动化评价，均给予五星好评以及图文。
+
