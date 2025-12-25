@@ -1,18 +1,20 @@
 # JD-AutomaticEvaluate
-version: JD-AutomaticEvaluate-3.2.4
+
+![Latest Version](https://img.shields.io/badge/Version-JD--AutomaticEvaluate--3.2.4-%23DCF30D?style=plastic&logo=github&logoColor=white&labelColor=%23282425&color=%239E2E2E)
+[![Latest Releases](https://img.shields.io/badge/dynamic/json?url=https://api.github.com/repos/Goodnameisfordoggy/JD-AutomatedTools/releases/latest&query=$.tag_name&label=Latest%20Release&labelColor=%23282425&color=%23F3840D&style=plastic&logo=github&logoColor=white)](https://github.com/Goodnameisfordoggy/JD-AutomatedTools/releases/latest)
 
 ## 简介
 自动化评价工具，给予五星好评加图文。
 
-## 🌟工具特点
-- 本工具以订单对应的评价页面地址(orderVoucher_url)作为标识来组织评价任务，消除了部分商品没有商品编号的影响。
-- 本工具支持单任务线性运行(符合一般真实用户操作逻辑): `订单列表`->`评价页面`->`商品详情页面copy文案，图片/ai生成文案`->`评价页面填写`
-
-
 ## 📢适用情况
 - 本工具目前仅适用于处于待评价状态的订单
 
-- 为确保商品评价内容的准确性，在一个单号有多个子商品评价任务时会逐个进行。若遇到商品详情页面`https://item.jd.com/XXXXXXXX.html`不存在的情况则跳过当前评价任务。
+## 🌟工具特点
+- 本工具以订单对应的评价页面地址(orderVoucher_url)作为标识来组织评价任务，消除了部分商品没有商品编号的影响。
+- 本工具支持单任务线性运行(符合一般真实用户操作逻辑): `订单列表`->`评价页面`->`商品详情页面copy文案，图片/ai生成文案`->`评价页面填写`
+- 本工具将一个待评价订单拆分成**最小可评价单元**（按商品细分，一个单元最终就是一条评价），以此来确保商品评价内容的准确性，与收益最大化（每条通过审核的评价都可以获得15点创作值），在一个订单有多个单元时会逐个进行。一个订单中只有主品单元可以获得评价有礼，且评价有礼不能重复获得，故其余非主品单元评价完成后没有获得评价有利（只要审核通过）均属于正常情况。
+- 若遇到商品详情页面`https://item.jd.com/XXXXXXXX.html`不存在的情况默认跳过当前单元。
+
 
 ## 💥运行异常情况💥
 - **强烈建议** ：发生异常退出之后把日志等级调到DEBUG后重新运行两次，有解决不了的问题拿着log文件来问。
@@ -32,9 +34,9 @@ version: JD-AutomaticEvaluate-3.2.4
 ```
 # 所有参数已设置好默认值，如需改动请往下阅读
 # 使用默认参数运行
-# 运行 py 文件
+# 使用命令行运行 py 入口文件
 python JDpc-AutomaticEvaluate.py
-# 运行 exe 文件
+# 或直接运行 exe 文件
 JD-AutomaticEvaluate.exe
 ```
 
